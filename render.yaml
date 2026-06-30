@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: rowad-tahseeli-platform
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
+    disk:
+      name: tahseeli-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: DB_PATH
+        value: /var/data/tahseeli.db
+      - key: BOT_TOKEN
+        sync: false
+      - key: OPENROUTER_KEY
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false

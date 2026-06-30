@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}ترتيب — {{ comp.name }}{% endblock %}
+{% block content %}
+<div style="max-width:720px;margin:40px auto;padding:0 24px">
+  <div style="text-align:center;margin-bottom:28px">
+    <div style="font-size:2.5rem;margin-bottom:8px">🏆</div>
+    <h1 style="font-size:1.6rem;font-weight:900;margin-bottom:4px">{{ comp.name }}</h1>
+    <div class="badge badge-{{ 'green' if comp.status == 'active' else 'gray' }}">
+      {{ 'جارية' if comp.status == 'active' else 'منتهية' }}
+    </div>
+  </div>
+
+  {% if my_rank %}
+  <div style="background:var(--gold-glow);border:2px solid var(--border-gold);
+              border-radius:var(--radius);padding:20px;margin-bottom:24px;text-align:center">
+    <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:4px">ترتيبك</div>
+    <div style="font-size:2.5rem;font-weight:900;color:var(--gold)">
+      #{{ my_rank.rank }}
+    </div>
+    <div style="font-size:0.9rem;color:var(--text-secondary)">
+      {{ my_rank.correct }} / {{ my_rank.total_q }} صحيح · {{ my_rank.score }}%
+    </div>
+  </div>
+  {% endif %}
+
+  <div style="display:flex;flex-direction:column;gap:8px">
+    {% for p in rankings %}
+    <div class="leaderboard-row {{ 'me' if p.user_id == current_user.id }}">
+      <div class="rank-badge rank-{{ p.rank if p.rank <= 3 else 'other' }}">{{ p.rank }}</div>
+      <div class="avatar" style="width:36px;height:36px;font-size:0.9rem">{{ p.name[0] }}</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:0.95rem">{{ p.name }}</div>
+        <div style="font-size:0.78rem;color:var(--text-muted)">{{ p.correct }} / {{ p.total_q }} صحيح</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:1.2rem;font-weight:900;color:var(--gold)">{{ p.score }}%</div>
+        <div style="font-size:0.75rem;color:var(--text-muted)">{{ p.time_taken // 60 }}:{{ '%02d'|format(p.time_taken % 60) }}</div>
+      </div>
+    </div>
+    {% endfor %}
+
+    {% if not rankings %}
+    <div style="text-align:center;padding:40px;color:var(--text-muted)">
+      <div style="font-size:2rem;margin-bottom:8px">📋</div>
+      لا توجد نتائج بعد
+    </div>
+    {% endif %}
+  </div>
+
+  <div style="display:flex;gap:12px;margin-top:24px">
+    <a href="{{ url_for('competition.index') }}" class="btn btn-primary">🏆 مسابقات أخرى</a>
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">🏠 الرئيسية</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,438 @@
+{% extends 'base.html' %}
+{% block title %}لوحة المشرف{% endblock %}
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Admin Sidebar -->
+  <aside class="sidebar">
+    <div style="padding:16px;border-bottom:1px solid var(--border);margin-bottom:16px">
+      <div class="badge badge-gold">👑 مشرف النظام</div>
+      <div style="font-weight:700;font-size:0.9rem;margin-top:8px">{{ current_user.name }}</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">الإدارة</div>
+      <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link active"><span class="icon">📊</span> لوحة التحكم</a>
+      {% if is_super_admin %}<a href="{{ url_for('admin.users') }}" class="sidebar-link"><span class="icon">👥</span> المستخدمون</a>{% endif %}
+      {% if is_super_admin %}<a href="{{ url_for('admin.supervisors') }}" class="sidebar-link" style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.22)"><span class="icon">🛡️</span> إدارة المشرفين</a>{% endif %}
+      <a href="{{ url_for('admin.questions') }}" class="sidebar-link"><span class="icon">❓</span> الأسئلة</a>
+      <a href="{{ url_for('lectures.admin_lectures', branch='tahseeli') }}" class="sidebar-link" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25)"><span class="icon">🎬</span> محاضرات التحصيلي</a>
+      <a href="{{ url_for('lectures.admin_lectures', branch='professional_license') }}" class="sidebar-link" style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.22)"><span class="icon">🏅</span> محاضرات الرخصة المهنية</a>
+      <a href="{{ url_for('pro_license.admin_index') }}" class="sidebar-link" style="background:rgba(244,63,94,0.12);border:1px solid rgba(244,63,94,0.35)"><span class="icon">📝</span> أسئلة الرخصة المهنية</a>
+      <a href="{{ url_for('pro_license.admin_drawings') }}" class="sidebar-link" style="background:rgba(251,191,36,0.10);border:1px solid rgba(251,191,36,0.35)"><span class="icon">🖼️</span> أسئلة مزودة برسومات</a>
+      <a href="{{ url_for('admin.create_competition') }}" class="sidebar-link"><span class="icon">🏆</span> إنشاء مسابقة</a>
+      <a href="{{ url_for('notifications.admin_send') }}" class="sidebar-link" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2)"><span class="icon">📢</span> إرسال إشعار / رسالة</a>
+      <a href="{{ url_for('messages.admin_inbox') }}" class="sidebar-link" style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2)"><span class="icon">✉️</span> صندوق الرسائل {% if unread_dm_count > 0 %}<span style="background:#10b981;color:#fff;font-size:0.62rem;padding:1px 5px;border-radius:8px;margin-right:4px">{{ unread_dm_count }}</span>{% endif %}</a>
+      <a href="{{ url_for('community.index') }}" class="sidebar-link"><span class="icon">👥</span> المجتمع</a>
+      <a href="{{ url_for('cms.admin_cms') }}" class="sidebar-link" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3)"><span class="icon">🗃</span> إدارة المحتوى (CMS)</a>
+      {% if is_super_admin %}
+      <a href="{{ url_for('code_assistant.index') }}" class="sidebar-link" style="background:linear-gradient(135deg,rgba(139,92,246,0.18),rgba(99,102,241,0.12));border:1px solid rgba(139,92,246,0.45)"><span class="icon">💻</span> مساعد البرمجة</a>
+      {% endif %}
+    </div>
+    <div class="sidebar-section" style="margin-top:8px">
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link"><span class="icon">🚪</span> خروج</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <h1 style="font-size:1.6rem;font-weight:900;margin-bottom:24px">📊 لوحة تحكم المشرف</h1>
+
+    <!-- تحذير قاعدة البيانات غير الدائمة -->
+    {% if not db_info.persistent %}
+    <div style="background:linear-gradient(135deg,rgba(239,68,68,0.15),rgba(220,38,38,0.08));border:1.5px solid rgba(239,68,68,0.5);border-radius:14px;padding:18px 22px;margin-bottom:24px">
+      <div style="display:flex;align-items:flex-start;gap:14px">
+        <span style="font-size:1.8rem;flex-shrink:0">⚠️</span>
+        <div style="flex:1">
+          <div style="font-weight:800;color:#ef4444;margin-bottom:8px;font-size:1rem">تحذير: قاعدة البيانات غير محمية من الحذف عند النشر!</div>
+          <div style="color:#fca5a5;font-size:0.88rem;line-height:1.7;margin-bottom:12px">
+            قاعدة البيانات محفوظة في: <code style="background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px">{{ db_info.path }}</code><br>
+            عند كل نشر جديد على Render سيتم حذف هذه البيانات لأنها ليست على قرص دائم.<br>
+            <strong>لحل المشكلة نهائياً اتبع الخطوات التالية في لوحة Render:</strong>
+          </div>
+          <ol style="color:#fca5a5;font-size:0.85rem;line-height:2;margin-right:20px">
+            <li>اذهب إلى <strong>Dashboard → اختر الخدمة → Disks</strong></li>
+            <li>اضغط <strong>Add Disk</strong> ← اسمه: <code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:3px">tahseeli-data</code></li>
+            <li>Mount Path: <code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:3px">/var/data</code> — Size: <strong>1 GB</strong></li>
+            <li>اذهب إلى <strong>Environment</strong> وأضف: <code style="background:rgba(0,0,0,0.3);padding:1px 5px;border-radius:3px">DB_PATH = /var/data/tahseeli.db</code></li>
+            <li>اضغط <strong>Deploy</strong> — ستُحفظ البيانات بعد ذلك بشكل دائم</li>
+          </ol>
+          <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+            <a href="{{ url_for('admin.db_backup') }}" style="background:#ef4444;color:#fff;padding:8px 16px;border-radius:8px;font-weight:700;font-size:0.85rem;text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+              💾 تحميل نسخة احتياطية الآن
+            </a>
+            <span style="color:#94a3b8;font-size:0.82rem;align-self:center">حجم القاعدة: {{ db_info.size_mb }} MB</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);border-radius:10px;padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+      <span>✅</span>
+      <span style="color:#10b981;font-size:0.88rem;font-weight:700">قاعدة البيانات على قرص دائم — البيانات محمية من الحذف عند النشر ({{ db_info.size_mb }} MB)</span>
+      <a href="{{ url_for('admin.db_backup') }}" style="margin-right:auto;color:#10b981;font-size:0.82rem;text-decoration:underline">💾 تحميل نسخة احتياطية</a>
+    </div>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="stats-grid" style="margin-bottom:28px">
+      <div class="stat-card">
+        <div class="stat-card-top"><div class="stat-icon" style="background:var(--gold-glow)">👥</div></div>
+        <div class="stat-num text-gold">{{ stats.users }}</div>
+        <div class="stat-label">طالب مسجّل</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-top"><div class="stat-icon" style="background:var(--cyan-glow)">❓</div></div>
+        <div class="stat-num" style="color:var(--cyan)">{{ stats.questions }}</div>
+        <div class="stat-label">سؤال نشط</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-top"><div class="stat-icon" style="background:var(--emerald-glow)">📝</div></div>
+        <div class="stat-num" style="color:var(--emerald)">{{ stats.evals }}</div>
+        <div class="stat-label">اختبار أُجري</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-top"><div class="stat-icon" style="background:var(--purple-glow)">🏆</div></div>
+        <div class="stat-num" style="color:var(--purple)">{{ stats.competitions }}</div>
+        <div class="stat-label">مسابقة</div>
+      </div>
+    </div>
+
+    <!-- Quick Nav Cards (مرئية دائماً للتنقل السريع) -->
+    <div class="stats-grid" style="margin-bottom:28px">
+      <a href="{{ url_for('admin.questions') }}" class="stat-card" style="text-decoration:none;cursor:pointer;transition:transform .15s,box-shadow .15s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+        <div class="stat-card-top"><div class="stat-icon" style="background:var(--cyan-glow)">❓</div></div>
+        <div class="stat-num" style="color:var(--cyan);font-size:1rem">إدارة الأسئلة</div>
+        <div class="stat-label">إضافة · تعديل · صور</div>
+      </a>
+      {% if is_super_admin %}<a href="{{ url_for('admin.users') }}" class="stat-card" style="text-decoration:none;cursor:pointer;transition:transform .15s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+        <div class="stat-card-top"><div class="stat-icon" style="background:var(--gold-glow)">👥</div></div>
+        <div class="stat-num" style="color:var(--gold);font-size:1rem">المستخدمون</div>
+        <div class="stat-label">عرض · إدارة الطلاب</div>
+      </a>{% endif %}
+      <a href="{{ url_for('notifications.admin_send') }}" class="stat-card" style="text-decoration:none;cursor:pointer;transition:transform .15s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+        <div class="stat-card-top"><div class="stat-icon" style="background:var(--emerald-glow)">📢</div></div>
+        <div class="stat-num" style="color:var(--emerald);font-size:1rem">إرسال إشعار</div>
+        <div class="stat-label">إشعار عام أو خاص</div>
+      </a>
+      <a href="{{ url_for('messages.admin_inbox') }}" class="stat-card" style="text-decoration:none;cursor:pointer;transition:transform .15s" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform=''">
+        <div class="stat-card-top"><div class="stat-icon" style="background:var(--purple-glow)">✉️</div></div>
+        <div class="stat-num" style="color:var(--purple);font-size:1rem">صندوق الرسائل</div>
+        <div class="stat-label">{% if unread_dm_count > 0 %}<span style="color:#10b981;font-weight:900">{{ unread_dm_count }} رسالة جديدة</span>{% else %}الرسائل الخاصة{% endif %}</div>
+      </a>
+    </div>
+
+    <!-- Subject Stats -->
+    <div class="grid-2" style="margin-bottom:28px">
+      <div class="card">
+        <h3 style="font-weight:800;margin-bottom:16px">📚 أسئلة المواد</h3>
+        {% for subj, s in subject_stats.items() %}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div style="font-size:0.9rem">
+            {% if subj == 'physics' %}⚛️ الفيزياء
+            {% elif subj == 'chemistry' %}🧪 الكيمياء
+            {% elif subj == 'biology' %}🧬 الأحياء
+            {% else %}📐 الرياضيات{% endif %}
+          </div>
+          <div class="badge badge-gold">{{ s.questions }} سؤال</div>
+        </div>
+        {% endfor %}
+        <div class="divider"></div>
+        <form method="POST" action="{{ url_for('admin.seed_questions') }}" style="margin-top:12px">
+          <button type="submit" class="btn btn-primary btn-sm">⬇️ تحميل الأسئلة الافتراضية</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3 style="font-weight:800;margin-bottom:16px">📋 آخر الاختبارات</h3>
+        {% for ev in recent_evals[:5] %}
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:0.85rem">
+            {% if ev.subject == 'physics' %}⚛️{% elif ev.subject == 'chemistry' %}🧪{% elif ev.subject == 'biology' %}🧬{% else %}📐{% endif %}
+            {{ ev.student.name[:15] if ev.student else '—' }}
+          </div>
+          <span class="badge badge-{{ 'green' if ev.score_pct >= 75 else 'gold' if ev.score_pct >= 50 else 'red' }}">
+            {{ ev.score_pct }}%
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- مساعد البرمجة — للمشرف العام فقط -->
+    {% if is_super_admin %}
+    <div class="card" style="margin-bottom:24px;background:linear-gradient(135deg,rgba(99,102,241,0.06),rgba(139,92,246,0.04));border:1.5px solid rgba(139,92,246,0.3)">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="font-size:2.4rem">💻</div>
+        <div style="flex:1">
+          <div style="font-weight:900;font-size:1.05rem;color:#a5b4fc;margin-bottom:4px">مساعد البرمجة</div>
+          <div style="font-size:0.85rem;color:#64748b;line-height:1.6">
+            يقرأ ويعدّل ملفات المنصة على GitHub مباشرةً بمساعدة الذكاء الاصطناعي المجاني.<br>
+            يمكنه إضافة ميزات، تصحيح أخطاء، وتعديل أي ملف في المستودع.
+          </div>
+        </div>
+        <a href="{{ url_for('code_assistant.index') }}"
+          style="background:linear-gradient(135deg,#6366f1,#7c3aed);color:#fff;border:none;
+                 border-radius:12px;padding:12px 24px;font-weight:800;cursor:pointer;
+                 font-family:inherit;font-size:0.92rem;text-decoration:none;white-space:nowrap;display:block">
+          🚀 فتح المساعد البرمجي
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- إعدادات متقدمة -->
+    <div class="card" style="margin-bottom:24px">
+      <h3 style="font-weight:800;margin-bottom:18px">🔐 إعدادات متقدمة</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;flex-wrap:wrap">
+
+        <!-- مفتاح AI -->
+        <div style="background:#0d1628;border:1px solid var(--border);border-radius:12px;padding:18px">
+          <div style="font-weight:700;margin-bottom:10px;color:var(--cyan)">🤖 مفتاح OpenRouter AI</div>
+          <div id="aiKeyStatus" style="font-size:0.82rem;color:#94a3b8;margin-bottom:10px">⏳ جارٍ التحقق...</div>
+          <input id="aiKeyInput" type="password" placeholder="sk-or-v1-..."
+            style="width:100%;background:#060c1a;border:1px solid var(--border);border-radius:8px;
+                   padding:9px 12px;color:#e2e8f0;font-family:monospace;font-size:0.85rem;margin-bottom:10px;box-sizing:border-box">
+          <button onclick="saveAiKey()"
+            style="background:linear-gradient(135deg,#0891b2,#0e7490);color:#fff;border:none;
+                   border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">
+            💾 حفظ المفتاح
+          </button>
+          <div id="aiKeyResult" style="margin-top:8px;font-size:0.82rem;display:none"></div>
+        </div>
+
+        <!-- نسخ احتياطي فوري -->
+        <div style="background:#0d1628;border:1px solid var(--border);border-radius:12px;padding:18px">
+          <div style="font-weight:700;margin-bottom:10px;color:#10b981">💾 نسخ احتياطي فوري</div>
+          <div style="font-size:0.83rem;color:#94a3b8;margin-bottom:14px;line-height:1.6">
+            يُصدّر كل المستخدمين والأسئلة والمحاضرات إلى GitHub الآن.<br>
+            يُوصى بالضغط عليه قبل كل نشر جديد على Render.
+          </div>
+          <button onclick="runFullExport()"
+            style="background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;
+                   border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">
+            🚀 تصدير كل البيانات إلى GitHub
+          </button>
+          <div id="exportResult" style="margin-top:8px;font-size:0.82rem;display:none"></div>
+        </div>
+
+        <!-- مفتاح GitHub -->
+        <div style="background:#0d1628;border:1px solid var(--border);border-radius:12px;padding:18px">
+          <div style="font-weight:700;margin-bottom:10px;color:#f59e0b">🔑 مفتاح GitHub (Personal Access Token)</div>
+          <div id="ghTokenStatus" style="font-size:0.82rem;color:#94a3b8;margin-bottom:10px">⏳ جارٍ التحقق...</div>
+          <input id="ghTokenInput" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
+            style="width:100%;background:#060c1a;border:1px solid var(--border);border-radius:8px;
+                   padding:9px 12px;color:#e2e8f0;font-family:monospace;font-size:0.85rem;margin-bottom:10px;box-sizing:border-box">
+          <button onclick="saveGhToken()"
+            style="background:linear-gradient(135deg,#b45309,#92400e);color:#fff;border:none;
+                   border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">
+            💾 حفظ مفتاح GitHub
+          </button>
+          <div style="font-size:0.75rem;color:#4b5563;margin-top:8px">يُستخدم من قِبل مساعد البرمجة للقراءة والكتابة في المستودع</div>
+          <div id="ghTokenResult" style="margin-top:6px;font-size:0.82rem;display:none"></div>
+        </div>
+
+        <!-- محدد نموذج الذكاء الاصطناعي -->
+        <div style="background:#0d1628;border:1px solid var(--border);border-radius:12px;padding:18px">
+          <div style="font-weight:700;margin-bottom:10px;color:#a78bfa">🧠 نموذج الذكاء الاصطناعي (لمساعد الطلاب)</div>
+          <div id="aiModelStatus" style="font-size:0.8rem;color:#94a3b8;margin-bottom:10px">⏳ جارٍ التحقق...</div>
+          <select id="aiModelSelect"
+            style="width:100%;background:#060c1a;border:1px solid var(--border);border-radius:8px;
+                   padding:9px 12px;color:#e2e8f0;font-size:0.85rem;margin-bottom:10px;font-family:inherit">
+            <option value="auto">🔄 تلقائي — كل النماذج بالترتيب (موصى به)</option>
+            <optgroup label="── مجانية بلا مفتاح ──">
+              <option value="g4f-qwen3">🟢 Qwen3-235B — مجاني بلا مفتاح</option>
+              <option value="g4f-qwen72">🟢 Qwen2.5-72B — مجاني بلا مفتاح</option>
+              <option value="g4f-only">🟢 g4f فقط (كل نماذجه بالترتيب)</option>
+            </optgroup>
+            <optgroup label="── OpenRouter مجاني (يحتاج مفتاح) ──">
+              <option value="or-gemma">🔵 Gemma-4-31B — OpenRouter مجاني</option>
+              <option value="or-gpt20">🔵 GPT-OSS-20B — OpenRouter مجاني</option>
+              <option value="or-gpt120">🔵 GPT-OSS-120B — OpenRouter مجاني</option>
+              <option value="or-only">🔵 OpenRouter فقط (كل نماذجه)</option>
+            </optgroup>
+          </select>
+          <button onclick="saveAiModel()"
+            style="background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;
+                   border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer;width:100%;font-family:inherit">
+            💾 حفظ إعداد النموذج
+          </button>
+          <div id="aiModelResult" style="margin-top:8px;font-size:0.82rem;display:none"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Email Test -->
+    <div class="card" style="margin-bottom:24px">
+      <h3 style="font-weight:800;margin-bottom:14px">📧 اختبار خدمة البريد</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <input id="testEmailInput" type="email" placeholder="{{ current_user.email }}"
+          value="{{ current_user.email }}"
+          style="flex:1;min-width:200px;background:#0d1628;border:1px solid var(--border);
+                 border-radius:10px;padding:9px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+        <button onclick="sendTestEmail()"
+          style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;
+                 border-radius:10px;padding:9px 18px;font-weight:700;cursor:pointer;
+                 font-family:inherit;font-size:0.9rem;white-space:nowrap">
+          إرسال رسالة اختبار
+        </button>
+      </div>
+      <div id="testEmailResult" style="margin-top:10px;font-size:0.85rem;display:none"></div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="card" style="padding:0">
+      <div class="card-header" style="padding:16px 20px">
+        <h3 class="card-title">👥 آخر المستخدمين</h3>
+        {% if is_super_admin %}<a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-secondary">عرض الكل</a>{% endif %}
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead><tr><th>الاسم</th><th>البريد</th><th>المستوى</th><th>الحالة</th><th>تاريخ التسجيل</th></tr></thead>
+          <tbody>
+          {% for u in recent_users %}
+          <tr>
+            <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="width:30px;height:30px;font-size:0.8rem">{{ u.name[0] }}</div>{{ u.name }}</div></td>
+            <td style="font-size:0.85rem;color:var(--text-muted)">{{ u.email }}</td>
+            <td>
+              <span class="badge badge-{{ 'green' if u.level == 'advanced' else 'cyan' if u.level == 'intermediate' else 'gold' }}">
+                {{ u.level }}
+              </span>
+            </td>
+            <td><span class="badge badge-{{ 'green' if u.is_verified else 'red' }}">{{ 'مفعّل' if u.is_verified else 'غير مفعّل' }}</span></td>
+            <td style="font-size:0.82rem;color:var(--text-muted)">{{ u.created_at.strftime('%Y/%m/%d') }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+// ── مفتاح AI ──────────────────────────────────────────────────────────────
+(function loadAiKeyStatus(){
+  fetch('/admin/ai-key/current').then(r=>r.json()).then(d=>{
+    const el = document.getElementById('aiKeyStatus');
+    if(d.success && d.has_key)
+      el.innerHTML = '✅ مفتاح نشط: <code style="color:#00e5ff">'+d.masked+'</code>';
+    else
+      el.textContent = '⚠️ لا يوجد مفتاح — الذكاء الاصطناعي معطّل';
+  }).catch(()=>{});
+})();
+
+// ── مفتاح GitHub ───────────────────────────────────────────────────────────
+(function loadGhTokenStatus(){
+  const el = document.getElementById('ghTokenStatus');
+  if(!el) return;
+  fetch('/admin/github-token/current').then(r=>r.json()).then(d=>{
+    if(d.success && d.has_token)
+      el.innerHTML = '✅ مفتاح نشط: <code style="color:#f59e0b">'+d.masked+'</code>';
+    else
+      el.textContent = '⚠️ لا يوجد مفتاح GitHub — المساعد البرمجي لن يعمل';
+  }).catch(()=>{});
+})();
+
+function saveGhToken(){
+  const token = document.getElementById('ghTokenInput').value.trim();
+  const res   = document.getElementById('ghTokenResult');
+  if(!token){ res.style.display='block'; res.style.color='#ef4444'; res.textContent='⚠️ أدخل التوكن أولاً'; return; }
+  res.style.display='block'; res.style.color='#94a3b8'; res.textContent='⏳ جارٍ الحفظ...';
+  fetch('/admin/github-token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})})
+    .then(r=>r.json()).then(d=>{
+      res.style.color = d.success ? '#10b981' : '#ef4444';
+      res.textContent = d.success ? '✅ '+d.msg : '❌ '+d.error;
+      if(d.success){
+        document.getElementById('ghTokenInput').value='';
+        // تحديث الحالة
+        fetch('/admin/github-token/current').then(r=>r.json()).then(d=>{
+          const el=document.getElementById('ghTokenStatus');
+          if(el && d.has_token) el.innerHTML='✅ مفتاح نشط: <code style="color:#f59e0b">'+d.masked+'</code>';
+        });
+      }
+    }).catch(e=>{ res.style.color='#ef4444'; res.textContent='❌ خطأ: '+e.message; });
+}
+
+// ── نموذج الذكاء الاصطناعي ────────────────────────────────────────────────
+(function loadAiModelStatus(){
+  const el  = document.getElementById('aiModelStatus');
+  const sel = document.getElementById('aiModelSelect');
+  if(!el || !sel) return;
+  fetch('/admin/ai-model/current').then(r=>r.json()).then(d=>{
+    if(d.success){
+      sel.value = d.model || 'auto';
+      const names = {
+        'auto':'تلقائي — كل النماذج',
+        'g4f-qwen3':'Qwen3-235B (g4f)',
+        'g4f-qwen72':'Qwen2.5-72B (g4f)',
+        'g4f-only':'g4f فقط',
+        'or-gemma':'Gemma-4-31B (OpenRouter)',
+        'or-gpt20':'GPT-OSS-20B (OpenRouter)',
+        'or-gpt120':'GPT-OSS-120B (OpenRouter)',
+        'or-only':'OpenRouter فقط',
+      };
+      el.innerHTML = '✅ النموذج الحالي: <b style="color:#a78bfa">'+(names[d.model]||d.model)+'</b>';
+    }
+  }).catch(()=>{});
+})();
+
+function saveAiModel(){
+  const model = document.getElementById('aiModelSelect').value;
+  const res   = document.getElementById('aiModelResult');
+  res.style.display='block'; res.style.color='#94a3b8'; res.textContent='⏳ جارٍ الحفظ...';
+  fetch('/admin/ai-model',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model})})
+    .then(r=>r.json()).then(d=>{
+      res.style.color = d.success ? '#10b981' : '#ef4444';
+      res.textContent = d.success ? '✅ '+d.msg : '❌ '+d.error;
+    }).catch(e=>{ res.style.color='#ef4444'; res.textContent='❌ '+e.message; });
+}
+
+function saveAiKey(){
+  const key = document.getElementById('aiKeyInput').value.trim();
+  const res = document.getElementById('aiKeyResult');
+  if(!key){ res.style.display='block'; res.style.color='#ef4444'; res.textContent='⚠️ أدخل المفتاح أولاً'; return; }
+  res.style.display='block'; res.style.color='#94a3b8'; res.textContent='⏳ جارٍ الحفظ...';
+  fetch('/admin/ai-key',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key})})
+    .then(r=>r.json()).then(d=>{
+      res.style.color = d.success ? '#10b981' : '#ef4444';
+      res.textContent = d.success ? '✅ '+d.msg : '❌ '+d.error;
+      if(d.success){ document.getElementById('aiKeyInput').value=''; loadAiKeyStatus(); }
+    }).catch(e=>{ res.style.color='#ef4444'; res.textContent='❌ خطأ: '+e.message; });
+  function loadAiKeyStatus(){
+    fetch('/admin/ai-key/current').then(r=>r.json()).then(d=>{
+      const el=document.getElementById('aiKeyStatus');
+      if(d.success&&d.has_key) el.innerHTML='✅ مفتاح نشط: <code style="color:#00e5ff">'+d.masked+'</code>';
+      else el.textContent='⚠️ لا يوجد مفتاح';
+    });
+  }
+}
+
+function runFullExport(){
+  const res = document.getElementById('exportResult');
+  res.style.display='block'; res.style.color='#94a3b8'; res.textContent='⏳ جارٍ التصدير إلى GitHub...';
+  fetch('/admin/backup/export',{method:'POST',headers:{'Content-Type':'application/json'}})
+    .then(r=>r.json()).then(d=>{
+      res.style.color = d.success ? '#10b981' : '#ef4444';
+      res.textContent = d.success ? '✅ '+d.msg : '❌ '+(d.error||'فشل التصدير');
+    }).catch(e=>{ res.style.color='#ef4444'; res.textContent='❌ خطأ: '+e.message; });
+}
+
+// ── اختبار البريد ──────────────────────────────────────────────────────────
+function sendTestEmail() {
+  const email = document.getElementById('testEmailInput').value.trim();
+  const resultDiv = document.getElementById('testEmailResult');
+  resultDiv.style.display = 'block';
+  resultDiv.style.color = '#94a3b8';
+  resultDiv.textContent = '⏳ جارٍ الإرسال...';
+  fetch('/admin/test-email', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({email})
+  }).then(r => r.json()).then(d => {
+    resultDiv.style.color = d.success ? '#10b981' : '#ef4444';
+    resultDiv.textContent = d.success ? '✅ ' + d.msg : '❌ ' + d.msg;
+  }).catch(e => {
+    resultDiv.style.color = '#ef4444';
+    resultDiv.textContent = '❌ خطأ في الاتصال: ' + e.message;
+  });
+}
+</script>
+{% endblock %}

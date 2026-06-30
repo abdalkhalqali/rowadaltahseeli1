@@ -1,0 +1,514 @@
+{% extends 'base.html' %}
+{% block title %}إدارة المستخدمين{% endblock %}
+{% block content %}
+<div class="dashboard-wrapper">
+  <aside class="sidebar">
+    <div style="padding:16px;border-bottom:1px solid var(--border);margin-bottom:16px"><div class="badge badge-gold">👑 مشرف</div></div>
+    <div class="sidebar-section">
+      <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><span class="icon">📊</span> لوحة التحكم</a>
+      {% if is_super_admin %}<a href="{{ url_for('admin.users') }}" class="sidebar-link active"><span class="icon">👥</span> المستخدمون</a>{% endif %}
+      <a href="{{ url_for('admin.questions') }}" class="sidebar-link"><span class="icon">❓</span> الأسئلة</a>
+      <a href="{{ url_for('admin.create_competition') }}" class="sidebar-link"><span class="icon">🏆</span> مسابقة جديدة</a>
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link"><span class="icon">🚪</span> خروج</a>
+    </div>
+  </aside>
+  <main class="main-content">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <h1 style="font-size:1.5rem;font-weight:900">👥 المستخدمون</h1>
+      <button onclick="openCreateUser()"
+        style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;
+               border-radius:12px;padding:10px 22px;font-size:0.9rem;font-weight:700;
+               cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;
+               box-shadow:0 4px 16px rgba(16,185,129,0.35)">
+        ➕ إنشاء حساب جديد
+      </button>
+    </div>
+
+    <div class="card" style="padding:0">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>الطالب</th>
+              <th>البريد</th>
+              <th>المستوى</th>
+              <th>الاختبارات</th>
+              <th>التسجيل</th>
+              <th>الحالة</th>
+              <th style="text-align:center">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for u in users.items %}
+          <tr id="row-{{ u.id }}" {% if u.is_banned %}style="opacity:0.55"{% endif %}>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div class="avatar" style="width:32px;height:32px;font-size:0.85rem;{% if u.is_banned %}background:#ef4444{% endif %}">{{ u.name[0] }}</div>
+                <a href="{{ url_for('admin.user_detail', uid=u.id) }}" style="font-weight:600;font-size:0.9rem">{{ u.name }}</a>
+              </div>
+            </td>
+            <td style="font-size:0.83rem;color:var(--text-muted)">{{ u.email }}</td>
+            <td><span class="badge badge-{{ 'green' if u.level == 'advanced' else 'cyan' if u.level == 'intermediate' else 'gold' }}">{{ u.level }}</span></td>
+            <td style="font-weight:600">{{ u.exams_taken }}</td>
+            <td style="font-size:0.82rem;color:var(--text-muted)">{{ u.created_at.strftime('%Y/%m/%d') }}</td>
+            <td>
+              {% if u.is_banned %}
+                <span class="badge" style="background:#ef4444;color:#fff">🚫 محظور</span>
+              {% else %}
+                <span class="badge badge-{{ 'green' if u.is_verified else 'gray' }}">{{ 'مفعّل' if u.is_verified else 'غير مفعّل' }}</span>
+              {% endif %}
+            </td>
+            <td>
+              <div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap">
+
+                <!-- عرض كلمة المرور -->
+                <button onclick="viewPassword({{ u.id }}, '{{ u.name }}')"
+                  title="عرض / تعيين كلمة المرور"
+                  style="background:linear-gradient(135deg,#0f172a,#1e293b);color:#a5b4fc;
+                         border:1px solid rgba(99,102,241,0.4);border-radius:8px;
+                         padding:5px 9px;font-size:0.78rem;cursor:pointer;font-family:inherit">
+                  🔑 المرور
+                </button>
+
+                {% if u.is_banned %}
+                  <button onclick="unbanUser({{ u.id }})"
+                    style="background:#10b981;color:#fff;border:none;border-radius:8px;
+                           padding:5px 10px;font-size:0.78rem;cursor:pointer;font-family:inherit">
+                    ✅ رفع الحظر
+                  </button>
+                {% else %}
+                  <button onclick="banUser({{ u.id }})"
+                    style="background:#f59e0b;color:#000;border:none;border-radius:8px;
+                           padding:5px 10px;font-size:0.78rem;cursor:pointer;font-family:inherit">
+                    🚫 حظر
+                  </button>
+                {% endif %}
+
+                <button onclick="promoteUser({{ u.id }}, '{{ u.name }}')"
+                  style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:8px;
+                         padding:5px 10px;font-size:0.78rem;cursor:pointer;font-family:inherit">
+                  ⭐ ترقية
+                </button>
+                <button onclick="deleteUser({{ u.id }}, '{{ u.name }}')"
+                  style="background:#ef4444;color:#fff;border:none;border-radius:8px;
+                         padding:5px 10px;font-size:0.78rem;cursor:pointer;font-family:inherit">
+                  🗑 حذف
+                </button>
+
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" style="padding:16px">
+        {% if users.has_prev %}<a href="?page={{ users.prev_num }}" class="page-btn">←</a>{% endif %}
+        {% for p in users.iter_pages() %}{% if p %}<a href="?page={{ p }}" class="page-btn {{ 'active' if p == users.page }}">{{ p }}</a>{% endif %}{% endfor %}
+        {% if users.has_next %}<a href="?page={{ users.next_num }}" class="page-btn">→</a>{% endif %}
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ══════════════════════════════════════════
+     نافذة التأكيد العامة
+══════════════════════════════════════════ -->
+<div id="confirmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);
+     z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#141824;border:1px solid var(--border);border-radius:16px;
+              padding:32px;max-width:380px;width:90%;text-align:center">
+    <div id="confirmIcon" style="font-size:3rem;margin-bottom:12px">⚠️</div>
+    <h3 id="confirmTitle" style="color:#fff;margin-bottom:8px"></h3>
+    <p id="confirmMsg" style="color:#94a3b8;margin-bottom:24px;font-size:0.9rem"></p>
+    <div style="display:flex;gap:12px;justify-content:center">
+      <button onclick="closeConfirm()"
+        style="background:var(--bg-elevated);color:#e2e8f0;border:1px solid var(--border);
+               border-radius:10px;padding:10px 24px;cursor:pointer;font-family:inherit">
+        إلغاء
+      </button>
+      <button id="confirmBtn"
+        style="border:none;border-radius:10px;padding:10px 24px;
+               cursor:pointer;font-family:inherit;font-weight:700;color:#fff">
+        تأكيد
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     نافذة إنشاء حساب جديد
+══════════════════════════════════════════ -->
+<div id="createUserModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);
+     z-index:9999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#0d1628;border:1px solid rgba(16,185,129,0.35);border-radius:20px;
+              padding:32px;max-width:440px;width:100%;position:relative;
+              box-shadow:0 16px 48px rgba(0,0,0,0.7)">
+
+    <button onclick="closeCreateUser()"
+      style="position:absolute;top:14px;left:14px;background:rgba(255,255,255,0.07);
+             border:1px solid rgba(255,255,255,0.1);border-radius:8px;width:30px;height:30px;
+             color:#94a3b8;cursor:pointer;font-size:1rem;line-height:1">✕</button>
+
+    <h3 style="color:#10b981;font-size:1.1rem;margin-bottom:6px">➕ إنشاء حساب جديد</h3>
+    <p style="color:#64748b;font-size:0.8rem;margin-bottom:20px">سيتمكن المستخدم من تسجيل الدخول فوراً دون رمز تحقق</p>
+
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div>
+        <label style="color:#94a3b8;font-size:0.82rem;display:block;margin-bottom:5px">الاسم الكامل *</label>
+        <input id="cu_name" type="text" placeholder="مثال: أحمد محمد"
+          style="width:100%;background:#111827;border:1px solid var(--border);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;outline:none">
+      </div>
+      <div>
+        <label style="color:#94a3b8;font-size:0.82rem;display:block;margin-bottom:5px">البريد الإلكتروني *</label>
+        <input id="cu_email" type="email" placeholder="example@gmail.com" dir="ltr"
+          style="width:100%;background:#111827;border:1px solid var(--border);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;outline:none">
+      </div>
+      <div>
+        <label style="color:#94a3b8;font-size:0.82rem;display:block;margin-bottom:5px">كلمة المرور *</label>
+        <div style="position:relative">
+          <input id="cu_pass" type="password" placeholder="6 أحرف على الأقل" dir="ltr"
+            style="width:100%;background:#111827;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 40px 10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;outline:none">
+          <button type="button" onclick="togglePassVis('cu_pass', this)"
+            style="position:absolute;left:10px;top:50%;transform:translateY(-50%);
+                   background:none;border:none;color:#64748b;cursor:pointer;font-size:1rem;padding:2px">👁</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="color:#94a3b8;font-size:0.82rem;display:block;margin-bottom:5px">الجنس</label>
+          <select id="cu_gender"
+            style="width:100%;background:#111827;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;outline:none">
+            <option value="male">ذكر</option>
+            <option value="female">أنثى</option>
+            <option value="unknown">غير محدد</option>
+          </select>
+        </div>
+        <div>
+          <label style="color:#94a3b8;font-size:0.82rem;display:block;margin-bottom:5px">الصف</label>
+          <select id="cu_grade"
+            style="width:100%;background:#111827;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;outline:none">
+            <option value="grade_12">الثاني عشر</option>
+            <option value="grade_11">الحادي عشر</option>
+            <option value="grade_10">العاشر</option>
+            <option value="graduate">خريج</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="cu_error" style="display:none;margin-top:12px;background:rgba(239,68,68,0.12);
+         border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 14px;
+         color:#fca5a5;font-size:0.83rem"></div>
+
+    <div style="display:flex;gap:12px;margin-top:22px">
+      <button onclick="closeCreateUser()"
+        style="flex:1;background:var(--bg-elevated);color:#e2e8f0;border:1px solid var(--border);
+               border-radius:10px;padding:12px;cursor:pointer;font-family:inherit;font-size:0.9rem">
+        إلغاء
+      </button>
+      <button onclick="submitCreateUser()"
+        style="flex:2;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;
+               border-radius:10px;padding:12px;cursor:pointer;font-family:inherit;font-weight:700;font-size:0.9rem">
+        ✅ إنشاء الحساب
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     نافذة عرض / تغيير كلمة المرور
+══════════════════════════════════════════ -->
+<div id="passModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);
+     z-index:9999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#0d1628;border:1px solid rgba(99,102,241,0.35);border-radius:20px;
+              padding:32px;max-width:400px;width:100%;position:relative;
+              box-shadow:0 16px 48px rgba(0,0,0,0.7)">
+
+    <button onclick="closePassModal()"
+      style="position:absolute;top:14px;left:14px;background:rgba(255,255,255,0.07);
+             border:1px solid rgba(255,255,255,0.1);border-radius:8px;width:30px;height:30px;
+             color:#94a3b8;cursor:pointer;font-size:1rem;line-height:1">✕</button>
+
+    <h3 id="passModalTitle" style="color:#a5b4fc;font-size:1.05rem;margin-bottom:18px">🔑 بيانات دخول المستخدم</h3>
+
+    <!-- عرض البيانات الحالية -->
+    <div id="passInfo" style="background:#111827;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
+      <div style="margin-bottom:10px">
+        <div style="color:#64748b;font-size:0.75rem;margin-bottom:3px">البريد الإلكتروني</div>
+        <div id="passEmail" style="color:#e2e8f0;font-size:0.9rem;font-family:monospace;direction:ltr"></div>
+      </div>
+      <div>
+        <div style="color:#64748b;font-size:0.75rem;margin-bottom:3px">كلمة المرور</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div id="passValue" style="color:#a5b4fc;font-size:0.95rem;font-family:monospace;
+               font-weight:700;direction:ltr;letter-spacing:0.05em;flex:1"></div>
+          <button id="copyPassBtn" onclick="copyPass()"
+            style="background:rgba(99,102,241,0.15);border:1px solid rgba(99,102,241,0.3);
+                   border-radius:7px;padding:4px 10px;color:#a5b4fc;font-size:0.75rem;
+                   cursor:pointer;font-family:inherit;white-space:nowrap">
+            📋 نسخ
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- تغيير كلمة المرور -->
+    <div style="border-top:1px solid var(--border);padding-top:18px">
+      <div style="color:#94a3b8;font-size:0.82rem;margin-bottom:10px;font-weight:600">🔄 تعيين كلمة مرور جديدة</div>
+      <div style="position:relative;margin-bottom:12px">
+        <input id="newPassInput" type="password" placeholder="كلمة المرور الجديدة..." dir="ltr"
+          style="width:100%;background:#111827;border:1px solid var(--border);border-radius:10px;
+                 padding:10px 40px 10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;outline:none">
+        <button type="button" onclick="togglePassVis('newPassInput', this)"
+          style="position:absolute;left:10px;top:50%;transform:translateY(-50%);
+                 background:none;border:none;color:#64748b;cursor:pointer;font-size:1rem;padding:2px">👁</button>
+      </div>
+      <div id="resetPassError" style="display:none;color:#fca5a5;font-size:0.8rem;margin-bottom:8px"></div>
+      <button onclick="submitResetPass()"
+        style="width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;
+               border-radius:10px;padding:11px;cursor:pointer;font-family:inherit;font-weight:700;font-size:0.9rem">
+        💾 حفظ كلمة المرور الجديدة
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     نافذة الترقية
+══════════════════════════════════════════ -->
+<div id="promoteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);
+     z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#141824;border:1px solid var(--border);border-radius:20px;
+              padding:32px;max-width:420px;width:92%">
+    <h3 id="promoteTitle" style="color:#fff;margin-bottom:20px;font-size:1.1rem">ترقية مستخدم</h3>
+    <form id="promoteForm">
+      <label style="color:#94a3b8;font-size:0.85rem;display:block;margin-bottom:6px">المسمى الوظيفي</label>
+      <input id="adminRole" value="مشرف" required
+        style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+               padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;margin-bottom:16px">
+
+      <div style="color:#94a3b8;font-size:0.85rem;margin-bottom:10px">الصلاحيات</div>
+      <div style="display:grid;gap:10px;margin-bottom:24px">
+        {% for perm,label in [('perm_questions','إدارة الأسئلة'),('perm_users','إدارة المستخدمين'),
+                               ('perm_community','المجتمع'),('perm_analytics','الإحصائيات'),
+                               ('perm_notifications','الإشعارات')] %}
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
+          <input type="checkbox" id="{{ perm }}"
+            style="width:18px;height:18px;accent-color:#6366f1">
+          <span style="color:#e2e8f0;font-size:0.9rem">{{ label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+
+      <div style="display:flex;gap:12px">
+        <button type="button" onclick="closePromote()"
+          style="flex:1;background:var(--bg-elevated);color:#e2e8f0;border:1px solid var(--border);
+                 border-radius:10px;padding:11px;cursor:pointer;font-family:inherit">إلغاء</button>
+        <button type="submit"
+          style="flex:1;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;
+                 border-radius:10px;padding:11px;cursor:pointer;font-family:inherit;font-weight:700">
+          ⭐ ترقية
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+let _pendingAction = null;
+let _passUid = null;
+let _passCurrent = '';
+
+/* ── تأكيد عام ── */
+function showConfirm(icon, title, msg, btnColor, action) {
+  document.getElementById('confirmIcon').textContent  = icon;
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmMsg').textContent   = msg;
+  document.getElementById('confirmBtn').style.background = btnColor;
+  document.getElementById('confirmBtn').onclick = action;
+  document.getElementById('confirmModal').style.display = 'flex';
+}
+function closeConfirm() {
+  document.getElementById('confirmModal').style.display = 'none';
+}
+
+/* ── حظر / رفع حظر / حذف ── */
+function banUser(uid) {
+  showConfirm('🚫', 'حظر المستخدم', 'سيُمنع هذا المستخدم من تسجيل الدخول.', '#f59e0b', () => {
+    closeConfirm();
+    fetch(`/admin/users/${uid}/ban`, {method:'POST'})
+      .then(r => r.json()).then(d => { if (d.success) location.reload(); else alert(d.error); });
+  });
+}
+function unbanUser(uid) {
+  showConfirm('✅', 'رفع الحظر', 'سيتمكن المستخدم من تسجيل الدخول مجدداً.', '#10b981', () => {
+    closeConfirm();
+    fetch(`/admin/users/${uid}/unban`, {method:'POST'})
+      .then(r => r.json()).then(d => { if (d.success) location.reload(); else alert(d.error); });
+  });
+}
+function deleteUser(uid, name) {
+  showConfirm('🗑', 'حذف الحساب', `سيُحذف حساب "${name}" وجميع بياناته نهائياً.`, '#ef4444', () => {
+    closeConfirm();
+    fetch(`/admin/users/${uid}/delete`, {method:'POST'})
+      .then(r => r.json()).then(d => {
+        if (d.success) { const row = document.getElementById('row-' + uid); if (row) row.remove(); }
+        else alert(d.error);
+      });
+  });
+}
+
+/* ── ترقية ── */
+function promoteUser(uid, name) {
+  document.getElementById('promoteModal').style.display = 'flex';
+  document.getElementById('promoteTitle').textContent = 'ترقية ' + name + ' إلى مشرف';
+  document.getElementById('promoteForm').dataset.uid = uid;
+}
+function closePromote() {
+  document.getElementById('promoteModal').style.display = 'none';
+}
+document.getElementById('promoteForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const uid = this.dataset.uid;
+  const data = {
+    action: 'promote',
+    role: document.getElementById('adminRole').value,
+    perm_questions:    document.getElementById('perm_questions').checked,
+    perm_users:        document.getElementById('perm_users').checked,
+    perm_community:    document.getElementById('perm_community').checked,
+    perm_analytics:    document.getElementById('perm_analytics').checked,
+    perm_notifications:document.getElementById('perm_notifications').checked,
+  };
+  fetch(`/admin/users/${uid}/promote`, {
+    method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data)
+  }).then(r => r.json()).then(d => {
+    if (d.success) { closePromote(); location.reload(); } else alert('حدث خطأ');
+  });
+});
+
+/* ── إنشاء حساب جديد ── */
+function openCreateUser() {
+  document.getElementById('cu_name').value  = '';
+  document.getElementById('cu_email').value = '';
+  document.getElementById('cu_pass').value  = '';
+  document.getElementById('cu_error').style.display = 'none';
+  document.getElementById('createUserModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('cu_name').focus(), 100);
+}
+function closeCreateUser() {
+  document.getElementById('createUserModal').style.display = 'none';
+}
+function submitCreateUser() {
+  const name     = document.getElementById('cu_name').value.trim();
+  const email    = document.getElementById('cu_email').value.trim();
+  const password = document.getElementById('cu_pass').value.trim();
+  const gender   = document.getElementById('cu_gender').value;
+  const grade    = document.getElementById('cu_grade').value;
+  const errEl    = document.getElementById('cu_error');
+
+  if (!name || !email || !password) {
+    errEl.textContent = '⚠️ الرجاء تعبئة جميع الحقول المطلوبة';
+    errEl.style.display = 'block'; return;
+  }
+  fetch('/admin/users/create', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({name, email, password, gender, grade})
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      closeCreateUser();
+      location.reload();
+    } else {
+      errEl.textContent = '❌ ' + d.error;
+      errEl.style.display = 'block';
+    }
+  });
+}
+
+/* ── عرض / تغيير كلمة المرور ── */
+function viewPassword(uid, name) {
+  _passUid = uid;
+  _passCurrent = '';
+  document.getElementById('passModalTitle').textContent = '🔑 بيانات دخول: ' + name;
+  document.getElementById('passEmail').textContent   = '...';
+  document.getElementById('passValue').textContent   = '...';
+  document.getElementById('newPassInput').value      = '';
+  document.getElementById('resetPassError').style.display = 'none';
+  document.getElementById('passModal').style.display = 'flex';
+
+  fetch(`/admin/users/${uid}/password`)
+    .then(r => r.json())
+    .then(d => {
+      document.getElementById('passEmail').textContent = d.email || '—';
+      if (d.success) {
+        _passCurrent = d.password;
+        document.getElementById('passValue').textContent = d.password;
+      } else {
+        document.getElementById('passValue').innerHTML =
+          '<span style="color:#64748b;font-size:0.82rem">' + d.error + '</span>';
+      }
+    });
+}
+function closePassModal() {
+  document.getElementById('passModal').style.display = 'none';
+}
+function copyPass() {
+  if (!_passCurrent) return;
+  navigator.clipboard.writeText(_passCurrent).then(() => {
+    const btn = document.getElementById('copyPassBtn');
+    btn.textContent = '✅ تم النسخ';
+    setTimeout(() => btn.textContent = '📋 نسخ', 2000);
+  });
+}
+function submitResetPass() {
+  const newPass = document.getElementById('newPassInput').value.trim();
+  const errEl   = document.getElementById('resetPassError');
+  if (newPass.length < 6) {
+    errEl.textContent = '⚠️ كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+    errEl.style.display = 'block'; return;
+  }
+  fetch(`/admin/users/${_passUid}/reset-password`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({password: newPass})
+  })
+  .then(r => r.json())
+  .then(d => {
+    if (d.success) {
+      _passCurrent = newPass;
+      document.getElementById('passValue').textContent = newPass;
+      document.getElementById('newPassInput').value = '';
+      errEl.style.display = 'none';
+      const btn = document.getElementById('copyPassBtn');
+      btn.textContent = '✅ تم الحفظ';
+      setTimeout(() => btn.textContent = '📋 نسخ', 2500);
+    } else {
+      errEl.textContent = '❌ ' + d.error;
+      errEl.style.display = 'block';
+    }
+  });
+}
+
+/* ── إظهار / إخفاء كلمة المرور ── */
+function togglePassVis(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else                         { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
+/* إغلاق النوافذ بالضغط على الخلفية */
+['createUserModal','passModal','confirmModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+  });
+});
+</script>
+{% endblock %}

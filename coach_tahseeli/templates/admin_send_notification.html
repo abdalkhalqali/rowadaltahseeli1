@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}إرسال إشعار{% endblock %}
+{% block content %}
+<div style="max-width:600px;margin:40px auto;padding:0 20px;direction:rtl">
+
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+    <span style="font-size:1.8rem">📢</span>
+    <div>
+      <h1 style="font-size:1.3rem;font-weight:900">إرسال إشعار للطلاب</h1>
+      <p style="font-size:0.84rem;color:var(--text-muted)">أرسل رسالة لطالب واحد أو لجميع المستخدمين</p>
+    </div>
+  </div>
+
+  <div class="card" style="padding:28px">
+    <form method="POST">
+      {# الهدف #}
+      <div style="margin-bottom:18px">
+        <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:8px">📌 إرسال إلى</label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="target" value="all" checked
+                   onchange="document.getElementById('user-select').style.display='none'">
+            <span style="font-size:0.88rem;font-weight:700">📢 جميع الطلاب</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <input type="radio" name="target" value="one"
+                   onchange="document.getElementById('user-select').style.display='block'">
+            <span style="font-size:0.88rem;font-weight:700">👤 طالب محدد</span>
+          </label>
+        </div>
+        <div id="user-select" style="margin-top:10px;display:none">
+          <select name="user_id"
+            style="width:100%;padding:9px 12px;border-radius:9px;
+                   background:var(--bg-elevated);border:1px solid var(--border);
+                   color:var(--text-primary);font-size:0.88rem">
+            <option value="">-- اختر الطالب --</option>
+            {% for u in users %}
+            <option value="{{ u.id }}">{{ u.name }} ({{ u.email }})</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      {# العنوان #}
+      <div style="margin-bottom:16px">
+        <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px">العنوان *</label>
+        <input type="text" name="title" required maxlength="200"
+               placeholder="مثال: تذكير بالتدريب اليومي"
+               style="width:100%;padding:10px 12px;border-radius:9px;box-sizing:border-box;
+                      background:var(--bg-elevated);border:1px solid var(--border);
+                      color:var(--text-primary);font-size:0.9rem">
+      </div>
+
+      {# النص #}
+      <div style="margin-bottom:20px">
+        <label style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px">تفاصيل الإشعار (اختياري)</label>
+        <textarea name="body" maxlength="500" rows="4"
+                  placeholder="اكتب تفاصيل الرسالة هنا…"
+                  style="width:100%;padding:10px 12px;border-radius:9px;resize:vertical;box-sizing:border-box;
+                         background:var(--bg-elevated);border:1px solid var(--border);
+                         color:var(--text-primary);font-size:0.88rem;font-family:inherit"></textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button type="submit" class="btn btn-primary">📢 إرسال الإشعار</button>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">إلغاء</a>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

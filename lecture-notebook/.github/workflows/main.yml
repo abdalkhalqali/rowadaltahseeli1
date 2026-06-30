@@ -1,0 +1,67 @@
+name: 🎓 Build & Send to Telegram
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 📦 Install dependencies
+        run: npm install --legacy-peer-deps
+        env:
+          CI: false
+
+      - name: 🔨 Build Web App
+        run: npm run build:web
+        env:
+          CI: false
+          EXPO_NO_TELEMETRY: 1
+          NODE_ENV: production
+
+      - name: 🗜️ Create ZIP
+        run: |
+          zip -r lecture-notebook.zip dist/
+          echo "ZIP_SIZE=$(du -h lecture-notebook.zip | cut -f1)" >> $GITHUB_ENV
+          echo "COMMIT=$(git log --oneline -1 | cut -c1-60)" >> $GITHUB_ENV
+          echo "BUILD_TIME=$(date '+%Y-%m-%d %H:%M')" >> $GITHUB_ENV
+
+      - name: 📣 Notify Telegram
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{\"chat_id\":\"${CHAT_ID}\",\"parse_mode\":\"HTML\",\"text\":\"✅ <b>دفتر المحاضرات — بناء ناجح</b>\n\n📝 ${{ env.COMMIT }}\n🕐 ${{ env.BUILD_TIME }}\n📦 الحجم: ${{ env.ZIP_SIZE }}\"}"
+
+      - name: 📤 Send ZIP
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendDocument" \
+            -F "chat_id=${CHAT_ID}" \
+            -F "document=@lecture-notebook.zip" \
+            -F "caption=🎓 دفتر المحاضرات (${{ env.BUILD_TIME }})"
+
+      - name: ❌ Notify Failure
+        if: failure()
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{\"chat_id\":\"${CHAT_ID}\",\"parse_mode\":\"HTML\",\"text\":\"❌ <b>فشل البناء</b>\n🔗 <a href='https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}'>عرض الخطأ</a>\"}"

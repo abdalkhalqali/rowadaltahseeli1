@@ -1,0 +1,587 @@
+{% extends 'base.html' %}
+{% block title %}إدارة المحاضرات والدروس{% endblock %}
+{% block content %}
+<div class="dashboard-wrapper">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div style="padding:16px;border-bottom:1px solid var(--border);margin-bottom:16px">
+      <div class="badge badge-gold">👑 مشرف النظام</div>
+      <div style="font-weight:700;font-size:0.9rem;margin-top:8px">{{ current_user.name }}</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">الإدارة</div>
+      <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><span class="icon">📊</span> لوحة التحكم</a>
+      {% if is_super_admin %}<a href="{{ url_for('admin.users') }}" class="sidebar-link"><span class="icon">👥</span> المستخدمون</a>{% endif %}
+      <a href="{{ url_for('admin.questions') }}" class="sidebar-link"><span class="icon">❓</span> الأسئلة</a>
+      <a href="{{ url_for('lectures.admin_lectures', branch='tahseeli') }}" class="sidebar-link {% if branch=='tahseeli' %}active{% endif %}" style="background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.3)"><span class="icon">🎬</span> محاضرات التحصيلي</a>
+      <a href="{{ url_for('lectures.admin_lectures', branch='professional_license') }}" class="sidebar-link {% if branch=='professional_license' %}active{% endif %}" style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.22)"><span class="icon">🏅</span> محاضرات الرخصة المهنية</a>
+      <a href="{{ url_for('admin.create_competition') }}" class="sidebar-link"><span class="icon">🏆</span> إنشاء مسابقة</a>
+      <a href="{{ url_for('notifications.admin_send') }}" class="sidebar-link"><span class="icon">📢</span> إرسال إشعار</a>
+      <a href="{{ url_for('messages.admin_inbox') }}" class="sidebar-link"><span class="icon">✉️</span> صندوق الرسائل</a>
+    </div>
+    <div class="sidebar-section" style="margin-top:8px">
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link"><span class="icon">🚪</span> خروج</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:24px">
+      <div>
+        <h1 style="font-size:1.5rem;font-weight:900;margin-bottom:4px">
+          {% if branch == 'tahseeli' %}🎬 محاضرات ودروس التحصيلي{% else %}🏅 الرخصة المهنية للفيزياء{% endif %}
+        </h1>
+        <div style="color:#94a3b8;font-size:0.85rem">إدارة المحاضرات والدروس — {{ lectures|length }} محاضرة</div>
+      </div>
+      <button onclick="openAddModal()"
+        style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;
+               border-radius:12px;padding:10px 20px;font-weight:700;cursor:pointer;
+               font-family:inherit;font-size:0.9rem">
+        ➕ إضافة محاضرة
+      </button>
+    </div>
+
+    <!-- Branch Tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      <a href="{{ url_for('lectures.admin_lectures', branch='tahseeli') }}"
+        style="padding:8px 20px;border-radius:10px;font-weight:700;font-size:0.9rem;text-decoration:none;
+               {% if branch=='tahseeli' %}background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff{% else %}background:var(--bg-elevated);color:#94a3b8;border:1px solid var(--border){% endif %}">
+        🎓 طلاب التحصيلي
+      </a>
+      <a href="{{ url_for('lectures.admin_lectures', branch='professional_license') }}"
+        style="padding:8px 20px;border-radius:10px;font-weight:700;font-size:0.9rem;text-decoration:none;
+               {% if branch=='professional_license' %}background:linear-gradient(135deg,#f43f5e,#e11d48);color:#fff{% else %}background:var(--bg-elevated);color:#94a3b8;border:1px solid var(--border){% endif %}">
+        🏅 الرخصة المهنية للفيزياء
+      </a>
+    </div>
+
+    <!-- Section Filters (for professional_license) -->
+    {% if branch == 'professional_license' %}
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      <a href="{{ url_for('lectures.admin_lectures', branch=branch) }}"
+        style="padding:6px 16px;border-radius:8px;font-size:0.85rem;text-decoration:none;
+               {% if not section %}background:var(--cyan);color:#000;font-weight:700{% else %}background:var(--bg-elevated);color:#94a3b8;border:1px solid var(--border){% endif %}">
+        الكل
+      </a>
+      {% for sec_key, sec_ar in sections_ar.items() %}
+      <a href="{{ url_for('lectures.admin_lectures', branch=branch, section=sec_key) }}"
+        style="padding:6px 16px;border-radius:8px;font-size:0.85rem;text-decoration:none;
+               {% if section == sec_key %}background:var(--cyan);color:#000;font-weight:700{% else %}background:var(--bg-elevated);color:#94a3b8;border:1px solid var(--border){% endif %}">
+        {{ sec_ar }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Subject Filters -->
+    <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap">
+      <a href="{{ url_for('lectures.admin_lectures', branch=branch, section=section) }}"
+        style="padding:6px 16px;border-radius:8px;font-size:0.85rem;text-decoration:none;
+               {% if not subject %}background:var(--gold);color:#000;font-weight:700{% else %}background:var(--bg-elevated);color:#94a3b8;border:1px solid var(--border){% endif %}">
+        جميع المواد
+      </a>
+      {% for subj_key, subj_ar in subjects_ar.items() %}
+        {% if branch == 'tahseeli' and subj_key not in ['professional_physics'] %}
+        <a href="{{ url_for('lectures.admin_lectures', branch=branch, section=section, subject=subj_key) }}"
+          style="padding:6px 16px;border-radius:8px;font-size:0.85rem;text-decoration:none;
+                 {% if subject == subj_key %}background:var(--gold);color:#000;font-weight:700{% else %}background:var(--bg-elevated);color:#94a3b8;border:1px solid var(--border){% endif %}">
+          {{ subj_ar }}
+        </a>
+        {% elif branch == 'professional_license' %}
+        <a href="{{ url_for('lectures.admin_lectures', branch=branch, section=section, subject=subj_key) }}"
+          style="padding:6px 16px;border-radius:8px;font-size:0.85rem;text-decoration:none;
+                 {% if subject == subj_key %}background:var(--gold);color:#000;font-weight:700{% else %}background:var(--bg-elevated);color:#94a3b8;border:1px solid var(--border){% endif %}">
+          {{ subj_ar }}
+        </a>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    <!-- Lectures Grid -->
+    {% if lectures %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">
+      {% for lec in lectures %}
+      <div class="card" style="padding:0;overflow:hidden">
+        <!-- Video Thumbnail Preview -->
+        <div style="position:relative;background:#0d1628;padding-top:56.25%;overflow:hidden;border-radius:12px 12px 0 0">
+          <iframe src="{{ lec.embed_url() }}"
+            style="position:absolute;top:0;left:0;width:100%;height:100%;border:none"
+            allow="autoplay;encrypted-media" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div style="padding:16px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px">
+            <div style="font-weight:700;font-size:0.95rem;line-height:1.4;flex:1">{{ lec.title }}</div>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button
+                onclick="openEditModalFromBtn({{ lec.id }})"
+                style="background:rgba(99,102,241,0.15);color:#6366f1;border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:0.8rem;font-family:inherit">
+                ✏️
+              </button>
+              <form method="POST" action="{{ url_for('lectures.admin_delete_lecture', lid=lec.id) }}"
+                onsubmit="return confirm('هل تريد حذف هذه المحاضرة؟')">
+                <button type="submit"
+                  style="background:rgba(239,68,68,0.15);color:#ef4444;border:none;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:0.8rem;font-family:inherit">
+                  🗑
+                </button>
+              </form>
+            </div>
+          </div>
+          {% if lec.channel %}
+          <div style="color:#94a3b8;font-size:0.8rem;margin-bottom:6px">📺 {{ lec.channel }}</div>
+          {% endif %}
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+            {% if lec.subject and lec.subject in subjects_ar %}
+            <span style="background:rgba(99,102,241,0.15);color:#6366f1;font-size:0.75rem;padding:2px 8px;border-radius:6px">{{ subjects_ar[lec.subject] }}</span>
+            {% endif %}
+            {% if lec.section and lec.section in sections_ar %}
+            <span style="background:rgba(16,185,129,0.15);color:#10b981;font-size:0.75rem;padding:2px 8px;border-radius:6px">{{ sections_ar[lec.section] }}</span>
+            {% endif %}
+            {% if lec.standard %}
+            <span style="background:rgba(255,184,0,0.15);color:var(--gold);font-size:0.75rem;padding:2px 8px;border-radius:6px">{{ lec.standard }}</span>
+            {% endif %}
+          </div>
+          {% if lec.description %}
+          <div style="color:#94a3b8;font-size:0.82rem;line-height:1.5">{{ lec.description[:100] }}{% if lec.description|length > 100 %}...{% endif %}</div>
+          {% endif %}
+          <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+            <div style="font-size:0.75rem;color:#475569">
+              ترتيب: {{ lec.order_num }} · {{ lec.created_at.strftime('%Y/%m/%d') }}
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:0.75rem;color:#64748b" title="مشاهدات حقيقية / وهمية">
+                👁 {{ lec.views_real or 0 }} / {{ lec.total_views }}
+              </span>
+              <a href="{{ url_for('lectures.admin_lecture_feedbacks', lid=lec.id) }}"
+                style="background:rgba(16,185,129,0.12);color:#10b981;border:none;border-radius:6px;
+                       padding:3px 8px;cursor:pointer;font-size:0.72rem;text-decoration:none">
+                💬 {{ lec.feedbacks.count() }}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card" style="text-align:center;padding:60px 20px">
+      <div style="font-size:3rem;margin-bottom:12px">🎬</div>
+      <div style="font-weight:700;font-size:1.1rem;margin-bottom:8px">لا توجد محاضرات بعد</div>
+      <div style="color:#94a3b8;margin-bottom:20px">اضغط على "إضافة محاضرة" لإضافة أول محاضرة</div>
+      <button onclick="openAddModal()"
+        style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;
+               border-radius:12px;padding:10px 24px;font-weight:700;cursor:pointer;font-family:inherit">
+        ➕ إضافة محاضرة
+      </button>
+    </div>
+    {% endif %}
+
+  </main>
+</div>
+
+<!-- ═══ Modal إضافة ═══ -->
+<div id="addModalOverlay" onclick="closeAddModal()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000"></div>
+<div id="addModal"
+  style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+         background:#141824;border:1px solid var(--border);border-radius:20px;
+         padding:28px;max-width:560px;width:94%;z-index:1001;max-height:90vh;overflow-y:auto">
+  <h3 style="font-weight:900;margin-bottom:20px">➕ إضافة محاضرة جديدة</h3>
+  <form method="POST" action="{{ url_for('lectures.admin_add_lecture') }}" enctype="multipart/form-data">
+    <input type="hidden" name="branch" value="{{ branch }}">
+    <div style="display:grid;gap:14px">
+      <div>
+        <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">عنوان المحاضرة *</label>
+        <input name="title" required placeholder="مثال: شرح قوانين نيوتن — الفصل الأول"
+          style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+      </div>
+
+      <!-- مصدر الفيديو: تبويبان -->
+      <div>
+        <div style="display:flex;gap:0;margin-bottom:10px;border-radius:10px;overflow:hidden;border:1px solid var(--border)">
+          <button type="button" id="addTabUrl" onclick="addSwitchTab('url')"
+            style="flex:1;padding:9px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;
+                   cursor:pointer;font-family:inherit;font-size:0.85rem;font-weight:700">
+            🔗 رابط
+          </button>
+          <button type="button" id="addTabFile" onclick="addSwitchTab('file')"
+            style="flex:1;padding:9px;background:var(--bg-elevated);color:#94a3b8;border:none;
+                   cursor:pointer;font-family:inherit;font-size:0.85rem;font-weight:700">
+            📤 رفع ملف مباشر
+          </button>
+        </div>
+
+        <!-- تبويب الرابط -->
+        <div id="addUrlSection">
+          <input name="video_url" id="addVideoUrl" placeholder="https://youtu.be/... أو https://drive.google.com/..."
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;direction:ltr">
+          <div style="margin-top:4px;font-size:0.71rem;color:#475569">
+            📺 YouTube &nbsp;|&nbsp; 📁 Google Drive &nbsp;|&nbsp; 🔗 mp4 / webm مباشر
+          </div>
+        </div>
+
+        <!-- تبويب رفع الملف -->
+        <div id="addFileSection" style="display:none">
+          <label style="display:block;border:2px dashed rgba(99,102,241,0.4);border-radius:12px;
+                        padding:20px;text-align:center;cursor:pointer;background:rgba(99,102,241,0.05);
+                        transition:border-color 0.2s" id="addFileLabel">
+            <input type="file" name="video_file" id="addVideoFile" accept="video/*"
+              style="display:none" onchange="addFileChosen(this)">
+            <div id="addFileHint">
+              <div style="font-size:1.8rem;margin-bottom:6px">🎬</div>
+              <div style="font-weight:700;font-size:0.9rem;color:#a5b4fc">اسحب الفيديو هنا أو اضغط للاختيار</div>
+              <div style="font-size:0.75rem;color:#475569;margin-top:4px">mp4 · webm · mkv · mov · avi — حتى 500 ميجابايت</div>
+            </div>
+          </label>
+          <div id="addFileChosen" style="display:none;margin-top:8px;padding:10px 14px;
+               background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);
+               border-radius:10px;font-size:0.85rem;color:#6ee7b7"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">القناة / المعلم</label>
+          <input name="channel" placeholder="مثال: رواد التحصيلي"
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+        </div>
+        <div>
+          <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">المادة</label>
+          <select name="subject"
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+            <option value="">-- اختر --</option>
+            {% if branch == 'tahseeli' %}
+              <option value="physics">الفيزياء</option>
+              <option value="chemistry">الكيمياء</option>
+              <option value="biology">الأحياء</option>
+              <option value="math">الرياضيات</option>
+              <option value="general">عام</option>
+            {% else %}
+              <option value="professional_physics">فيزياء الرخصة المهنية</option>
+              <option value="physics">الفيزياء</option>
+              <option value="general">عام</option>
+            {% endif %}
+          </select>
+        </div>
+      </div>
+      {% if branch == 'professional_license' %}
+      <div>
+        <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">القسم</label>
+        <select name="section"
+          style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+          <option value="">-- اختر القسم --</option>
+          <option value="lectures">المحاضرات</option>
+          <option value="exams">الاختبارات</option>
+          <option value="daily_training">التدريب اليومي</option>
+        </select>
+      </div>
+      {% endif %}
+      <div>
+        <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">المعيار المرتبط</label>
+        <input name="standard" placeholder="مثال: معيار 1.2 — قوانين الحركة"
+          style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+      </div>
+      <div>
+        <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">وصف المحاضرة</label>
+        <textarea name="description" rows="3" placeholder="وصف مختصر عن محتوى المحاضرة..."
+          style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;resize:vertical"></textarea>
+      </div>
+      <div>
+        <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">📝 نص المحاضرة (للمساعد الذكي)</label>
+        <textarea name="transcript" rows="5"
+          placeholder="الصق هنا نص / شرح المحاضرة كاملاً — سيستخدمه المساعد الذكي للإجابة على أسئلة الطلاب عن هذه المحاضرة..."
+          style="width:100%;background:#0d1628;border:1px solid rgba(99,102,241,0.3);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.88rem;resize:vertical;
+                 line-height:1.7"></textarea>
+        <div style="font-size:0.72rem;color:#475569;margin-top:3px">
+          🤖 سيُعرض للطلاب كنص قابل للقراءة ويُرسل للذكاء الاصطناعي كسياق
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">رقم الترتيب</label>
+          <input name="order_num" type="number" value="0" min="0"
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+        </div>
+        <div>
+          <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">👁 مشاهدات وهمية</label>
+          <input name="views_fake" type="number" value="0" min="0"
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem"
+            placeholder="0">
+          <div style="font-size:0.72rem;color:#475569;margin-top:3px">تظهر مجتمعة مع الحقيقية للطلاب</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button type="submit"
+        style="flex:1;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;
+               border-radius:12px;padding:12px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.95rem">
+        ✅ حفظ المحاضرة
+      </button>
+      <button type="button" onclick="closeAddModal()"
+        style="background:var(--bg-elevated);color:#94a3b8;border:1px solid var(--border);
+               border-radius:12px;padding:12px 20px;cursor:pointer;font-family:inherit">
+        إلغاء
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- ═══ Modal تعديل ═══ -->
+<div id="editModalOverlay" onclick="closeEditModal()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000"></div>
+<div id="editModal"
+  style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+         background:#141824;border:1px solid var(--border);border-radius:20px;
+         padding:28px;max-width:560px;width:94%;z-index:1001;max-height:90vh;overflow-y:auto">
+  <h3 style="font-weight:900;margin-bottom:20px">✏️ تعديل المحاضرة</h3>
+  <form id="editForm" method="POST" enctype="multipart/form-data">
+    <div style="display:grid;gap:14px">
+      <div>
+        <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">عنوان المحاضرة *</label>
+        <input id="edit_title" name="title" required
+          style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+      </div>
+
+      <!-- مصدر الفيديو في التعديل -->
+      <div>
+        <div style="display:flex;gap:0;margin-bottom:10px;border-radius:10px;overflow:hidden;border:1px solid var(--border)">
+          <button type="button" id="editTabUrl" onclick="editSwitchTab('url')"
+            style="flex:1;padding:9px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;
+                   cursor:pointer;font-family:inherit;font-size:0.85rem;font-weight:700">
+            🔗 رابط
+          </button>
+          <button type="button" id="editTabFile" onclick="editSwitchTab('file')"
+            style="flex:1;padding:9px;background:var(--bg-elevated);color:#94a3b8;border:none;
+                   cursor:pointer;font-family:inherit;font-size:0.85rem;font-weight:700">
+            📤 رفع ملف جديد
+          </button>
+        </div>
+        <div id="editUrlSection">
+          <input id="edit_video_url" name="video_url"
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;direction:ltr">
+          <div style="margin-top:4px;font-size:0.71rem;color:#475569">📺 YouTube &nbsp;|&nbsp; 📁 Google Drive &nbsp;|&nbsp; 🔗 mp4 مباشر</div>
+        </div>
+        <div id="editFileSection" style="display:none">
+          <label style="display:block;border:2px dashed rgba(99,102,241,0.4);border-radius:12px;
+                        padding:16px;text-align:center;cursor:pointer;background:rgba(99,102,241,0.05)">
+            <input type="file" name="video_file" id="editVideoFile" accept="video/*"
+              style="display:none" onchange="editFileChosen(this)">
+            <div id="editFileHint">
+              <div style="font-size:1.4rem;margin-bottom:4px">🎬</div>
+              <div style="font-size:0.85rem;color:#a5b4fc;font-weight:700">اضغط لاختيار فيديو جديد</div>
+              <div style="font-size:0.72rem;color:#475569;margin-top:3px">mp4 · webm · mkv — حتى 500 ميجابايت</div>
+            </div>
+          </label>
+          <div id="editFileChosen" style="display:none;margin-top:8px;padding:10px 14px;
+               background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);
+               border-radius:10px;font-size:0.85rem;color:#6ee7b7"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">القناة / المعلم</label>
+          <input id="edit_channel" name="channel"
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+        </div>
+        <div>
+          <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">المادة</label>
+          <input id="edit_subject" name="subject"
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">القسم (للرخصة المهنية)</label>
+        <select id="edit_section" name="section"
+          style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+          <option value="">-- لا يوجد --</option>
+          <option value="lectures">المحاضرات</option>
+          <option value="exams">الاختبارات</option>
+          <option value="daily_training">التدريب اليومي</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">المعيار المرتبط</label>
+        <input id="edit_standard" name="standard"
+          style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+      </div>
+      <div>
+        <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">وصف المحاضرة</label>
+        <textarea id="edit_description" name="description" rows="3"
+          style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;resize:vertical"></textarea>
+      </div>
+      <div>
+        <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">📝 نص المحاضرة (للمساعد الذكي)</label>
+        <textarea id="edit_transcript" name="transcript" rows="5"
+          placeholder="الصق هنا نص / شرح المحاضرة كاملاً..."
+          style="width:100%;background:#0d1628;border:1px solid rgba(99,102,241,0.3);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.88rem;resize:vertical;
+                 line-height:1.7"></textarea>
+        <div style="font-size:0.72rem;color:#475569;margin-top:3px">
+          🤖 سيُعرض للطلاب ويُرسل للذكاء الاصطناعي كسياق للمحاضرة
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">رقم الترتيب</label>
+          <input id="edit_order_num" name="order_num" type="number" min="0"
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+        </div>
+        <div>
+          <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">👁 مشاهدات وهمية</label>
+          <input id="edit_views_fake" name="views_fake" type="number" min="0"
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem">
+          <div style="font-size:0.72rem;color:#475569;margin-top:3px">تظهر مجتمعة للطلاب</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button type="submit"
+        style="flex:1;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;
+               border-radius:12px;padding:12px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.95rem">
+        ✅ حفظ التعديلات
+      </button>
+      <button type="button" onclick="closeEditModal()"
+        style="background:var(--bg-elevated);color:#94a3b8;border:1px solid var(--border);
+               border-radius:12px;padding:12px 20px;cursor:pointer;font-family:inherit">
+        إلغاء
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+/* ═══ بيانات المحاضرات (آمن من مشاكل JSON في HTML attributes) ═══ */
+var LECS = {
+  {% for lec in lectures %}
+  {{ lec.id }}: {{ {
+      'id': lec.id,
+      'title': lec.title,
+      'channel': lec.channel or '',
+      'video_url': lec.video_url or '',
+      'description': lec.description or '',
+      'standard': lec.standard or '',
+      'subject': lec.subject or '',
+      'section': lec.section or '',
+      'order_num': lec.order_num,
+      'views_fake': lec.views_fake or 0,
+      'transcript': lec.transcript or ''
+    } | tojson }}{% if not loop.last %},{% endif %}
+  {% endfor %}
+};
+
+function openAddModal(){
+  document.getElementById('addModalOverlay').style.display='block';
+  document.getElementById('addModal').style.display='block';
+}
+function closeAddModal(){
+  document.getElementById('addModalOverlay').style.display='none';
+  document.getElementById('addModal').style.display='none';
+}
+
+/* ── تبويب الإضافة: رابط / رفع ── */
+function addSwitchTab(tab){
+  var urlSec  = document.getElementById('addUrlSection');
+  var fileSec = document.getElementById('addFileSection');
+  var tabUrl  = document.getElementById('addTabUrl');
+  var tabFile = document.getElementById('addTabFile');
+  if(tab === 'file'){
+    urlSec.style.display  = 'none';
+    fileSec.style.display = 'block';
+    tabFile.style.background = 'linear-gradient(135deg,#6366f1,#8b5cf6)';
+    tabFile.style.color = '#fff';
+    tabUrl.style.background = 'var(--bg-elevated)';
+    tabUrl.style.color = '#94a3b8';
+    document.getElementById('addVideoUrl').removeAttribute('required');
+  } else {
+    urlSec.style.display  = 'block';
+    fileSec.style.display = 'none';
+    tabUrl.style.background = 'linear-gradient(135deg,#6366f1,#8b5cf6)';
+    tabUrl.style.color = '#fff';
+    tabFile.style.background = 'var(--bg-elevated)';
+    tabFile.style.color = '#94a3b8';
+  }
+}
+function addFileChosen(inp){
+  var f = inp.files[0];
+  if(!f) return;
+  var mb = (f.size / 1048576).toFixed(1);
+  var el = document.getElementById('addFileChosen');
+  el.style.display = 'block';
+  el.innerHTML = '✅ ' + f.name + ' (' + mb + ' MB)';
+}
+
+/* ── تبويب التعديل: رابط / رفع ── */
+function editSwitchTab(tab){
+  var urlSec  = document.getElementById('editUrlSection');
+  var fileSec = document.getElementById('editFileSection');
+  var tabUrl  = document.getElementById('editTabUrl');
+  var tabFile = document.getElementById('editTabFile');
+  if(tab === 'file'){
+    urlSec.style.display  = 'none';
+    fileSec.style.display = 'block';
+    tabFile.style.background = 'linear-gradient(135deg,#6366f1,#8b5cf6)';
+    tabFile.style.color = '#fff';
+    tabUrl.style.background = 'var(--bg-elevated)';
+    tabUrl.style.color = '#94a3b8';
+  } else {
+    urlSec.style.display  = 'block';
+    fileSec.style.display = 'none';
+    tabUrl.style.background = 'linear-gradient(135deg,#6366f1,#8b5cf6)';
+    tabUrl.style.color = '#fff';
+    tabFile.style.background = 'var(--bg-elevated)';
+    tabFile.style.color = '#94a3b8';
+  }
+}
+function editFileChosen(inp){
+  var f = inp.files[0];
+  if(!f) return;
+  var mb = (f.size / 1048576).toFixed(1);
+  var el = document.getElementById('editFileChosen');
+  el.style.display = 'block';
+  el.innerHTML = '✅ ' + f.name + ' (' + mb + ' MB) — سيحل محل الفيديو الحالي';
+}
+
+function openEditModalFromBtn(lid){
+  var lec = LECS[lid];
+  if(!lec){ alert('لم يتم العثور على بيانات المحاضرة'); return; }
+  document.getElementById('editForm').action     = '/admin/lectures/edit/' + lec.id;
+  document.getElementById('edit_title').value    = lec.title       || '';
+  document.getElementById('edit_channel').value  = lec.channel     || '';
+  document.getElementById('edit_video_url').value= lec.video_url   || '';
+  document.getElementById('edit_description').value = lec.description || '';
+  document.getElementById('edit_standard').value = lec.standard    || '';
+  document.getElementById('edit_subject').value  = lec.subject     || '';
+  document.getElementById('edit_section').value  = lec.section     || '';
+  document.getElementById('edit_order_num').value= lec.order_num   || 0;
+  document.getElementById('edit_views_fake').value= lec.views_fake || 0;
+  document.getElementById('edit_transcript').value= lec.transcript || '';
+  // إعادة التبويب لـ "رابط" عند كل فتح
+  editSwitchTab('url');
+  document.getElementById('editFileChosen').style.display = 'none';
+  document.getElementById('editModalOverlay').style.display='block';
+  document.getElementById('editModal').style.display='block';
+}
+function closeEditModal(){
+  document.getElementById('editModalOverlay').style.display='none';
+  document.getElementById('editModal').style.display='none';
+}
+</script>
+{% endblock %}

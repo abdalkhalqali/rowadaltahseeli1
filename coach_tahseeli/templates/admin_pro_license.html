@@ -1,0 +1,672 @@
+{% extends "admin_dashboard.html" %}
+{% block content %}
+<div class="container-fluid py-4" dir="rtl">
+
+  <!-- رأس الصفحة -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="fw-bold mb-0">🎓 أسئلة الرخصة المهنية للفيزياء</h4>
+      <small class="text-muted">إدارة أسئلة الـ 18 معيار</small>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <form method="POST" action="{{ url_for('pro_license.admin_seed') }}" class="d-inline">
+        <button type="submit" class="btn btn-outline-info btn-sm"
+          onclick="return confirm('تحميل 360 سؤال نموذجي (20 لكل معيار)؟')">
+          ⚡ تحميل الأسئلة النموذجية
+        </button>
+      </form>
+      <form method="POST" action="{{ url_for('pro_license.admin_reshuffle') }}" class="d-inline">
+        <button type="submit" class="btn btn-outline-warning btn-sm"
+          onclick="return confirm('سيتم إعادة خلط خيارات جميع الأسئلة الموجودة لتوزيع الإجابات الصحيحة عشوائياً. هل تريد المتابعة؟')">
+          🔀 إعادة خلط الإجابات
+        </button>
+      </form>
+      <a href="{{ url_for('pro_license.admin_import') }}" class="btn btn-sm" style="background:rgba(124,58,237,.2);border:1px solid rgba(124,58,237,.4);color:#a78bfa">
+        📥 استيراد دفعي
+      </a>
+      <a href="{{ url_for('pro_license.admin_add') }}" class="btn btn-success btn-sm">
+        ➕ إضافة سؤال
+      </a>
+    </div>
+  </div>
+
+  <!-- زر اختيار المعيار -->
+  <div class="d-flex align-items-center gap-2 mb-4 flex-wrap">
+    <button class="btn btn-outline-primary btn-sm fw-bold" onclick="openStdModal()"
+            style="border-radius:10px;padding:8px 18px">
+      📋 اختر من المعايير الـ 18
+      {% if selected_standard %}<span class="badge bg-primary ms-1">معيار {{ selected_standard }}</span>{% endif %}
+    </button>
+    {% if selected_standard %}
+    <a href="{{ url_for('pro_license.admin_index') }}" class="btn btn-outline-secondary btn-sm">✖ إلغاء التحديد</a>
+    {% endif %}
+    <span class="text-muted small">
+      {% if selected_standard %}عرض: معيار {{ selected_standard }}{% else %}عرض: كل المعايير{% endif %}
+    </span>
+  </div>
+
+  <!-- Modal اختيار المعيار -->
+  <div id="stdModalOverlay" onclick="closeStdModal()"
+       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1040"></div>
+  <div id="stdModal"
+       style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+              z-index:1050;width:min(96vw,820px);max-height:85vh;overflow-y:auto;
+              background:#fff;border-radius:20px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold mb-0">📋 اختر معياراً لعرض أسئلته</h5>
+      <button onclick="closeStdModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#64748b;line-height:1">×</button>
+    </div>
+    <div class="row g-2">
+      <div class="col-6 col-sm-4 col-md-3">
+        <a href="{{ url_for('pro_license.admin_index') }}"
+           class="card text-decoration-none border-0 shadow-sm h-100 {{ 'border border-2 border-secondary' if not selected_standard }}"
+           style="border-radius:12px">
+          <div class="card-body p-2 text-center">
+            <div class="badge bg-secondary mb-1">الكل</div>
+            <div class="small fw-semibold" style="font-size:.75rem">كل المعايير</div>
+          </div>
+        </a>
+      </div>
+      {% for s_num, s_data in stats.items() %}
+      <div class="col-6 col-sm-4 col-md-3">
+        <a href="{{ url_for('pro_license.admin_index', standard=s_num) }}"
+           class="card text-decoration-none border-0 shadow-sm h-100
+                  {{ 'border border-2 border-primary' if selected_standard == s_num }}"
+           style="border-radius:12px">
+          <div class="card-body p-2 text-center">
+            <div class="badge {{ 'bg-primary' if s_data.type=='educational' else 'bg-warning text-dark' }} mb-1">
+              م{{ s_num }}
+            </div>
+            <div class="small fw-semibold" style="font-size:.72rem;line-height:1.3;color:#1e293b">
+              {{ s_data.name[:28] }}{% if s_data.name|length > 28 %}…{% endif %}
+            </div>
+            <div class="mt-1">
+              <span class="badge bg-light text-dark border" style="font-size:.65rem">{{ s_data.count }} سؤال</span>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- فلاتر -->
+  <form method="get" class="card card-body shadow-sm mb-4 border-0 bg-light">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold">المعيار</label>
+        <select name="standard" class="form-select form-select-sm">
+          <option value="">كل المعايير</option>
+          {% for s_num, s_data in standards.items() %}
+          <option value="{{ s_num }}" {{ 'selected' if selected_standard == s_num }}>
+            {{ s_num }} — {{ s_data.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-semibold">النوع</label>
+        <select name="type" class="form-select form-select-sm">
+          <option value="">الكل</option>
+          <option value="educational" {{ 'selected' if selected_type=='educational' }}>تربوي</option>
+          <option value="physics"     {{ 'selected' if selected_type=='physics' }}>فيزياء</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-semibold">الصعوبة</label>
+        <select name="difficulty" class="form-select form-select-sm">
+          <option value="">الكل</option>
+          <option value="easy"   {{ 'selected' if selected_difficulty=='easy' }}>سهل</option>
+          <option value="medium" {{ 'selected' if selected_difficulty=='medium' }}>متوسط</option>
+          <option value="hard"   {{ 'selected' if selected_difficulty=='hard' }}>صعب</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary btn-sm w-100">🔍 تصفية</button>
+      </div>
+      {% if selected_standard or selected_type or selected_difficulty %}
+      <div class="col-md-2">
+        <a href="{{ url_for('pro_license.admin_index') }}" class="btn btn-outline-secondary btn-sm w-100">
+          ✖ مسح الفلاتر
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- أسئلة — بطاقات جوال + جدول سطح المكتب -->
+  {% if questions %}
+  <div class="card shadow-sm border-0 d-none d-md-block">
+    <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
+      <span class="fw-semibold">
+        {% if selected_standard %}معيار {{ selected_standard }} — {% endif %}
+        {{ questions|length }} سؤال
+      </span>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0 small">
+        <thead class="table-light">
+          <tr>
+            <th>#</th><th>المعيار</th><th style="max-width:300px">نص السؤال</th>
+            <th>الإجابة</th><th>الصعوبة</th><th>رسم</th><th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for q in questions %}
+          <tr>
+            <td class="text-muted">{{ q.id }}</td>
+            <td>
+              <span class="badge {{ 'bg-primary' if q.q_type=='educational' else 'bg-warning text-dark' }}">{{ q.standard_num }}</span>
+              <div class="text-muted" style="font-size:.7rem;max-width:120px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">{{ q.standard_name }}</div>
+            </td>
+            <td style="max-width:300px">
+              <div style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis">{{ q.text }}</div>
+            </td>
+            <td><span class="badge bg-success">{{ q.answer }}</span></td>
+            <td>
+              {% if q.difficulty == 'easy' %}<span class="badge bg-success-subtle text-success border border-success">سهل</span>
+              {% elif q.difficulty == 'medium' %}<span class="badge bg-warning-subtle text-warning border border-warning">متوسط</span>
+              {% else %}<span class="badge bg-danger-subtle text-danger border border-danger">صعب</span>{% endif %}
+            </td>
+            <td>{% if q.image_data %}<span class="badge bg-info text-white">🖼️</span>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td>
+              <div class="d-flex gap-1">
+                <button onclick="openQuickEdit({{ q.id }})" class="btn btn-outline-primary btn-sm py-0 px-2">✏️</button>
+                <form method="POST" action="{{ url_for('pro_license.admin_delete', qid=q.id) }}" onsubmit="return confirm('حذف هذا السؤال؟')">
+                  <button type="submit" class="btn btn-outline-danger btn-sm py-0 px-2">🗑</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ بطاقات الجوال (تظهر فقط على الشاشات الصغيرة) ══ -->
+  <div class="d-md-none">
+    <div class="mb-2 text-muted small fw-semibold">
+      {% if selected_standard %}معيار {{ selected_standard }} — {% endif %}{{ questions|length }} سؤال
+    </div>
+    <div class="d-flex flex-column gap-2">
+    {% for q in questions %}
+    <div class="card border-0 shadow-sm" style="border-radius:14px;overflow:hidden">
+      <!-- رأس البطاقة -->
+      <div class="d-flex align-items-center justify-content-between px-3 pt-3 pb-1">
+        <div class="d-flex align-items-center gap-2">
+          <span class="text-muted small">#{{ q.id }}</span>
+          <span class="badge {{ 'bg-primary' if q.q_type=='educational' else 'bg-warning text-dark' }}">
+            م{{ q.standard_num }}
+          </span>
+          {% if q.difficulty == 'easy' %}<span class="badge bg-success-subtle text-success border border-success" style="font-size:.7rem">سهل</span>
+          {% elif q.difficulty == 'medium' %}<span class="badge bg-warning-subtle text-warning border border-warning" style="font-size:.7rem">متوسط</span>
+          {% else %}<span class="badge bg-danger-subtle text-danger border border-danger" style="font-size:.7rem">صعب</span>{% endif %}
+          {% if q.image_data %}<span class="badge bg-info text-white" style="font-size:.7rem">🖼️</span>{% endif %}
+        </div>
+        <span class="badge bg-success-subtle text-success border border-success">إجابة: {{ q.answer }}</span>
+      </div>
+      <!-- نص السؤال -->
+      <div class="px-3 py-2 fw-semibold" style="font-size:.88rem;line-height:1.6;border-bottom:1px solid #f0f0f0">
+        {{ q.text[:120] }}{% if q.text|length > 120 %}…{% endif %}
+      </div>
+      <!-- اسم المعيار -->
+      <div class="px-3 py-1 text-muted" style="font-size:.72rem">{{ q.standard_name }}</div>
+      <!-- أزرار الإجراءات -->
+      <div class="px-3 pb-3 pt-1 d-flex gap-2">
+        <button onclick="openQuickEdit({{ q.id }})"
+          class="btn btn-primary btn-sm flex-fill fw-semibold" style="border-radius:10px">
+          ✏️ تعديل
+        </button>
+        <form method="POST" action="{{ url_for('pro_license.admin_delete', qid=q.id) }}"
+              onsubmit="return confirm('حذف هذا السؤال؟')" style="flex:1">
+          <button type="submit" class="btn btn-outline-danger btn-sm w-100 fw-semibold" style="border-radius:10px">
+            🗑 حذف
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <div style="font-size:3rem">📭</div>
+    <p class="mt-2">لا توجد أسئلة بالفلاتر المحددة</p>
+    <a href="{{ url_for('pro_license.admin_add') }}" class="btn btn-success">➕ أضف سؤالاً</a>
+    <span class="mx-2">أو</span>
+    <form method="POST" action="{{ url_for('pro_license.admin_seed') }}" class="d-inline">
+      <button type="submit" class="btn btn-info text-white">⚡ حمّل الأسئلة النموذجية</button>
+    </form>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     Modal تعديل السؤال الكامل (نموذج + لوحة رسم)
+══════════════════════════════════════════════════ -->
+<div class="modal fade" id="quickEditModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+    <div class="modal-content border-0" style="border-radius:18px;overflow:hidden;background:#0f172a">
+
+      <!-- رأس المودال -->
+      <div class="modal-header" style="background:linear-gradient(135deg,#1e1b4b,#1e293b);border-bottom:1px solid rgba(99,102,241,0.2)">
+        <div class="d-flex align-items-center gap-3">
+          <div style="width:40px;height:40px;border-radius:11px;background:rgba(99,102,241,0.2);
+                      display:flex;align-items:center;justify-content:center;font-size:1.1rem">✏️</div>
+          <div>
+            <h5 class="modal-title fw-bold mb-0" style="color:#e2e8f0">تعديل السؤال</h5>
+            <div class="small" style="color:#64748b" id="qe_modal_subtitle">جاري التحميل...</div>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <form id="quickEditForm" method="POST" enctype="multipart/form-data">
+        <div class="modal-body p-0">
+
+          <!-- حالة التحميل -->
+          <div id="quickEditLoader" class="text-center py-5">
+            <div class="spinner-border text-primary" style="width:2.5rem;height:2.5rem" role="status"></div>
+            <div class="mt-3" style="color:#64748b">جاري تحميل بيانات السؤال...</div>
+          </div>
+
+          <!-- محتوى النموذج -->
+          <div id="quickEditContent" style="display:none;padding:20px">
+
+            <!-- ── صف 1: المعيار + الصعوبة ── -->
+            <div class="row g-3 mb-3">
+              <div class="col-md-8">
+                <label class="form-label fw-semibold small" style="color:#94a3b8">المعيار <span class="text-danger">*</span></label>
+                <select name="standard_num" id="qe_std" class="form-select form-select-sm"
+                  style="background:#0d1628;border:1px solid rgba(99,102,241,0.25);color:#e2e8f0;border-radius:9px">
+                  {% for s_num, s_data in standards.items() %}
+                  <option value="{{ s_num }}">{{ s_num }} — {{ s_data.name }} ({{ 'تربوي' if s_data.type=='educational' else 'فيزياء' }})</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold small" style="color:#94a3b8">الصعوبة</label>
+                <select name="difficulty" id="qe_diff" class="form-select form-select-sm"
+                  style="background:#0d1628;border:1px solid rgba(99,102,241,0.25);color:#e2e8f0;border-radius:9px">
+                  <option value="easy">🟢 سهل</option>
+                  <option value="medium">🟡 متوسط</option>
+                  <option value="hard">🔴 صعب</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- ── نص السؤال ── -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold small" style="color:#94a3b8">نص السؤال <span class="text-danger">*</span></label>
+              <textarea name="text" id="qe_text" rows="3" required
+                style="width:100%;background:#0d1628;border:1px solid rgba(99,102,241,0.25);border-radius:10px;
+                       padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.93rem;
+                       resize:vertical;line-height:1.6;box-sizing:border-box"
+                placeholder="اكتب نص السؤال هنا..."></textarea>
+            </div>
+
+            <!-- ── خيارات الإجابة ── -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold small" style="color:#94a3b8">خيارات الإجابة <span class="text-danger">*</span></label>
+              <div class="row g-2">
+                {% for letter, label, color in [('a','أ','#6366f1'),('b','ب','#10b981'),('c','ج','#f59e0b'),('d','د','#ef4444')] %}
+                <div class="col-md-6">
+                  <div style="display:flex;align-items:center;gap:8px;background:#0d1628;
+                              border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:8px 12px">
+                    <span style="width:28px;height:28px;border-radius:7px;background:{{ color }}22;
+                                 color:{{ color }};font-weight:800;font-size:0.88rem;flex-shrink:0;
+                                 display:flex;align-items:center;justify-content:center">{{ label }}</span>
+                    <input type="text" name="option_{{ letter }}" id="qe_{{ letter }}" required
+                           placeholder="الخيار {{ label }}"
+                           style="flex:1;background:transparent;border:none;color:#e2e8f0;
+                                  font-family:inherit;font-size:0.9rem;outline:none">
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- ── الإجابة الصحيحة + الشرح ── -->
+            <div class="row g-3 mb-3">
+              <div class="col-md-3">
+                <label class="form-label fw-semibold small" style="color:#94a3b8">الإجابة الصحيحة <span class="text-danger">*</span></label>
+                <select name="answer" id="qe_ans" class="form-select form-select-sm"
+                  style="background:#0d1628;border:1px solid rgba(16,185,129,0.3);color:#e2e8f0;border-radius:9px">
+                  <option value="A">أ — الخيار الأول</option>
+                  <option value="B">ب — الخيار الثاني</option>
+                  <option value="C">ج — الخيار الثالث</option>
+                  <option value="D">د — الخيار الرابع</option>
+                </select>
+              </div>
+              <div class="col-md-9">
+                <label class="form-label fw-semibold small" style="color:#94a3b8">شرح الإجابة (اختياري)</label>
+                <textarea name="explanation" id="qe_exp" rows="2"
+                  style="width:100%;background:#0d1628;border:1px solid rgba(255,255,255,0.08);border-radius:9px;
+                         padding:9px 12px;color:#e2e8f0;font-family:inherit;font-size:0.87rem;
+                         resize:vertical;box-sizing:border-box"
+                  placeholder="اشرح سبب صحة الإجابة..."></textarea>
+              </div>
+            </div>
+
+            <!-- ══ لوحة الرسم ══ -->
+            <div style="background:#111827;border:1px solid rgba(99,102,241,0.2);border-radius:14px;padding:16px;margin-bottom:4px">
+              <div class="d-flex align-items-center gap-2 mb-3">
+                <div style="width:32px;height:32px;border-radius:9px;background:rgba(99,102,241,0.15);
+                            display:flex;align-items:center;justify-content:center;font-size:1rem">🎨</div>
+                <div>
+                  <div class="fw-bold small" style="color:#e2e8f0">رسم بياني (اختياري)</div>
+                  <div style="font-size:0.72rem;color:#64748b">ارسم مخططاً أو رسماً يُرفق مع السؤال، أو أبقِه فارغاً</div>
+                </div>
+                <span id="qe_img_badge" class="badge bg-info ms-auto" style="display:none">🖼️ يوجد رسم محفوظ</span>
+              </div>
+
+              <!-- شريط الأدوات -->
+              <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:10px;
+                          padding:8px;background:#0d1628;border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+
+                <div style="display:flex;gap:3px;padding-left:8px;border-left:1px solid rgba(255,255,255,0.1)">
+                  {% for tid, icon, title in [('Pen','✏️','قلم حر'),('Line','╱','خط'),('Arrow','→','سهم'),('Rect','⬜','مستطيل'),('Circle','⭕','دائرة'),('Text','T','نص'),('Eraser','🧹','ممحاة')] %}
+                  <button type="button" id="qeDtool{{ tid }}" onclick="qeSetTool('{{ tid.lower() }}')"
+                    class="qe-draw-tool {% if tid=='Pen' %}active{% endif %}" title="{{ title }}">{{ icon }}</button>
+                  {% endfor %}
+                </div>
+
+                <div style="display:flex;align-items:center;gap:4px;padding:0 8px;border-left:1px solid rgba(255,255,255,0.1)">
+                  <span style="font-size:0.72rem;color:#64748b">لون:</span>
+                  <input type="color" id="qePenColor" value="#6366f1"
+                    style="width:30px;height:26px;padding:1px;border-radius:5px;border:none;cursor:pointer;background:transparent">
+                  {% for c in ['#e2e8f0','#6366f1','#10b981','#f59e0b','#ef4444','#000000'] %}
+                  <div onclick="document.getElementById('qePenColor').value='{{ c }}'"
+                    style="width:16px;height:16px;border-radius:4px;background:{{ c }};cursor:pointer;
+                           border:1px solid rgba(255,255,255,0.15)" title="{{ c }}"></div>
+                  {% endfor %}
+                </div>
+
+                <div style="display:flex;align-items:center;gap:5px;padding:0 8px;border-left:1px solid rgba(255,255,255,0.1)">
+                  <span style="font-size:0.72rem;color:#64748b">حجم:</span>
+                  <input type="range" id="qePenSize" min="1" max="20" value="2"
+                    style="width:70px;accent-color:#6366f1">
+                  <span id="qePenSizeVal" style="font-size:0.72rem;color:#94a3b8;min-width:20px">2</span>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:3px;padding:0 8px;border-left:1px solid rgba(255,255,255,0.1)">
+                  <input type="checkbox" id="qeFillShape" style="accent-color:#6366f1">
+                  <span style="font-size:0.72rem;color:#64748b">تعبئة</span>
+                </div>
+
+                <div style="display:flex;gap:4px;margin-right:auto">
+                  <button type="button" onclick="qeUndo()"
+                    style="background:rgba(99,102,241,0.15);color:#818cf8;border:none;border-radius:7px;
+                           padding:4px 9px;cursor:pointer;font-size:0.78rem;font-family:inherit">↩ تراجع</button>
+                  <button type="button" onclick="qeClear()"
+                    style="background:rgba(239,68,68,0.12);color:#ef4444;border:none;border-radius:7px;
+                           padding:4px 9px;cursor:pointer;font-size:0.78rem;font-family:inherit">🗑 مسح</button>
+                </div>
+              </div>
+
+              <!-- Canvas -->
+              <canvas id="qeDrawCanvas" width="800" height="300"
+                style="border:2px solid rgba(99,102,241,0.25);border-radius:10px;cursor:crosshair;
+                       background:#fff;max-width:100%;display:block;touch-action:none"></canvas>
+              <input type="hidden" name="image_data" id="qeImageData">
+
+              <!-- حقل النص -->
+              <div id="qeTextDiv" style="display:none;margin-top:8px">
+                <input id="qeTextInput" type="text" placeholder="اكتب النص ثم انقر على اللوحة..."
+                  style="background:#0d1628;border:1px solid rgba(99,102,241,0.3);border-radius:8px;
+                         padding:7px 11px;color:#e2e8f0;font-family:inherit;font-size:0.88rem;width:280px">
+              </div>
+            </div>
+
+          </div><!-- /quickEditContent -->
+        </div><!-- /modal-body -->
+
+        <div class="modal-footer" style="background:#0d1628;border-top:1px solid rgba(99,102,241,0.15)">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">إلغاء</button>
+          <button type="submit" class="btn btn-primary btn-sm fw-bold px-4"
+            style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none">
+            💾 حفظ التعديلات ورفعها لـ GitHub
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<style>
+.qe-draw-tool{background:transparent;color:#94a3b8;border:1px solid transparent;border-radius:6px;
+  padding:4px 8px;cursor:pointer;font-size:0.88rem;font-family:inherit;transition:.15s;min-width:30px}
+.qe-draw-tool:hover{background:rgba(99,102,241,0.15);color:#818cf8}
+.qe-draw-tool.active{background:rgba(99,102,241,0.25);color:#a5b4fc;border-color:rgba(99,102,241,0.4)}
+
+/* ── إصلاح تمركز مودال التعديل في وسط الشاشة ── */
+#quickEditModal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(0,0,0,0.6) !important;
+  padding: 16px !important;
+  box-sizing: border-box !important;
+  overflow-y: auto !important;
+}
+#quickEditModal:not(.show) { display: none !important; }
+#quickEditModal .modal-dialog {
+  position: relative !important;
+  margin: auto !important;
+  max-height: 92vh !important;
+  overflow-y: auto !important;
+  width: min(96vw, 900px) !important;
+  transform: none !important;
+  top: auto !important;
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ════════════════════════════════════════
+   Modal اختيار المعيار
+════════════════════════════════════════ */
+function openStdModal(){
+  document.getElementById('stdModal').style.display        = 'block';
+  document.getElementById('stdModalOverlay').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closeStdModal(){
+  document.getElementById('stdModal').style.display        = 'none';
+  document.getElementById('stdModalOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape'){
+    closeStdModal();
+    if(_bsModal) _bsModal.hide();
+  }
+});
+
+/* ════════════════════════════════════════
+   Modal تعديل السؤال الكامل
+════════════════════════════════════════ */
+let _bsModal    = null;
+let _qeHistory  = [];
+let _qeTool     = 'pen';
+let _qeDrawing  = false;
+let _qeSX = 0, _qeSY = 0, _qeSnap = null;
+const MAX_H     = 20;
+
+function _qeCanvas(){ return document.getElementById('qeDrawCanvas'); }
+function _qeCtx()   { return _qeCanvas().getContext('2d'); }
+function _qeColor() { return document.getElementById('qePenColor').value; }
+function _qeSize()  { return parseInt(document.getElementById('qePenSize').value); }
+function _qeFill()  { return document.getElementById('qeFillShape').checked; }
+
+function qeSaveH(){
+  const cv = _qeCanvas();
+  _qeHistory.push(cv.toDataURL());
+  if(_qeHistory.length > MAX_H) _qeHistory.shift();
+  document.getElementById('qeImageData').value = cv.toDataURL();
+}
+function qeUndo(){
+  if(_qeHistory.length > 1){
+    _qeHistory.pop();
+    const img = new Image();
+    const cv  = _qeCanvas(); const ct = _qeCtx();
+    img.onload = () => { ct.clearRect(0,0,cv.width,cv.height); ct.drawImage(img,0,0); document.getElementById('qeImageData').value = cv.toDataURL(); };
+    img.src = _qeHistory[_qeHistory.length-1];
+  }
+}
+function qeClear(){
+  const cv = _qeCanvas(); const ct = _qeCtx();
+  ct.clearRect(0,0,cv.width,cv.height);
+  qeSaveH();
+}
+function qeSetTool(t){
+  _qeTool = t;
+  document.querySelectorAll('.qe-draw-tool').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('qeDtool' + t.charAt(0).toUpperCase() + t.slice(1));
+  if(btn) btn.classList.add('active');
+  _qeCanvas().style.cursor = t==='text' ? 'text' : t==='eraser' ? 'cell' : 'crosshair';
+  document.getElementById('qeTextDiv').style.display = t==='text' ? 'block' : 'none';
+}
+function qeGetPos(e){
+  const cv = _qeCanvas(); const r = cv.getBoundingClientRect();
+  const t  = e.touches ? e.touches[0] : e;
+  return { x:(t.clientX-r.left)*(cv.width/r.width), y:(t.clientY-r.top)*(cv.height/r.height) };
+}
+function qeDrawShape(ex,ey){
+  const ct=_qeCtx();
+  ct.putImageData(_qeSnap,0,0);
+  ct.strokeStyle=_qeColor(); ct.fillStyle=_qeColor()+'44';
+  ct.lineWidth=_qeSize(); ct.lineCap='round'; ct.lineJoin='round';
+  if(_qeTool==='line'){ ct.beginPath();ct.moveTo(_qeSX,_qeSY);ct.lineTo(ex,ey);ct.stroke(); }
+  else if(_qeTool==='arrow'){
+    ct.beginPath();ct.moveTo(_qeSX,_qeSY);ct.lineTo(ex,ey);ct.stroke();
+    const a=Math.atan2(ey-_qeSY,ex-_qeSX),l=_qeSize()*3.5;
+    ct.beginPath();ct.moveTo(ex,ey);
+    ct.lineTo(ex-l*Math.cos(a-Math.PI/6),ey-l*Math.sin(a-Math.PI/6));
+    ct.moveTo(ex,ey);
+    ct.lineTo(ex-l*Math.cos(a+Math.PI/6),ey-l*Math.sin(a+Math.PI/6));
+    ct.stroke();
+  } else if(_qeTool==='rect'){
+    ct.beginPath();ct.rect(_qeSX,_qeSY,ex-_qeSX,ey-_qeSY);
+    if(_qeFill())ct.fill(); ct.stroke();
+  } else if(_qeTool==='circle'){
+    const rx=Math.abs(ex-_qeSX)/2,ry=Math.abs(ey-_qeSY)/2;
+    const cx=_qeSX+(ex-_qeSX)/2,cy=_qeSY+(ey-_qeSY)/2;
+    ct.beginPath();ct.ellipse(cx,cy,rx||1,ry||1,0,0,Math.PI*2);
+    if(_qeFill())ct.fill(); ct.stroke();
+  }
+}
+function qeOnStart(e){
+  e.preventDefault(); _qeDrawing=true;
+  const p=qeGetPos(e); _qeSX=p.x; _qeSY=p.y;
+  const ct=_qeCtx();
+  if(_qeTool==='text'){
+    const txt=document.getElementById('qeTextInput').value; if(!txt)return;
+    ct.fillStyle=_qeColor(); ct.font=Math.max(14,_qeSize()*4)+'px inherit';
+    ct.fillText(txt,p.x,p.y); qeSaveH(); _qeDrawing=false; return;
+  }
+  if(['line','arrow','rect','circle'].includes(_qeTool)){
+    _qeSnap=ct.getImageData(0,0,_qeCanvas().width,_qeCanvas().height);
+  } else { ct.beginPath(); ct.moveTo(p.x,p.y); }
+}
+function qeOnMove(e){
+  if(!_qeDrawing)return; e.preventDefault();
+  const p=qeGetPos(e); const ct=_qeCtx();
+  if(['line','arrow','rect','circle'].includes(_qeTool)){qeDrawShape(p.x,p.y);return;}
+  if(_qeTool==='eraser'){
+    ct.globalCompositeOperation='destination-out';
+    ct.lineWidth=_qeSize()*4; ct.lineCap='round';
+    ct.lineTo(p.x,p.y); ct.stroke(); ct.beginPath(); ct.moveTo(p.x,p.y);
+  } else {
+    ct.globalCompositeOperation='source-over';
+    ct.strokeStyle=_qeColor(); ct.lineWidth=_qeSize();
+    ct.lineCap='round'; ct.lineJoin='round';
+    ct.lineTo(p.x,p.y); ct.stroke(); ct.beginPath(); ct.moveTo(p.x,p.y);
+  }
+}
+function qeOnEnd(e){
+  if(!_qeDrawing)return; _qeDrawing=false;
+  _qeCtx().globalCompositeOperation='source-over'; qeSaveH();
+}
+(function attachCanvas(){
+  const cv = _qeCanvas();
+  cv.addEventListener('mousedown',  qeOnStart);
+  cv.addEventListener('mousemove',  qeOnMove);
+  cv.addEventListener('mouseup',    qeOnEnd);
+  cv.addEventListener('mouseleave', qeOnEnd);
+  cv.addEventListener('touchstart', qeOnStart, {passive:false});
+  cv.addEventListener('touchmove',  qeOnMove,  {passive:false});
+  cv.addEventListener('touchend',   qeOnEnd);
+  document.getElementById('qePenSize').addEventListener('input',function(){
+    document.getElementById('qePenSizeVal').textContent = this.value;
+  });
+})();
+
+/* ════ فتح المودال وتحميل البيانات ════ */
+async function openQuickEdit(qid){
+  const loader  = document.getElementById('quickEditLoader');
+  const content = document.getElementById('quickEditContent');
+  const form    = document.getElementById('quickEditForm');
+  const sub     = document.getElementById('qe_modal_subtitle');
+
+  loader.style.display  = 'block';
+  content.style.display = 'none';
+  sub.textContent       = 'جاري التحميل...';
+  form.action = '/admin/pro-license/edit/' + qid;
+
+  if(!_bsModal) _bsModal = new bootstrap.Modal(document.getElementById('quickEditModal'));
+  _bsModal.show();
+
+  try {
+    const r = await fetch('/admin/pro-license/api/' + qid);
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const q = await r.json();
+
+    /* ── تعبئة الحقول ── */
+    document.getElementById('qe_text').value = q.text        || '';
+    document.getElementById('qe_a').value    = q.option_a   || '';
+    document.getElementById('qe_b').value    = q.option_b   || '';
+    document.getElementById('qe_c').value    = q.option_c   || '';
+    document.getElementById('qe_d').value    = q.option_d   || '';
+    document.getElementById('qe_exp').value  = q.explanation || '';
+    document.getElementById('qe_ans').value  = q.answer      || 'A';
+    document.getElementById('qe_diff').value = q.difficulty  || 'medium';
+    document.getElementById('qe_std').value  = String(q.standard_num || 1);
+    sub.textContent = 'سؤال #' + q.id + ' — معيار ' + q.standard_num;
+
+    /* ── تحميل الرسم في Canvas ── */
+    const cv = _qeCanvas(); const ct = _qeCtx();
+    ct.clearRect(0,0,cv.width,cv.height);
+    _qeHistory = [];
+    const badge = document.getElementById('qe_img_badge');
+
+    if(q.image_data && q.image_data.startsWith('data:image')){
+      badge.style.display = 'inline-block';
+      const img = new Image();
+      img.onload = () => { ct.drawImage(img,0,0,cv.width,cv.height); qeSaveH(); };
+      img.src = q.image_data;
+      document.getElementById('qeImageData').value = q.image_data;
+    } else {
+      badge.style.display = 'none';
+      document.getElementById('qeImageData').value = '';
+      qeSaveH();
+    }
+
+    loader.style.display  = 'none';
+    content.style.display = 'block';
+
+  } catch(e){
+    loader.innerHTML = '<div class="text-danger p-4 text-center">❌ فشل تحميل البيانات<br><small>' + e.message + '</small></div>';
+  }
+}
+</script>
+{% endblock %}

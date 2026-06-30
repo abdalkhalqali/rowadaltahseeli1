@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}رواد التحصيلي{% endblock %} | منصة رواد التحصيلي الاحترافية</title>
+  <meta name="description" content="منصة رواد التحصيلي — أفضل منصة تعليمية للتحضير لاختبار التحصيل الدراسي">
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="رواد التحصيلي">
+  <link rel="apple-touch-icon" href="/static/icons/icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="/static/icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192x192.png">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚀</text></svg>">
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+  .notif-bell{
+    position:relative;display:inline-flex;align-items:center;justify-content:center;
+    width:36px;height:36px;border-radius:50%;font-size:1.15rem;
+    background:var(--bg-elevated,#1a1f2e);border:1px solid var(--border,#2a2f3e);
+    text-decoration:none;transition:background .2s,transform .2s;flex-shrink:0;
+  }
+  .notif-bell:hover{background:var(--bg-card,#141824);transform:scale(1.08)}
+  .notif-badge{
+    position:absolute;top:-4px;left:-4px;
+    background:#ef4444;color:#fff;
+    font-size:0.6rem;font-weight:900;line-height:1;
+    padding:2px 5px;border-radius:10px;
+    border:2px solid var(--bg,#080b14);
+    min-width:16px;text-align:center;
+  }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Sidebar Overlay (mobile) -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <a href="{{ url_for('index') }}" class="navbar-brand">
+    <div class="logo-icon">🚀</div>
+    <span>رواد التحصيلي</span>
+  </a>
+  <ul class="nav-links">
+    {% if current_user.is_authenticated %}
+      {% if current_user.is_admin %}
+        <li><button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="القائمة">☰</button></li>
+        <li class="nav-text-link"><a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint and 'admin' in request.endpoint %}active{% endif %}">لوحة المشرف</a></li>
+        <li class="nav-text-link"><a href="{{ url_for('admin.questions') }}">الأسئلة</a></li>
+      {% else %}
+        <li><button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="القائمة">☰</button></li>
+        <li class="nav-text-link"><a href="{{ url_for('student.dashboard') }}" class="{% if request.endpoint == 'student.dashboard' %}active{% endif %}">لوحتي</a></li>
+        <li class="nav-text-link"><a href="{{ url_for('competition.index') }}">المسابقات</a></li>
+      {% endif %}
+      <li>
+        <div class="flex items-center" style="gap:10px">
+          {# ── رسائل خاصة ── #}
+          <a href="{{ url_for('messages.inbox') }}" class="notif-bell"
+             title="الرسائل الخاصة" aria-label="الرسائل الخاصة">
+            ✉️
+            {% if unread_dm_count > 0 %}
+            <span class="notif-badge" style="background:#10b981">{{ unread_dm_count if unread_dm_count < 100 else '99+' }}</span>
+            {% endif %}
+          </a>
+          {# ── جرس الإشعارات ── #}
+          <a href="{{ url_for('notifications.index') }}" class="notif-bell"
+             title="الإشعارات" aria-label="الإشعارات">
+            🔔
+            {% if unread_notif_count > 0 %}
+            <span class="notif-badge">{{ unread_notif_count if unread_notif_count < 100 else '99+' }}</span>
+            {% endif %}
+          </a>
+          <div class="avatar">{{ current_user.name[0] }}</div>
+          <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-secondary">خروج</a>
+        </div>
+      </li>
+    {% else %}
+      <li class="nav-text-link"><a href="{{ url_for('index') }}#features">المميزات</a></li>
+      <li class="nav-text-link"><a href="{{ url_for('index') }}#subjects">المواد</a></li>
+      <li class="nav-text-link"><a href="{{ url_for('auth.login') }}">تسجيل الدخول</a></li>
+      <li><a href="{{ url_for('auth.register') }}" class="btn btn-sm nav-btn">ابدأ مجاناً</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div style="position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:1500;width:90%;max-width:480px">
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ 'danger' if cat == 'error' else cat }}" style="margin-bottom:8px">
+          {% if cat == 'success' %}✅{% elif cat == 'danger' or cat == 'error' %}❌{% elif cat == 'warning' %}⚠️{% else %}ℹ️{% endif %}
+          {{ msg }}
+        </div>
+      {% endfor %}
+    </div>
+    <script>setTimeout(()=>{document.querySelectorAll('.alert').forEach(a=>a.style.opacity='0')},4000)</script>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<!-- ═══════════════════════════════════════════
+     تهنئة عيد الأضحى المبارك 1447هـ
+     تظهر مرة واحدة لكل زيارة — تختفي بعد 5 أيام
+═══════════════════════════════════════════ -->
+<style>
+#eidToast{
+  position:fixed;bottom:30px;right:24px;z-index:8500;
+  width:320px;max-width:calc(100vw - 40px);
+  background:linear-gradient(145deg,#0d1a0d 0%,#0f2a14 40%,#1a1a0a 100%);
+  border:1px solid rgba(255,184,0,0.45);
+  border-radius:20px;
+  box-shadow:0 12px 48px rgba(0,0,0,0.7),0 0 40px rgba(255,184,0,0.12);
+  overflow:hidden;
+  transform:translateY(120px);opacity:0;
+  transition:transform .5s cubic-bezier(0.34,1.56,0.64,1),opacity .4s ease;
+  pointer-events:none;
+}
+#eidToast.show{transform:translateY(0);opacity:1;pointer-events:auto}
+
+#eidToast .eid-glow{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(255,184,0,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+#eidToast .eid-stars{
+  position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,#ffb800,#a8e063,#ffb800,transparent);
+  animation:eidStar 3s linear infinite;
+}
+@keyframes eidStar{0%{background-position:0 0}100%{background-position:200px 0}}
+
+#eidToast .eid-body{padding:18px 18px 14px}
+#eidToast .eid-header{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;
+}
+#eidToast .eid-icons{
+  display:flex;gap:6px;font-size:1.5rem;
+  animation:eidBounce 2s ease-in-out infinite;
+}
+@keyframes eidBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+#eidToast .eid-close{
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px;width:28px;height:28px;color:#94a3b8;
+  cursor:pointer;font-size:0.85rem;display:flex;align-items:center;justify-content:center;
+  transition:.2s;flex-shrink:0;
+}
+#eidToast .eid-close:hover{background:rgba(255,255,255,0.14);color:#e2e8f0}
+#eidToast .eid-title{
+  font-size:1.15rem;font-weight:900;
+  background:linear-gradient(90deg,#ffb800,#a8e063,#ffb800);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;background-size:200%;
+  animation:eidShimmer 3s linear infinite;
+  line-height:1.4;margin-bottom:6px;
+}
+@keyframes eidShimmer{0%{background-position:0%}100%{background-position:200%}}
+#eidToast .eid-msg{
+  font-size:0.82rem;color:#a7c9a0;line-height:1.7;
+}
+#eidToast .eid-footer{
+  margin-top:12px;padding-top:10px;
+  border-top:1px solid rgba(255,184,0,0.15);
+  font-size:0.75rem;color:#64748b;
+  display:flex;align-items:center;justify-content:space-between;
+}
+#eidToast .eid-progress-wrap{
+  height:2px;background:rgba(255,255,255,0.06);border-radius:2px;
+  overflow:hidden;margin-top:10px;
+}
+#eidToast .eid-progress-bar{
+  height:100%;width:100%;
+  background:linear-gradient(90deg,#ffb800,#a8e063);
+  border-radius:2px;
+  transition:width linear;
+}
+@media(max-width:480px){
+  #eidToast{right:12px;bottom:80px;width:calc(100vw - 24px)}
+}
+</style>
+
+<div id="eidToast">
+  <div class="eid-stars"></div>
+  <div class="eid-glow"></div>
+  <div class="eid-body">
+    <div class="eid-header">
+      <div class="eid-icons">🌙🕌✨</div>
+      <button class="eid-close" onclick="closeEid()" title="إغلاق">✕</button>
+    </div>
+    <div class="eid-title">عيد أضحى مبارك 🎉</div>
+    <div class="eid-msg">
+      تهنئكم منصة <strong style="color:#ffb800">رواد التحصيلي</strong> بمناسبة
+      <strong style="color:#a8e063">عيد الأضحى المبارك 1447هـ</strong> —
+      أعاده الله عليكم وعلى أهلكم بالخير واليُمن والبركات 🤲
+    </div>
+    <div class="eid-progress-wrap">
+      <div class="eid-progress-bar" id="eidProgressBar"></div>
+    </div>
+    <div class="eid-footer">
+      <span>🌿 تقبّل الله منّا ومنكم</span>
+      <span id="eidCountdown" style="color:#ffb80099;font-size:0.7rem"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var EID_KEY     = 'eidAdha1447_seen';
+  var EID_EXPIRY  = new Date('2026-06-11T23:59:59'); // تختفي بعد 5 أيام من العيد
+  var AUTO_CLOSE  = 10000; // تغلق تلقائياً بعد 10 ثوان
+
+  var now = new Date();
+  if(now > EID_EXPIRY) return; // انتهى وقت العيد
+
+  var toast = document.getElementById('eidToast');
+  var bar   = document.getElementById('eidProgressBar');
+  var cntEl = document.getElementById('eidCountdown');
+
+  // أظهر مرة واحدة فقط لكل زيارة
+  if(sessionStorage.getItem(EID_KEY)) return;
+
+  var timer, startTime, autoTimer;
+
+  function showEid(){
+    toast.classList.add('show');
+    sessionStorage.setItem(EID_KEY, '1');
+    startTime = Date.now();
+
+    // شريط التقدم
+    bar.style.transition = 'none';
+    bar.style.width = '100%';
+    setTimeout(function(){
+      bar.style.transition = 'width ' + (AUTO_CLOSE/1000) + 's linear';
+      bar.style.width = '0%';
+    }, 50);
+
+    // عداد الثواني
+    var remaining = AUTO_CLOSE / 1000;
+    cntEl.textContent = 'يُغلق خلال ' + remaining + 'ث';
+    timer = setInterval(function(){
+      remaining--;
+      if(remaining > 0){
+        cntEl.textContent = 'يُغلق خلال ' + remaining + 'ث';
+      } else {
+        clearInterval(timer);
+        cntEl.textContent = '';
+      }
+    }, 1000);
+
+    // إغلاق تلقائي
+    autoTimer = setTimeout(function(){ closeEid(); }, AUTO_CLOSE);
+  }
+
+  window.closeEid = function(){
+    clearInterval(timer);
+    clearTimeout(autoTimer);
+    toast.classList.remove('show');
+  };
+
+  // تأخير بسيط قبل الظهور
+  setTimeout(showEid, 1200);
+})();
+</script>
+
+{% if not current_user.is_authenticated %}
+<footer>
+  <div class="footer-logo">🚀 رواد التحصيلي</div>
+  <p class="footer-desc">منصة رواد التحصيلي الاحترافية — حيث يُصنع التفوق</p>
+  <p class="footer-copy">© 2025 منصة رواد التحصيلي الاحترافية. جميع الحقوق محفوظة.</p>
+</footer>
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+function toggleSidebar(){
+  var s = document.querySelector('.sidebar');
+  var o = document.getElementById('sidebarOverlay');
+  if(!s) return;
+  s.classList.toggle('open');
+  if(o) o.classList.toggle('open');
+}
+function closeSidebar(){
+  var s = document.querySelector('.sidebar');
+  var o = document.getElementById('sidebarOverlay');
+  if(s) s.classList.remove('open');
+  if(o) o.classList.remove('open');
+}
+// إغلاق السايدبار عند النقر على أي رابط داخله على الجوال
+document.addEventListener('DOMContentLoaded', function(){
+  var links = document.querySelectorAll('.sidebar .sidebar-link');
+  links.forEach(function(a){ a.addEventListener('click', closeSidebar); });
+});
+</script>
+{% block extra_js %}{% endblock %}
+
+<!-- ══ شريط تثبيت PWA ══ -->
+<style>
+#pwaInstallBar{
+  background:linear-gradient(120deg,#0f172a 0%,#1e1b4b 40%,#0f172a 100%);
+  box-shadow:0 -4px 32px rgba(99,102,241,0.35);
+}
+#pwaInstallBar::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(
+    45deg,
+    transparent,transparent 28px,
+    rgba(99,102,241,0.04) 28px,rgba(99,102,241,0.04) 30px
+  );
+  pointer-events:none;
+}
+@keyframes pwaGlow{
+  0%,100%{box-shadow:0 0 16px rgba(255,184,0,0.5)}
+  50%{box-shadow:0 0 32px rgba(255,184,0,0.9)}
+}
+#pwaInstallBtn{animation:pwaGlow 2s infinite}
+</style>
+<div id="pwaInstallBar"
+  style="display:none;position:fixed;bottom:0;left:0;right:0;
+         border-top:2px solid rgba(99,102,241,0.6);
+         padding:14px 20px;z-index:9000;
+         align-items:center;gap:14px;flex-wrap:wrap;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:200px;position:relative;z-index:1">
+    <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                border-radius:14px;width:46px;height:46px;display:flex;
+                align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">🎯</div>
+    <div>
+      <div style="font-weight:900;color:#fff;font-size:0.97rem;letter-spacing:0.01em">
+        ثبّت تطبيق رواد التحصيلي
+      </div>
+      <div style="color:#a5b4fc;font-size:0.78rem;margin-top:2px">
+        وصول فوري · يعمل بدون إنترنت · إشعارات فورية
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;position:relative;z-index:1">
+    <button id="pwaInstallBtn" onclick="installPWA()"
+      style="background:linear-gradient(135deg,#ffb800,#ff6b00);color:#0d0d0d;
+             border:none;border-radius:12px;padding:10px 20px;font-weight:900;
+             cursor:pointer;font-family:inherit;font-size:0.9rem;
+             white-space:nowrap;letter-spacing:0.02em">
+      📲 تثبيت مجاناً
+    </button>
+    <button onclick="dismissPWA()"
+      style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
+             border-radius:12px;padding:10px 16px;color:#94a3b8;
+             cursor:pointer;font-family:inherit;font-size:0.85rem">
+      ✕
+    </button>
+  </div>
+</div>
+
+<!-- تسجيل Service Worker للـ PWA -->
+<script>
+let _pwaDeferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _pwaDeferredPrompt = e;
+  if (!sessionStorage.getItem('pwaDismissed')){
+    const bar = document.getElementById('pwaInstallBar');
+    if (bar) bar.style.display = 'flex';
+  }
+});
+
+function installPWA(){
+  if (!_pwaDeferredPrompt) return;
+  _pwaDeferredPrompt.prompt();
+  _pwaDeferredPrompt.userChoice.then(function(r){
+    _pwaDeferredPrompt = null;
+    document.getElementById('pwaInstallBar').style.display = 'none';
+  });
+}
+
+function dismissPWA(){
+  document.getElementById('pwaInstallBar').style.display = 'none';
+  sessionStorage.setItem('pwaDismissed', '1');
+}
+
+window.addEventListener('appinstalled', function(){
+  document.getElementById('pwaInstallBar').style.display = 'none';
+  _pwaDeferredPrompt = null;
+});
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then(function(reg) {
+        console.log('✅ PWA: Service Worker مسجّل', reg.scope);
+      })
+      .catch(function(err) {
+        console.warn('PWA: فشل تسجيل Service Worker', err);
+      });
+  });
+}
+</script>
+
+{% if current_user.is_authenticated %}
+<!-- ════════════════════════════════════════════
+     بوت المساعد الذكي — رواد التحصيلي
+════════════════════════════════════════════ -->
+<style>
+#chatWidget{position:fixed;bottom:24px;left:24px;z-index:9999;font-family:'Tajawal',system-ui,sans-serif;touch-action:none}
+#chatWidget.dragging{transition:none!important}
+#chatBtn{
+  width:60px;height:60px;border-radius:50%;border:none;cursor:grab;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  box-shadow:0 6px 24px rgba(99,102,241,0.5);
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+  transition:.3s;position:relative;
+}
+#chatBtn:active{cursor:grabbing}
+#chatBtn:hover{box-shadow:0 8px 32px rgba(99,102,241,0.65)}
+#chatDragHint{position:absolute;top:-26px;left:50%;transform:translateX(-50%);
+  background:rgba(30,27,75,.9);color:#a5b4fc;font-size:0.65rem;border-radius:6px;
+  padding:2px 8px;white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none;font-family:'Tajawal',sans-serif}
+#chatWidget:hover #chatDragHint{opacity:1}
+#chatPing{
+  position:absolute;top:-2px;right:-2px;width:16px;height:16px;
+  background:#ef4444;border-radius:50%;border:2px solid #080b14;
+  display:none;animation:chatPingPulse 1.5s infinite;
+}
+@keyframes chatPingPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
+#chatWindow{
+  position:absolute;bottom:72px;left:0;
+  width:360px;max-width:calc(100vw - 32px);
+  background:#111827;border:1px solid #2a2f3e;border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+  display:none;flex-direction:column;overflow:hidden;
+  transition:opacity .25s,transform .25s;
+  transform:translateY(10px);opacity:0;
+}
+#chatWindow.open{display:flex;transform:translateY(0);opacity:1}
+#chatHeader{
+  background:linear-gradient(135deg,#1e1b4b,#312e81);
+  padding:14px 16px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(99,102,241,0.2);flex-shrink:0;
+}
+#chatMsgs{
+  flex:1;overflow-y:auto;padding:14px;
+  max-height:340px;min-height:200px;
+  display:flex;flex-direction:column;gap:10px;
+  scroll-behavior:smooth;
+}
+#chatMsgs::-webkit-scrollbar{width:4px}
+#chatMsgs::-webkit-scrollbar-thumb{background:#2a2f3e;border-radius:4px}
+.cmsg{max-width:85%;padding:10px 13px;border-radius:14px;font-size:0.875rem;line-height:1.6;word-break:break-word}
+.cmsg.user{
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;align-self:flex-end;border-bottom-right-radius:4px;
+}
+.cmsg.bot{
+  background:#1e2436;color:#e2e8f0;align-self:flex-start;
+  border:1px solid #2a2f3e;border-bottom-left-radius:4px;
+}
+.cmsg-time{font-size:0.65rem;color:#475569;margin-top:3px;display:block}
+.typing-dots{display:flex;gap:4px;padding:8px 12px;align-items:center}
+.typing-dots span{
+  width:8px;height:8px;border-radius:50%;background:#6366f1;
+  animation:dotBounce .8s infinite;display:block;
+}
+.typing-dots span:nth-child(2){animation-delay:.15s}
+.typing-dots span:nth-child(3){animation-delay:.3s}
+@keyframes dotBounce{0%,80%,100%{transform:scale(.8);opacity:.5}40%{transform:scale(1.1);opacity:1}}
+#chatQuick{
+  padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;
+  border-top:1px solid #1e2436;background:#0d1117;flex-shrink:0;
+}
+.cqbtn{
+  background:rgba(99,102,241,0.12);border:1px solid rgba(99,102,241,0.25);
+  color:#a5b4fc;border-radius:8px;padding:4px 10px;font-size:0.75rem;
+  cursor:pointer;font-family:inherit;transition:.2s;
+}
+.cqbtn:hover{background:rgba(99,102,241,0.25);color:#c7d2fe}
+#chatInputRow{
+  padding:10px 12px;display:flex;gap:8px;align-items:center;
+  border-top:1px solid #1e2436;background:#0d1117;flex-shrink:0;
+}
+#chatInput{
+  flex:1;background:#1e2436;border:1px solid #2a2f3e;border-radius:12px;
+  padding:9px 13px;color:#e2e8f0;font-family:inherit;font-size:0.875rem;
+  outline:none;resize:none;max-height:80px;min-height:38px;
+  transition:.2s;
+}
+#chatInput:focus{border-color:#6366f1;box-shadow:0 0 0 2px rgba(99,102,241,0.15)}
+#chatSend{
+  width:38px;height:38px;border-radius:10px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+  font-size:1rem;display:flex;align-items:center;justify-content:center;
+  transition:.2s;flex-shrink:0;
+}
+#chatSend:hover{transform:scale(1.08)}
+#chatReminderBanner{
+  background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.08));
+  border-bottom:1px solid rgba(245,158,11,0.25);
+  padding:8px 14px;display:none;align-items:center;gap:8px;
+  font-size:0.78rem;flex-shrink:0;
+}
+@media(max-width:400px){
+  #chatWindow{width:calc(100vw - 16px);left:-8px;bottom:68px}
+}
+</style>
+
+<div id="chatWidget">
+  <!-- زر الفتح -->
+  <div id="chatDragHint">اسحبني لأي مكان</div>
+  <button id="chatBtn" title="المساعد الذكي">
+    <span id="chatBtnIcon">🤖</span>
+    <div id="chatPing"></div>
+  </button>
+
+  <!-- نافذة الدردشة -->
+  <div id="chatWindow">
+    <!-- رأس النافذة -->
+    <div id="chatHeader">
+      <div style="width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.15);
+                  display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">🤖</div>
+      <div style="flex:1">
+        <div style="font-weight:800;color:#fff;font-size:0.9rem">مساعد رواد</div>
+        <div style="font-size:0.72rem;color:#a5b4fc;display:flex;align-items:center;gap:4px">
+          <span style="width:7px;height:7px;border-radius:50%;background:#10b981;display:inline-block"></span>
+          متاح دائماً
+        </div>
+      </div>
+      <button onclick="clearChat()" title="مسح المحادثة"
+              style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;
+                     padding:5px 8px;color:#94a3b8;cursor:pointer;font-size:0.75rem">🗑</button>
+      <button onclick="toggleChat()" title="تصغير"
+              style="background:rgba(255,255,255,0.08);border:none;border-radius:8px;
+                     padding:5px 8px;color:#94a3b8;cursor:pointer;font-size:1rem">✕</button>
+    </div>
+
+    <!-- بانر تذكير التدريب -->
+    <div id="chatReminderBanner">
+      <span>⏰</span>
+      <span>لم تكمل <strong style="color:#f59e0b">تدريب اليوم</strong> بعد!</span>
+      <a href="/student/pro-license" style="color:#f59e0b;font-weight:700;text-decoration:none;margin-right:auto">ابدأ الآن ←</a>
+      <button onclick="document.getElementById('chatReminderBanner').style.display='none'"
+              style="background:none;border:none;color:#64748b;cursor:pointer;padding:0 2px">✕</button>
+    </div>
+
+    <!-- منطقة الرسائل -->
+    <div id="chatMsgs">
+      <div class="cmsg bot">
+        مرحباً <strong>{{ current_user.name.split()[0] }}</strong>! 👋<br>
+        أنا مساعدك الذكي في رواد التحصيلي.<br>
+        يمكنني مساعدتك في الفيزياء والرياضيات والرخصة المهنية وأكثر.<br>
+        <small style="color:#6366f1">اكتب <code>/help</code> لرؤية الأوامر</small>
+      </div>
+    </div>
+
+    <!-- أزرار الأوامر السريعة -->
+    <div id="chatQuick">
+      <button class="cqbtn" onclick="sendQuick('/status')">📅 حالتي</button>
+      <button class="cqbtn" onclick="sendQuick('نقاط ضعفي')">📊 نقاط ضعفي</button>
+      <button class="cqbtn" onclick="sendQuick('خطة مراجعة سريعة')">📋 خطة مراجعة</button>
+      <button class="cqbtn" onclick="sendQuick('/help')">❓ مساعدة</button>
+    </div>
+
+    <!-- حقل الإدخال -->
+    <div id="chatInputRow">
+      <textarea id="chatInput" placeholder="اسألني أي شيء..." rows="1"
+                onkeydown="chatKeyDown(event)"
+                oninput="autoResize(this)"></textarea>
+      <button id="chatSend" onclick="sendMsg()" title="إرسال">➤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  let chatOpen   = false;
+  let isTyping   = false;
+  let LECTURE_ID = null;
+
+  // استخراج معرف المحاضرة من URL إن وُجد
+  const pathMatch = window.location.pathname.match(/\/lectures?\/watch\/(\d+)/);
+  if(pathMatch) LECTURE_ID = pathMatch[1];
+  // كذلك من data attribute إن وُجد
+  const lecEl = document.getElementById('currentLectureId');
+  if(lecEl) LECTURE_ID = lecEl.dataset.id;
+
+  // ══════════════════════════════════════════════
+  // السحب والتحريك للمساعد رواد
+  // ══════════════════════════════════════════════
+  (function initDrag(){
+    const widget  = document.getElementById('chatWidget');
+    const btn     = document.getElementById('chatBtn');
+    let isDragging = false, startX, startY, origLeft, origTop, didMove = false;
+
+    function getPos(){
+      const s = widget.style;
+      const rect = widget.getBoundingClientRect();
+      return {left: rect.left, top: rect.top};
+    }
+
+    function clamp(val, min, max){ return Math.max(min, Math.min(max, val)); }
+
+    function loadSavedPos(){
+      try {
+        const p = JSON.parse(localStorage.getItem('chatWidgetPos')||'null');
+        if(p && p.left !== undefined){
+          widget.style.left   = clamp(p.left, 8, window.innerWidth  - 70) + 'px';
+          widget.style.top    = clamp(p.top,  8, window.innerHeight - 70) + 'px';
+          widget.style.bottom = 'auto';
+          widget.style.right  = 'auto';
+        }
+      } catch(e){}
+    }
+
+    function onStart(e){
+      const touch = e.touches ? e.touches[0] : e;
+      // لا نبدأ السحب إذا كان النقر على نافذة المحادثة
+      if(e.target.closest && e.target.closest('#chatWindow')) return;
+      isDragging = true; didMove = false;
+      const pos = getPos();
+      widget.style.left   = pos.left + 'px';
+      widget.style.top    = pos.top  + 'px';
+      widget.style.bottom = 'auto';
+      widget.style.right  = 'auto';
+      startX   = touch.clientX - pos.left;
+      startY   = touch.clientY - pos.top;
+      widget.classList.add('dragging');
+      e.preventDefault();
+    }
+
+    function onMove(e){
+      if(!isDragging) return;
+      const touch = e.touches ? e.touches[0] : e;
+      const newLeft = clamp(touch.clientX - startX, 8, window.innerWidth  - 70);
+      const newTop  = clamp(touch.clientY - startY, 8, window.innerHeight - 70);
+      widget.style.left = newLeft + 'px';
+      widget.style.top  = newTop  + 'px';
+      if(Math.abs(touch.clientX - (startX + parseFloat(widget.style.left)||0)) > 4 ||
+         Math.abs(touch.clientY - (startY + parseFloat(widget.style.top) ||0)) > 4){
+        didMove = true;
+      }
+    }
+
+    function onEnd(e){
+      if(!isDragging) return;
+      isDragging = false;
+      widget.classList.remove('dragging');
+      try {
+        localStorage.setItem('chatWidgetPos', JSON.stringify({
+          left: parseFloat(widget.style.left),
+          top:  parseFloat(widget.style.top),
+        }));
+      } catch(err){}
+      if(!didMove) toggleChat();   // لم يتحرك = نقرة عادية
+    }
+
+    btn.addEventListener('mousedown',  onStart, {passive:false});
+    btn.addEventListener('touchstart', onStart, {passive:false});
+    window.addEventListener('mousemove',  onMove);
+    window.addEventListener('touchmove',  onMove, {passive:false});
+    window.addEventListener('mouseup',  onEnd);
+    window.addEventListener('touchend', onEnd);
+
+    loadSavedPos();
+  })();
+
+  window.toggleChat = function(){
+    chatOpen = !chatOpen;
+    const win = document.getElementById('chatWindow');
+    const ico = document.getElementById('chatBtnIcon');
+    win.classList.toggle('open', chatOpen);
+    ico.textContent = chatOpen ? '✕' : '🤖';
+    document.getElementById('chatPing').style.display = 'none';
+    if(chatOpen){
+      document.getElementById('chatInput').focus();
+      scrollBottom();
+      // اضبط اتجاه نافذة الدردشة بحسب موضع الزر
+      const widget = document.getElementById('chatWidget');
+      const rect   = widget.getBoundingClientRect();
+      const win2   = document.getElementById('chatWindow');
+      // نافذة فوق أو تحت؟
+      win2.style.top    = rect.top > window.innerHeight/2 ? 'auto' : '72px';
+      win2.style.bottom = rect.top > window.innerHeight/2 ? '72px' : 'auto';
+      // يمين أو يسار؟
+      win2.style.left  = rect.left + 360 > window.innerWidth ? 'auto' : '0';
+      win2.style.right = rect.left + 360 > window.innerWidth ? '0'    : 'auto';
+    }
+  };
+
+  // ─── استدعاء AI من المتصفح مباشرة (IP المستخدم = لا rate-limit مشترك)
+  async function callAIFromBrowser(aiMessages){
+    // ① GET — أبسط وأسرع
+    try {
+      const lastMsg = (aiMessages.filter(m=>m.role==='user').slice(-1)[0]||{}).content||'';
+      const sysMsg  = (aiMessages.find(m=>m.role==='system')||{}).content||'';
+      const prompt  = encodeURIComponent((sysMsg.slice(0,300)+'\n\nسؤال: '+lastMsg).slice(0,900));
+      const r = await fetch(`https://text.pollinations.ai/${prompt}?model=openai`, {
+        signal: AbortSignal.timeout(22000),
+      });
+      if(r.ok){
+        const txt = (await r.text()).trim();
+        if(txt.length > 3) return txt;
+      }
+    } catch(e){}
+
+    // ② POST (openai)
+    try {
+      const r = await fetch('https://text.pollinations.ai/openai', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({model:'openai', messages: aiMessages, max_tokens:1000}),
+        signal: AbortSignal.timeout(28000),
+      });
+      if(r.ok){
+        const d = await r.json();
+        const txt = d?.choices?.[0]?.message?.content || '';
+        if(txt.trim().length > 3) return txt.trim();
+      }
+    } catch(e){}
+
+    // ③ POST (mistral)
+    try {
+      const r = await fetch('https://text.pollinations.ai/openai', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({model:'mistral', messages: aiMessages, max_tokens:1000}),
+        signal: AbortSignal.timeout(28000),
+      });
+      if(r.ok){
+        const d = await r.json();
+        const txt = d?.choices?.[0]?.message?.content || '';
+        if(txt.trim().length > 3) return txt.trim();
+      }
+    } catch(e){}
+    return null;
+  }
+
+  window.sendMsg = async function(){
+    const inp = document.getElementById('chatInput');
+    const msg = inp.value.trim();
+    if(!msg || isTyping) return;
+    inp.value = ''; inp.style.height = '';
+    appendMsg('user', msg);
+    showTyping();
+    try {
+      // ① اطلب السياق من الخادم
+      const ctxResp = await fetch('/api/chat/context', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({message: msg, lecture_id: LECTURE_ID}),
+      });
+      const ctxData = await ctxResp.json();
+
+      // إذا كان أمراً سريعاً — الخادم يُجيب مباشرة
+      if(ctxData.quick_reply){
+        hideTyping();
+        appendMsg('bot', ctxData.quick_reply);
+        return;
+      }
+
+      let reply = null;
+
+      // ② استدعِ AI عبر وكيل الخادم (الأموثق والأفضل أداءً)
+      if(ctxData.messages){
+        try {
+          const aiResp = await fetch('/api/chat/ai', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({messages: ctxData.messages}),
+            signal: AbortSignal.timeout(45000),
+          });
+          if(aiResp.ok){
+            const aiData = await aiResp.json();
+            reply = aiData.reply || null;
+          }
+        } catch(e){}
+      }
+
+      // ③ إن فشل وكيل الخادم، جرّب Pollinations مباشرة من المتصفح
+      if(!reply && ctxData.messages){
+        reply = await callAIFromBrowser(ctxData.messages);
+      }
+
+      // ④ الملاذ الأخير — endpoint الكامل على الخادم
+      if(!reply){
+        const srvResp = await fetch('/api/chat/send', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({message: msg, lecture_id: LECTURE_ID}),
+        });
+        const srvData = await srvResp.json();
+        reply = srvData.reply || null;
+      } else {
+        // احفظ الرد في قاعدة البيانات
+        fetch('/api/chat/save', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({reply, lecture_id: LECTURE_ID}),
+        }).catch(()=>{});
+      }
+
+      hideTyping();
+      appendMsg('bot', reply || '⚠️ المساعد مشغول حالياً، حاول مرة أخرى بعد لحظة.');
+    } catch(e){
+      hideTyping();
+      appendMsg('bot', '❌ تعذّر الاتصال. تحقق من الإنترنت وحاول مجدداً.');
+    }
+  };
+
+  window.sendQuick = function(txt){
+    document.getElementById('chatInput').value = txt;
+    sendMsg();
+  };
+
+  window.chatKeyDown = function(e){
+    if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); sendMsg(); }
+  };
+
+  window.autoResize = function(el){
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 80) + 'px';
+  };
+
+  window.clearChat = function(){
+    const box = document.getElementById('chatMsgs');
+    box.innerHTML = '<div class="cmsg bot">تم مسح المحادثة. كيف أساعدك؟ 😊</div>';
+  };
+
+  // تنسيق النص (bold وغيره)
+  function formatText(txt){
+    return txt
+      .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+      .replace(/`([^`]+)`/g,'<code style="background:rgba(99,102,241,0.2);padding:1px 5px;border-radius:4px;font-size:0.85em">$1</code>')
+      .replace(/\n/g,'<br>');
+  }
+
+  function appendMsg(role, text){
+    const box = document.getElementById('chatMsgs');
+    const div = document.createElement('div');
+    div.className = 'cmsg ' + (role === 'user' ? 'user' : 'bot');
+    const now = new Date();
+    const t   = now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
+    div.innerHTML = formatText(text) + `<span class="cmsg-time">${t}</span>`;
+    box.appendChild(div);
+    scrollBottom();
+  }
+
+  function showTyping(){
+    isTyping = true;
+    const box = document.getElementById('chatMsgs');
+    const d   = document.createElement('div');
+    d.id = 'typingIndicator';
+    d.className = 'cmsg bot';
+    d.style.padding = '8px 12px';
+    d.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+    box.appendChild(d);
+    scrollBottom();
+  }
+
+  function hideTyping(){
+    isTyping = false;
+    const d = document.getElementById('typingIndicator');
+    if(d) d.remove();
+  }
+
+  function scrollBottom(){
+    const box = document.getElementById('chatMsgs');
+    setTimeout(()=>{ box.scrollTop = box.scrollHeight; },50);
+  }
+
+  // فحص التدريب اليومي بعد 3 ثوانٍ
+  setTimeout(async ()=>{
+    try {
+      const r = await fetch('/api/chat/status-check');
+      const d = await r.json();
+      if(!d.daily_done){
+        document.getElementById('chatPing').style.display = 'block';
+        if(chatOpen){
+          document.getElementById('chatReminderBanner').style.display = 'flex';
+        }
+      }
+    } catch(e){}
+  }, 3000);
+
+  // عند فتح الشات — إظهار بانر التذكير إن كان مطلوباً
+  const origToggle = window.toggleChat;
+  window.toggleChat = function(){
+    origToggle();
+    if(chatOpen && document.getElementById('chatPing').style.display !== 'none'){
+      document.getElementById('chatReminderBanner').style.display = 'flex';
+    }
+  };
+})();
+</script>
+{% endif %}
+</body>
+</html>

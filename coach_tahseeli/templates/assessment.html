@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% block title %}تقييم المستوى{% endblock %}
+{% block content %}
+
+{% if show_selector %}
+<!-- ── شاشة اختيار عدد الأسئلة ── -->
+<div style="min-height:70vh;display:flex;align-items:center;justify-content:center;padding:24px">
+  <div style="width:100%;max-width:520px;text-align:center">
+    <div style="font-size:3rem;margin-bottom:16px">🎯</div>
+    <h1 style="font-size:1.6rem;font-weight:900;margin-bottom:10px">تقييم المستوى الأولي</h1>
+    <p style="color:var(--text-muted);font-size:0.9rem;line-height:1.6;margin-bottom:28px">
+      اختبار شامل من كل المواد الأربعة (فيزياء، كيمياء، أحياء، رياضيات)<br>
+      يُحدد مستواك ويبني لك خطة تدريب مخصصة
+    </p>
+
+    <div style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px">
+      <p style="font-weight:700;font-size:0.95rem;margin-bottom:18px">اختر عدد الأسئلة:</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+        {% for cnt, label, note in [
+          (40, '40 سؤالاً', 'الحد الأدنى — ~30 دقيقة'),
+          (60, '60 سؤالاً', 'متوسط — ~45 دقيقة'),
+          (80, '80 سؤالاً', 'مفصّل — ~60 دقيقة'),
+          (100, '100 سؤالاً', 'شامل — ~75 دقيقة')
+        ] %}
+        <a href="{{ url_for('student.assessment') }}?count={{ cnt }}"
+           style="display:block;padding:14px 12px;border-radius:12px;border:2px solid var(--border);
+                  background:var(--bg-card);text-decoration:none;transition:all 0.2s">
+          <div style="font-weight:800;font-size:1rem;color:var(--text-primary);margin-bottom:4px">{{ label }}</div>
+          <div style="font-size:0.76rem;color:var(--text-muted)">{{ note }}</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <a href="{{ url_for('student.dashboard') }}" style="color:var(--text-muted);font-size:0.83rem;text-decoration:none">
+      تخطّي التقييم الآن ←
+    </a>
+  </div>
+</div>
+
+<style>
+a[href*="assessment?count"]:hover {
+  border-color: var(--gold) !important;
+  color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255,184,0,0.15);
+}
+</style>
+
+{% else %}
+<!-- ── صفحة الأسئلة ── -->
+<div class="quiz-wrapper" style="padding-top:24px">
+  <div style="text-align:center;margin-bottom:24px">
+    <h1 style="font-size:1.8rem;font-weight:900;margin-bottom:8px">🎯 تقييم المستوى الأولي</h1>
+    <p style="color:var(--text-muted)">{{ questions|length }} سؤال في المواد الأربعة — أجب بصدق لنبني لك خطة مثالية</p>
+  </div>
+
+  <div class="assessment-progress" id="assessDots">
+    {% for q in questions %}
+    <div class="assessment-dot {{ 'current' if loop.index0 == 0 else '' }}" id="dot{{ loop.index0 }}"></div>
+    {% endfor %}
+  </div>
+
+  <div class="quiz-header" style="margin-bottom:20px">
+    <div>
+      <div id="subjectLabel" class="badge badge-gold">الفيزياء ⚛️</div>
+    </div>
+    <div class="quiz-timer">⏱️ <span id="timerDisplay">60:00</span></div>
+    <div id="progressText" class="badge badge-cyan">1 / {{ questions|length }}</div>
+  </div>
+
+  <div class="quiz-progress-bar">
+    <div class="quiz-progress-fill" id="progressBar" style="width:0%"></div>
+  </div>
+
+  {% for q in questions %}
+  <div class="question-card" id="qCard{{ loop.index0 }}" style="{{ 'display:none' if loop.index0 > 0 else '' }}">
+    <div class="question-num">السؤال {{ loop.index }} / {{ questions|length }}</div>
+    <div class="question-text">{{ q.text }}</div>
+    <div>
+      {% for letter, text in [('A', q.option_a), ('B', q.option_b), ('C', q.option_c), ('D', q.option_d)] %}
+      <div class="answer-option" onclick="selectAnswer('{{ q.id }}', '{{ letter }}', '{{ q.answer }}', '{{ q.subject }}', this)">
+        <div class="answer-letter">{{ letter }}</div>
+        <div class="answer-text">{{ text }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div style="display:flex;gap:12px;margin-top:20px">
+    <button class="btn btn-secondary" id="prevBtn" onclick="navigate(-1)" disabled>← السابق</button>
+    <button class="btn btn-secondary" id="nextBtn" onclick="navigate(1)">التالي →</button>
+    <button class="btn btn-primary" id="submitBtn" style="display:none" onclick="submitAssessment()">
+      ✅ إنهاء التقييم
+    </button>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="spinner"></div>
+  <p style="color:var(--text-muted)">جاري تحليل مستواك بالذكاء الاصطناعي...</p>
+</div>
+
+<script>
+const QUESTIONS = {{ questions | tojson | safe }};
+const TOTAL = QUESTIONS.length;
+let current = 0;
+let answers = {};
+let timeLeft = Math.max(TOTAL, 40) * 60;
+
+const SUBJECT_LABELS = {physics:'⚛️ الفيزياء', chemistry:'🧪 الكيمياء',
+                        biology:'🧬 الأحياء', math:'📐 الرياضيات'};
+
+const timerEl = document.getElementById('timerDisplay');
+setInterval(()=>{
+  if(timeLeft<=0){submitAssessment();return}
+  timeLeft--;
+  const m=Math.floor(timeLeft/60), s=timeLeft%60;
+  timerEl.textContent=`${m}:${s.toString().padStart(2,'0')}`;
+},1000);
+
+function selectAnswer(qid, letter, correct, subject, el) {
+  answers[qid] = {letter, is_correct: letter===correct, subject};
+  document.querySelectorAll(`#qCard${current} .answer-option`).forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  updateProgress();
+  setTimeout(()=>{if(current<TOTAL-1)navigate(1);},600);
+}
+
+function navigate(dir){
+  document.getElementById(`qCard${current}`).style.display='none';
+  document.getElementById(`dot${current}`).classList.remove('current');
+  if(answers[QUESTIONS[current].id])document.getElementById(`dot${current}`).classList.add('answered');
+  current+=dir;
+  document.getElementById(`qCard${current}`).style.display='block';
+  document.getElementById(`dot${current}`).classList.add('current');
+  const subj = QUESTIONS[current].subject;
+  document.getElementById('subjectLabel').textContent = SUBJECT_LABELS[subj]||subj;
+  updateNav();
+}
+function updateNav(){
+  document.getElementById('prevBtn').disabled=current===0;
+  document.getElementById('nextBtn').style.display=current<TOTAL-1?'':'none';
+  document.getElementById('submitBtn').style.display=current===TOTAL-1?'':'none';
+}
+function updateProgress(){
+  const n=Object.keys(answers).length;
+  document.getElementById('progressBar').style.width=(n/TOTAL*100)+'%';
+  document.getElementById('progressText').textContent=`${current+1} / ${TOTAL}`;
+}
+async function submitAssessment(){
+  document.getElementById('loadingOverlay').style.display='flex';
+  const payload={};
+  for(const[k,v]of Object.entries(answers)){payload[k]=v;}
+  const r=await fetch('/student/assessment',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({answers:payload})
+  });
+  const data=await r.json();
+  if(data.redirect)location.href=data.redirect;
+}
+updateNav();
+</script>
+{% endif %}
+
+{% endblock %}

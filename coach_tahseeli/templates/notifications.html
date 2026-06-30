@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}إشعاراتي{% endblock %}
+{% block content %}
+<style>
+.notif-wrap{max-width:680px;margin:36px auto;padding:0 20px;direction:rtl}
+.notif-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.notif-header h1{font-size:1.4rem;font-weight:900;flex:1}
+.notif-item{
+  display:flex;gap:12px;padding:14px 18px;
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:14px;margin-bottom:10px;transition:border-color .2s;
+}
+.notif-item.unread{
+  border-color:rgba(16,185,129,0.3);
+  background:linear-gradient(135deg,rgba(16,185,129,0.04),transparent);
+}
+.notif-item:hover{border-color:rgba(16,185,129,0.2)}
+.notif-icon{
+  width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;flex-shrink:0;
+  background:var(--bg-elevated);border:1px solid var(--border);
+}
+.notif-content{flex:1;min-width:0}
+.notif-title{font-size:0.9rem;font-weight:800;color:var(--text-primary);margin-bottom:3px}
+.notif-body{font-size:0.83rem;color:var(--text-secondary);line-height:1.5}
+.notif-time{font-size:0.72rem;color:var(--text-muted);margin-top:4px}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:#10b981;flex-shrink:0;margin-top:6px}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
+</style>
+
+<div class="notif-wrap">
+  <div class="notif-header">
+    <span style="font-size:1.8rem">🔔</span>
+    <h1>إشعاراتي</h1>
+    {% if current_user.is_admin %}
+    <a href="{{ url_for('notifications.admin_send') }}" class="btn btn-primary btn-sm">
+      📢 إرسال إشعار جديد
+    </a>
+    {% endif %}
+  </div>
+
+  {% if not notifs %}
+  <div class="empty-state">
+    <div style="font-size:3rem;margin-bottom:12px">🔔</div>
+    <div style="font-size:1rem;font-weight:700;margin-bottom:6px">لا توجد إشعارات بعد</div>
+    <div style="font-size:0.84rem">ستصلك إشعارات من الإدارة والنظام هنا</div>
+  </div>
+  {% else %}
+  {% for n in notifs %}
+  <div class="notif-item {{ 'unread' if not n.is_read }}">
+    {% if not n.is_read %}<div class="notif-dot"></div>{% endif %}
+    <div class="notif-icon">{{ n.icon }}</div>
+    <div class="notif-content">
+      <div class="notif-title">{{ n.title }}</div>
+      {% if n.body %}
+      <div class="notif-body">{{ n.body }}</div>
+      {% endif %}
+      <div class="notif-time" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span>
+          {% if n.sender %}من: {{ n.sender.name }} · {% endif %}
+          {{ n.created_at.strftime('%Y/%m/%d · %H:%M') }}
+        </span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          {% if n.link %}
+          <a href="{{ n.link }}"
+             style="font-size:0.75rem;font-weight:700;padding:3px 12px;border-radius:8px;
+                    background:linear-gradient(135deg,rgba(255,184,0,0.15),rgba(255,140,0,0.15));
+                    border:1px solid rgba(255,184,0,0.4);
+                    color:#FFB800;text-decoration:none;white-space:nowrap">
+            🚀 اضغط هنا للدخول
+          </a>
+          {% endif %}
+          {% if n.notif_type == 'admin' and n.sender %}
+          <a href="{{ url_for('messages.thread', user_id=n.sender.id) }}"
+             style="font-size:0.75rem;font-weight:700;padding:3px 10px;border-radius:8px;
+                    background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);
+                    color:#10b981;text-decoration:none;white-space:nowrap">
+            ✉️ رد على المشرف
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <div style="margin-top:20px;text-align:center">
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">← العودة للوحة</a>
+  </div>
+</div>
+{% endblock %}

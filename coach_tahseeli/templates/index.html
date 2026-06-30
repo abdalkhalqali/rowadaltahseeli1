@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% block title %}الرئيسية{% endblock %}
+{% block content %}
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div style="max-width:1280px;margin:0 auto;padding:0 24px;width:100%;position:relative;z-index:2">
+    <div style="display:grid;grid-template-columns:1fr auto;gap:48px;align-items:center">
+      <div class="hero-content" style="padding:0">
+
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          المنصة الأولى للتحصيل الدراسي في السعودية
+        </div>
+
+        <h1 class="hero-title">
+          كُن رائداً<br>
+          <span class="highlight">لا تابعاً</span>
+        </h1>
+
+        <p class="hero-subtitle">منصة رواد التحصيلي الاحترافية</p>
+
+        <p class="hero-desc">
+          ابدأ رحلتك نحو التفوق في التحصيلي مع نظام متكامل يجمع بين التعلم الاحترافي،
+          والتحليل الدقيق، والتدريب الموجّه. نقوم بتقييم مستواك بدقة ونبني لك خطة شخصية.
+        </p>
+
+        <div class="hero-actions">
+          <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+            🚀 ابدأ رحلتك الآن — مجاناً
+          </a>
+          <a href="#features" class="btn btn-secondary btn-lg">
+            اكتشف المنصة
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <div class="hero-stat-num">+5000</div>
+            <div class="hero-stat-label">سؤال تحصيلي</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">4</div>
+            <div class="hero-stat-label">مواد علمية</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">AI</div>
+            <div class="hero-stat-label">تحليل ذكي</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-num">∞</div>
+            <div class="hero-stat-label">اختبارات تدريبية</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visual Cards -->
+      <div class="hero-visual" style="position:relative;width:380px;height:460px">
+        <div style="background:var(--bg-card);border:1px solid var(--border-gold);border-radius:16px;
+                    padding:20px;position:absolute;top:0;right:0;width:300px;
+                    animation:float 4s ease infinite;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <div style="width:38px;height:38px;border-radius:9px;background:var(--gold-glow);
+                        display:flex;align-items:center;justify-content:center;font-size:1.2rem">⚛️</div>
+            <div>
+              <div style="font-size:0.85rem;font-weight:700">اختبار الفيزياء</div>
+              <div style="font-size:0.75rem;color:var(--text-muted)">الفصل الأول</div>
+            </div>
+            <div class="badge badge-gold" style="margin-right:auto">85%</div>
+          </div>
+          <div style="height:6px;background:var(--bg-elevated);border-radius:3px;overflow:hidden;margin-bottom:10px">
+            <div style="width:85%;height:100%;background:linear-gradient(90deg,var(--gold),var(--cyan))"></div>
+          </div>
+          <div style="font-size:0.82rem;color:var(--text-muted)">17 من 20 سؤال صحيح ✅</div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid rgba(0,229,255,0.3);border-radius:16px;
+                    padding:18px;position:absolute;bottom:20px;left:0;width:240px;
+                    animation:float 4s ease 1.5s infinite;box-shadow:0 20px 60px rgba(0,0,0,0.5)">
+          <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px">🏆 تقييم المستوى</div>
+          <div style="font-size:1.1rem;font-weight:800;color:var(--cyan);margin-bottom:12px">متقدم 🔥</div>
+          <div style="font-size:0.78rem;color:var(--text-muted)">استمر، أنت في أفضل 15%</div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid rgba(16,185,129,0.3);border-radius:12px;
+                    padding:14px;position:absolute;top:180px;right:10px;width:200px;
+                    animation:float 4s ease 0.8s infinite">
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px">💡 توصية اليوم</div>
+          <div style="font-size:0.85rem;font-weight:600;color:var(--emerald)">راجع قوانين الحركة في الفيزياء</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SUBJECTS ===== -->
+<section class="section" id="subjects" style="background:var(--bg-secondary)">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="section-header">
+      <span class="section-label">📚 المواد الدراسية</span>
+      <h2 class="section-title">مواد <span class="glow-text">التحصيل الدراسي</span></h2>
+      <p class="section-desc">تدرّب على جميع مواد اختبار التحصيل مع آلاف الأسئلة والتحليل الذكي</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px">
+
+      <div class="subject-card physics animate-in">
+        <span class="subject-icon">⚛️</span>
+        <div class="subject-name">الفيزياء</div>
+        <div class="subject-stats">الحركة · القوى · الأمواج · الكهرباء</div>
+        <div class="subject-progress-bar" style="margin-top:16px">
+          <div class="subject-progress-fill" style="width:75%;background:var(--cyan)"></div>
+        </div>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('student.exam', subject='physics', exam_type='quick_test') }}"
+           class="btn btn-sm btn-secondary w-full" style="margin-top:16px">ابدأ الاختبار</a>
+        {% else %}
+        <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-secondary w-full" style="margin-top:16px">ابدأ مجاناً</a>
+        {% endif %}
+      </div>
+
+      <div class="subject-card chemistry animate-in delay-1">
+        <span class="subject-icon">🧪</span>
+        <div class="subject-name">الكيمياء</div>
+        <div class="subject-stats">الذرة · التفاعلات · المحاليل · الروابط</div>
+        <div class="subject-progress-bar" style="margin-top:16px">
+          <div class="subject-progress-fill" style="width:60%;background:var(--gold)"></div>
+        </div>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('student.exam', subject='chemistry', exam_type='quick_test') }}"
+           class="btn btn-sm btn-secondary w-full" style="margin-top:16px">ابدأ الاختبار</a>
+        {% else %}
+        <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-secondary w-full" style="margin-top:16px">ابدأ مجاناً</a>
+        {% endif %}
+      </div>
+
+      <div class="subject-card biology animate-in delay-2">
+        <span class="subject-icon">🧬</span>
+        <div class="subject-name">الأحياء</div>
+        <div class="subject-stats">الخلية · الوراثة · التطور · الأجهزة</div>
+        <div class="subject-progress-bar" style="margin-top:16px">
+          <div class="subject-progress-fill" style="width:85%;background:var(--emerald)"></div>
+        </div>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('student.exam', subject='biology', exam_type='quick_test') }}"
+           class="btn btn-sm btn-secondary w-full" style="margin-top:16px">ابدأ الاختبار</a>
+        {% else %}
+        <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-secondary w-full" style="margin-top:16px">ابدأ مجاناً</a>
+        {% endif %}
+      </div>
+
+      <div class="subject-card math animate-in delay-3">
+        <span class="subject-icon">📐</span>
+        <div class="subject-name">الرياضيات</div>
+        <div class="subject-stats">الجبر · الهندسة · المثلثات · الإحصاء</div>
+        <div class="subject-progress-bar" style="margin-top:16px">
+          <div class="subject-progress-fill" style="width:55%;background:var(--purple)"></div>
+        </div>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('student.exam', subject='math', exam_type='quick_test') }}"
+           class="btn btn-sm btn-secondary w-full" style="margin-top:16px">ابدأ الاختبار</a>
+        {% else %}
+        <a href="{{ url_for('auth.register') }}" class="btn btn-sm btn-secondary w-full" style="margin-top:16px">ابدأ مجاناً</a>
+        {% endif %}
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="section" id="features">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="section-header">
+      <span class="section-label">✨ المميزات</span>
+      <h2 class="section-title">لماذا <span class="glow-text">رواد التحصيلي</span>؟</h2>
+      <p class="section-desc">نظام متكامل يجمع التعلم الذكي مع التحليل الدقيق والتدريب الشخصي</p>
+    </div>
+    <div class="features-grid">
+
+      <div class="feature-card animate-in">
+        <div class="feature-icon-wrap" style="background:var(--gold-glow)">🎯</div>
+        <div class="feature-title">تقييم المستوى الأولي</div>
+        <div class="feature-desc">نبدأ بتقييم مستواك في 40 سؤال لتحديد نقاط القوة والضعف وبناء خطة دراسية مخصصة.</div>
+      </div>
+
+      <div class="feature-card animate-in delay-1">
+        <div class="feature-icon-wrap" style="background:var(--cyan-glow)">🤖</div>
+        <div class="feature-title">ذكاء اصطناعي متقدم</div>
+        <div class="feature-desc">يحلل أداءك ويقدم توصيات دراسية مخصصة بالذكاء الاصطناعي بعد كل اختبار.</div>
+      </div>
+
+      <div class="feature-card animate-in delay-2">
+        <div class="feature-icon-wrap" style="background:var(--purple-glow)">⚔️</div>
+        <div class="feature-title">مسابقات مباشرة</div>
+        <div class="feature-desc">تنافس مع زملائك في وقت حقيقي وتسلّق لوحة المتصدرين واحصل على تقييم فوري.</div>
+      </div>
+
+      <div class="feature-card animate-in">
+        <div class="feature-icon-wrap" style="background:var(--emerald-glow)">📊</div>
+        <div class="feature-title">تحليل الأداء التفصيلي</div>
+        <div class="feature-desc">تقارير مفصلة لكل اختبار مع تحليل الأخطاء والشرح التفصيلي لكل سؤال.</div>
+      </div>
+
+      <div class="feature-card animate-in delay-1">
+        <div class="feature-icon-wrap" style="background:var(--gold-glow)">📚</div>
+        <div class="feature-title">توليد أسئلة من PDF</div>
+        <div class="feature-desc">ارفع ملف دراسي وسيولّد الذكاء الاصطناعي أسئلة تحصيلية تلقائياً من محتواه.</div>
+      </div>
+
+      <div class="feature-card animate-in delay-2">
+        <div class="feature-icon-wrap" style="background:var(--cyan-glow)">🏆</div>
+        <div class="feature-title">خطة دراسية شخصية</div>
+        <div class="feature-desc">بناءً على نتائجك، تحصل على خطة دراسية مفصلة وتوصيات يومية لتحقيق أعلى الدرجات.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="section" style="background:var(--bg-secondary)">
+  <div style="max-width:700px;margin:0 auto;text-align:center">
+    <div style="background:linear-gradient(135deg,rgba(255,184,0,0.08),rgba(0,229,255,0.05));
+                border:1px solid var(--border-gold);border-radius:24px;padding:56px 36px">
+      <div style="font-size:3rem;margin-bottom:16px">🚀</div>
+      <h2 style="font-size:2.2rem;font-weight:900;margin-bottom:16px">
+        ابدأ رحلة <span class="glow-text">التفوق</span> اليوم
+      </h2>
+      <p style="color:var(--text-muted);font-size:1.05rem;margin-bottom:32px;line-height:1.8">
+        انضم إلى آلاف الطلاب الذين اختاروا رواد التحصيلي طريقاً لتحقيق أحلامهم
+      </p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg">
+          🎓 سجّل مجاناً الآن
+        </a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-lg">
+          تسجيل الدخول
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

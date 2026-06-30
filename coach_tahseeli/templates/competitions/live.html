@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}{{ comp.name }} — مباشر{% endblock %}
+{% block content %}
+<div class="quiz-wrapper" style="padding-top:20px">
+
+  <div class="competition-header">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="badge badge-green" style="margin-bottom:8px">🔴 مباشر</div>
+        <h2 style="font-size:1.2rem;font-weight:800">{{ comp.name }}</h2>
+      </div>
+      <div class="quiz-timer" id="compTimer">⏱️ <span id="timerDisplay">{{ comp.duration_min }}:00</span></div>
+    </div>
+    <div class="quiz-progress-bar" style="margin-top:16px">
+      <div class="quiz-progress-fill" id="progressBar" style="width:0%"></div>
+    </div>
+  </div>
+
+  {% for q in questions %}
+  <div class="question-card" id="qCard{{ loop.index0 }}" style="{{ 'display:none' if loop.index0 > 0 else '' }}">
+    <div class="question-num">السؤال {{ loop.index }} / {{ questions|length }}</div>
+    <div class="question-text">{{ q.text }}</div>
+    <div>
+      {% for letter, text in [('A', q.option_a), ('B', q.option_b), ('C', q.option_c), ('D', q.option_d)] %}
+      <div class="answer-option" onclick="selectAnswer('{{ q.id }}', '{{ letter }}', this)">
+        <div class="answer-letter">{{ letter }}</div>
+        <div class="answer-text">{{ text }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div style="display:flex;gap:12px;margin-top:20px">
+    <button class="btn btn-secondary" id="prevBtn" onclick="navigate(-1)" disabled>← السابق</button>
+    <button class="btn btn-secondary" id="nextBtn" onclick="navigate(1)">التالي →</button>
+    <button class="btn btn-primary" id="submitBtn" style="display:none" onclick="submitComp()">
+      ✅ إنهاء المسابقة
+    </button>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="spinner"></div>
+  <p>جاري تصحيح الإجابات وحساب ترتيبك...</p>
+</div>
+
+<script>
+const QUESTIONS = {{ questions | tojson | safe }};
+const TOTAL = QUESTIONS.length;
+let current = 0, answers = {}, startTime = Date.now();
+let timeLeft = {{ comp.duration_min }} * 60;
+
+const timerEl = document.getElementById('timerDisplay');
+const timerWrap = document.getElementById('compTimer');
+const interval = setInterval(()=>{
+  if(timeLeft<=0){clearInterval(interval);submitComp();return}
+  timeLeft--;
+  const m=Math.floor(timeLeft/60), s=timeLeft%60;
+  timerEl.textContent=`${m}:${s.toString().padStart(2,'0')}`;
+  if(timeLeft<=60)timerWrap.classList.add('urgent');
+},1000);
+
+function selectAnswer(qid, letter, el){
+  answers[qid]=letter;
+  document.querySelectorAll(`#qCard${current} .answer-option`).forEach(e=>e.classList.remove('selected'));
+  el.classList.add('selected');
+  updateProgress();
+}
+function navigate(dir){
+  document.getElementById(`qCard${current}`).style.display='none';
+  current+=dir;
+  document.getElementById(`qCard${current}`).style.display='block';
+  updateNav();
+}
+function updateNav(){
+  document.getElementById('prevBtn').disabled=current===0;
+  document.getElementById('nextBtn').style.display=current<TOTAL-1?'':'none';
+  document.getElementById('submitBtn').style.display=current===TOTAL-1?'':'none';
+}
+function updateProgress(){
+  const n=Object.keys(answers).length;
+  document.getElementById('progressBar').style.width=(n/TOTAL*100)+'%';
+}
+async function submitComp(){
+  clearInterval(interval);
+  document.getElementById('loadingOverlay').style.display='flex';
+  const timeTaken=Math.floor((Date.now()-startTime)/1000);
+  const r=await fetch(location.href,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({answers,time_taken:timeTaken})
+  });
+  const data=await r.json();
+  if(data.redirect)location.href=data.redirect;
+}
+updateNav();
+</script>
+{% endblock %}

@@ -1,0 +1,533 @@
+{% extends 'base.html' %}
+{% block title %}{{ '✏️ تعديل سؤال' if action=='edit' else '➕ إضافة سؤال جديد' }} — الرخصة المهنية{% endblock %}
+{% block content %}
+<div class="dashboard-wrapper">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div style="padding:16px;border-bottom:1px solid var(--border);margin-bottom:16px">
+      <div class="badge badge-gold">👑 مشرف النظام</div>
+      <div style="font-weight:700;font-size:0.9rem;margin-top:8px">{{ current_user.name }}</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">الإدارة</div>
+      <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><span class="icon">📊</span> لوحة التحكم</a>
+      {% if is_super_admin %}<a href="{{ url_for('admin.users') }}" class="sidebar-link"><span class="icon">👥</span> المستخدمون</a>{% endif %}
+      <a href="{{ url_for('pro_license.admin_index') }}" class="sidebar-link active"
+         style="background:rgba(244,63,94,0.12);border:1px solid rgba(244,63,94,0.35)">
+        <span class="icon">📝</span> أسئلة الرخصة المهنية
+      </a>
+      <a href="{{ url_for('lectures.admin_lectures', branch='professional_license') }}" class="sidebar-link"><span class="icon">🏅</span> محاضرات الرخصة</a>
+      <a href="{{ url_for('lectures.admin_lectures', branch='tahseeli') }}" class="sidebar-link"><span class="icon">🎬</span> محاضرات التحصيلي</a>
+    </div>
+    <div class="sidebar-section" style="margin-top:8px">
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link"><span class="icon">🚪</span> خروج</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px">
+      <a href="{{ url_for('pro_license.admin_index') }}"
+        style="background:var(--bg-elevated);color:#94a3b8;border:1px solid var(--border);
+               border-radius:10px;padding:8px 14px;text-decoration:none;font-size:0.85rem">
+        ← رجوع
+      </a>
+      <h1 style="font-size:1.4rem;font-weight:900;margin:0">
+        {{ '✏️ تعديل سؤال' if action=='edit' else '➕ إضافة سؤال جديد' }}
+      </h1>
+    </div>
+
+    <form method="POST"
+          action="{{ url_for('pro_license.admin_edit', qid=question.id) if action=='edit' else url_for('pro_license.admin_add') }}">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+        <!-- المعيار -->
+        <div class="card" style="padding:16px">
+          <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:8px;font-weight:600">
+            المعيار <span style="color:#ef4444">*</span>
+          </label>
+          <select name="standard_num" class="form-select"
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.88rem" required>
+            {% for s_num, s_info in standards.items() %}
+            <option value="{{ s_num }}" {{ 'selected' if question and question.standard_num == s_num }}>
+              {{ s_num }} — {{ s_info.name }}
+              ({{ 'تربوي' if s_info.type=='educational' else 'فيزياء' }})
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- الصعوبة -->
+        <div class="card" style="padding:16px">
+          <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:8px;font-weight:600">
+            مستوى الصعوبة
+          </label>
+          <select name="difficulty"
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.88rem">
+            <option value="easy"   {{ 'selected' if question and question.difficulty=='easy' }}>🟢 سهل</option>
+            <option value="medium" {{ 'selected' if not question or question.difficulty=='medium' }}>🟡 متوسط</option>
+            <option value="hard"   {{ 'selected' if question and question.difficulty=='hard' }}>🔴 صعب</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- نص السؤال -->
+      <div class="card" style="padding:16px;margin-bottom:16px">
+        <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:8px;font-weight:600">
+          نص السؤال <span style="color:#ef4444">*</span>
+        </label>
+        <textarea name="text" rows="3" required
+          placeholder="اكتب نص السؤال هنا..."
+          style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                 padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.95rem;
+                 resize:vertical;line-height:1.6;box-sizing:border-box">{{ question.text if question else '' }}</textarea>
+      </div>
+
+      <!-- خيارات الإجابة -->
+      <div class="card" style="padding:16px;margin-bottom:16px">
+        <div style="font-size:0.85rem;color:#94a3b8;margin-bottom:12px;font-weight:600">
+          خيارات الإجابة <span style="color:#ef4444">*</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          {% for letter, label, color in [('a','أ','#6366f1'),('b','ب','#10b981'),('c','ج','#f59e0b'),('d','د','#ef4444')] %}
+          <div style="display:flex;align-items:center;gap:8px;background:#0d1628;
+                      border:1px solid var(--border);border-radius:10px;padding:8px 12px">
+            <span style="width:28px;height:28px;border-radius:8px;background:{{ color }}22;
+                         color:{{ color }};font-weight:800;font-size:0.9rem;flex-shrink:0;
+                         display:flex;align-items:center;justify-content:center">{{ label }}</span>
+            <input type="text" name="option_{{ letter }}" required
+                   placeholder="الخيار {{ label }}"
+                   value="{{ question['option_' + letter] if question else '' }}"
+                   style="flex:1;background:transparent;border:none;color:#e2e8f0;
+                          font-family:inherit;font-size:0.9rem;outline:none">
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+
+        <!-- الإجابة الصحيحة -->
+        <div class="card" style="padding:16px">
+          <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:8px;font-weight:600">
+            الإجابة الصحيحة <span style="color:#ef4444">*</span>
+          </label>
+          <select name="answer"
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.88rem">
+            {% for letter, label in [('A','أ — الخيار الأول'),('B','ب — الخيار الثاني'),('C','ج — الخيار الثالث'),('D','د — الخيار الرابع')] %}
+            <option value="{{ letter }}" {{ 'selected' if question and question.answer == letter }}>
+              {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- الشرح -->
+        <div class="card" style="padding:16px">
+          <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:8px;font-weight:600">
+            شرح الإجابة (اختياري)
+          </label>
+          <textarea name="explanation" rows="2"
+            placeholder="اشرح سبب صحة الإجابة..."
+            style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                   padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.88rem;
+                   resize:vertical;box-sizing:border-box">{{ question.explanation if question else '' }}</textarea>
+        </div>
+      </div>
+
+      <!-- ═══ مقطع الكود ═══ -->
+      <div class="card" style="padding:18px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(99,102,241,0.15);
+                        display:flex;align-items:center;justify-content:center;font-size:1.1rem">💻</div>
+            <div>
+              <div style="font-weight:700">كود مرفق (اختياري)</div>
+              <div style="font-size:0.78rem;color:#64748b">أضف مقطع كود يُعرض مع السؤال في الاختبار</div>
+            </div>
+          </div>
+          <button type="button" onclick="toggleProCode()" id="pro_code_toggle"
+            style="background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.3);
+                   border-radius:9px;padding:6px 14px;font-size:0.8rem;cursor:pointer;font-family:inherit;font-weight:600">
+            + إضافة كود
+          </button>
+        </div>
+        <div id="pro_code_section" style="display:{{ 'block' if question and question.code_snippet else 'none' }}">
+          <div style="margin-bottom:8px">
+            <label style="font-size:0.82rem;color:#94a3b8;display:block;margin-bottom:6px;font-weight:600">لغة الكود</label>
+            <select name="code_type" id="pro_code_type"
+              style="background:#0d1628;border:1px solid var(--border);border-radius:8px;
+                     padding:8px 12px;color:#e2e8f0;font-family:inherit;font-size:0.85rem">
+              <option value="python"     {{ 'selected' if question and question.code_type=='python' }}>🐍 Python</option>
+              <option value="javascript" {{ 'selected' if question and question.code_type=='javascript' }}>🟨 JavaScript</option>
+              <option value="java"       {{ 'selected' if question and question.code_type=='java' }}>☕ Java</option>
+              <option value="cpp"        {{ 'selected' if question and question.code_type=='cpp' }}>⚙️ C++</option>
+              <option value="sql"        {{ 'selected' if question and question.code_type=='sql' }}>🗄️ SQL</option>
+              <option value="pseudocode" {{ 'selected' if question and question.code_type=='pseudocode' }}>📝 Pseudocode</option>
+              <option value="text"       {{ 'selected' if question and question.code_type=='text' }}>📄 نص عادي</option>
+            </select>
+          </div>
+          <textarea name="code_snippet"
+            placeholder="الصق الكود هنا…"
+            rows="7"
+            style="width:100%;background:#0a0e1a;border:1px solid rgba(99,102,241,0.3);
+                   border-radius:10px;padding:12px 14px;color:#a5f3fc;
+                   font-family:'Courier New',Courier,monospace;font-size:0.85rem;
+                   direction:ltr;text-align:left;resize:vertical;line-height:1.6;
+                   box-sizing:border-box">{{ question.code_snippet if question else '' }}</textarea>
+          <div style="margin-top:6px;font-size:0.72rem;color:#475569">
+            💡 سيظهر الكود للطالب في الاختبار بتنسيق أحادي المسافة مع إمكانية النسخ
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ لوحة الرسم المحسّنة ═══ -->
+      <div class="card" style="padding:20px;margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="width:36px;height:36px;border-radius:10px;background:rgba(99,102,241,0.15);
+                      display:flex;align-items:center;justify-content:center;font-size:1.1rem">🎨</div>
+          <div>
+            <div style="font-weight:700">رسم بياني (اختياري)</div>
+            <div style="font-size:0.78rem;color:#64748b">ارسم مخططاً أو رسماً يُرفق مع السؤال</div>
+          </div>
+        </div>
+
+        <!-- شريط الأدوات -->
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px;
+                    padding:10px;background:#0d1628;border-radius:12px;border:1px solid var(--border)">
+
+          <!-- أدوات الرسم -->
+          <div style="display:flex;gap:4px;padding-left:8px;border-left:1px solid var(--border)">
+            <button type="button" id="toolPen" onclick="setTool('pen')"
+              class="draw-tool active" title="قلم حر">✏️</button>
+            <button type="button" id="toolLine" onclick="setTool('line')"
+              class="draw-tool" title="خط مستقيم">╱</button>
+            <button type="button" id="toolArrow" onclick="setTool('arrow')"
+              class="draw-tool" title="سهم">→</button>
+            <button type="button" id="toolRect" onclick="setTool('rect')"
+              class="draw-tool" title="مستطيل">⬜</button>
+            <button type="button" id="toolCircle" onclick="setTool('circle')"
+              class="draw-tool" title="دائرة/بيضاوي">⭕</button>
+            <button type="button" id="toolText" onclick="setTool('text')"
+              class="draw-tool" title="نص">T</button>
+            <button type="button" id="toolEraser" onclick="setTool('eraser')"
+              class="draw-tool" title="ممحاة">🧹</button>
+          </div>
+
+          <!-- اللون -->
+          <div style="display:flex;align-items:center;gap:4px;padding:0 8px;border-left:1px solid var(--border)">
+            <span style="font-size:0.75rem;color:#64748b">لون:</span>
+            <input type="color" id="penColor" value="#6366f1"
+              style="width:32px;height:28px;padding:1px;border-radius:6px;border:none;cursor:pointer;background:transparent">
+            <!-- ألوان سريعة -->
+            {% for c in ['#e2e8f0','#6366f1','#10b981','#f59e0b','#ef4444','#000000'] %}
+            <div onclick="document.getElementById('penColor').value='{{ c }}'"
+              style="width:18px;height:18px;border-radius:4px;background:{{ c }};cursor:pointer;
+                     border:1px solid rgba(255,255,255,0.2)" title="{{ c }}"></div>
+            {% endfor %}
+          </div>
+
+          <!-- الحجم -->
+          <div style="display:flex;align-items:center;gap:6px;padding:0 8px;border-left:1px solid var(--border)">
+            <span style="font-size:0.75rem;color:#64748b">حجم:</span>
+            <input type="range" id="penSize" min="1" max="20" value="2"
+              style="width:80px;accent-color:#6366f1">
+            <span id="penSizeVal" style="font-size:0.75rem;color:#94a3b8;min-width:24px">2</span>
+          </div>
+
+          <!-- تعبئة -->
+          <div style="display:flex;align-items:center;gap:4px;padding:0 8px;border-left:1px solid var(--border)">
+            <input type="checkbox" id="fillShape" style="accent-color:#6366f1">
+            <span style="font-size:0.75rem;color:#64748b">تعبئة</span>
+          </div>
+
+          <!-- إجراءات -->
+          <div style="display:flex;gap:4px;margin-right:auto">
+            <button type="button" onclick="undoAction()"
+              style="background:rgba(99,102,241,0.15);color:#6366f1;border:none;border-radius:7px;
+                     padding:5px 10px;cursor:pointer;font-size:0.8rem;font-family:inherit" title="تراجع">↩ تراجع</button>
+            <button type="button" onclick="clearCanvas()"
+              style="background:rgba(239,68,68,0.12);color:#ef4444;border:none;border-radius:7px;
+                     padding:5px 10px;cursor:pointer;font-size:0.8rem;font-family:inherit" title="مسح الكل">🗑 مسح</button>
+          </div>
+        </div>
+
+        <!-- Canvas -->
+        <canvas id="drawingCanvas" width="800" height="320"
+          style="border:2px solid rgba(99,102,241,0.3);border-radius:12px;cursor:crosshair;
+                 background:#fff;max-width:100%;display:block;touch-action:none">
+        </canvas>
+        <input type="hidden" name="image_data" id="imageData"
+               value="{{ question.image_data if question else '' }}">
+
+        {% if question and question.image_data %}
+        <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+          <span style="color:#10b981;font-size:0.82rem">✅ يوجد رسم محفوظ — سيُستبدل عند الإرسال</span>
+          <img src="{{ question.image_data }}" alt="الرسم الحالي" id="savedDrawing"
+               style="height:60px;border:1px solid var(--border);border-radius:8px;cursor:pointer"
+               onclick="loadSavedDrawing()" title="انقر لاستعادة الرسم">
+          <span style="font-size:0.78rem;color:#64748b">(انقر على الصورة لاستعادته)</span>
+        </div>
+        {% endif %}
+
+        <!-- حقل إدخال نص للأداة T -->
+        <div id="textInputDiv" style="display:none;margin-top:10px">
+          <input id="textInput" type="text" placeholder="اكتب النص ثم انقر على اللوحة..."
+            style="background:#0d1628;border:1px solid var(--border);border-radius:8px;
+                   padding:8px 12px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;width:280px">
+        </div>
+      </div>
+
+      <!-- أزرار الحفظ -->
+      <div style="display:flex;gap:12px">
+        <button type="submit"
+          style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;
+                 border-radius:12px;padding:12px 32px;font-weight:700;cursor:pointer;
+                 font-family:inherit;font-size:0.95rem">
+          {{ '💾 حفظ التعديلات' if action=='edit' else '✅ حفظ السؤال' }}
+        </button>
+        <a href="{{ url_for('pro_license.admin_index') }}"
+          style="background:var(--bg-elevated);color:#94a3b8;border:1px solid var(--border);
+                 border-radius:12px;padding:12px 20px;text-decoration:none;font-size:0.9rem">
+          إلغاء
+        </a>
+      </div>
+    </form>
+  </main>
+</div>
+
+<style>
+.draw-tool {
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  padding: 5px 9px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: all .15s;
+  min-width: 32px;
+}
+.draw-tool:hover { background: rgba(99,102,241,0.15); color: #6366f1; }
+.draw-tool.active { background: rgba(99,102,241,0.25); color: #6366f1; border-color: rgba(99,102,241,0.4); }
+</style>
+
+<script>
+function toggleProCode(){
+  const sec = document.getElementById('pro_code_section');
+  const btn = document.getElementById('pro_code_toggle');
+  if(sec.style.display === 'none' || sec.style.display === ''){
+    sec.style.display = 'block';
+    btn.textContent = '− إخفاء الكود';
+  } else {
+    sec.style.display = 'none';
+    btn.textContent = '+ إضافة كود';
+  }
+}
+// Set toggle text on load
+(function(){
+  const sec = document.getElementById('pro_code_section');
+  const btn = document.getElementById('pro_code_toggle');
+  if(sec && sec.style.display === 'block') btn.textContent = '− إخفاء الكود';
+})();
+</script>
+
+<script>
+(function(){
+  const canvas  = document.getElementById('drawingCanvas');
+  const ctx     = canvas.getContext('2d');
+  const imgData = document.getElementById('imageData');
+
+  let currentTool = 'pen';
+  let drawing     = false;
+  let startX = 0, startY = 0;
+  let snapshot    = null;    // لمعاينة الأشكال أثناء الرسم
+  let history     = [];      // للتراجع
+  const MAX_HISTORY = 20;
+
+  // ─── تحميل الرسم المحفوظ ───
+  const saved = imgData.value;
+  if(saved && saved.startsWith('data:image')){
+    const img = new Image();
+    img.onload = () => { ctx.drawImage(img, 0, 0); saveHistory(); };
+    img.src = saved;
+  } else {
+    saveHistory();
+  }
+
+  // ─── تحميل الرسم المحفوظ (استعادة) ───
+  window.loadSavedDrawing = function(){
+    const src = document.getElementById('savedDrawing')?.src;
+    if(!src) return;
+    const img = new Image();
+    img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); saveHistory(); };
+    img.src = src;
+  };
+
+  // ─── تاريخ للتراجع ───
+  function saveHistory(){
+    history.push(canvas.toDataURL());
+    if(history.length > MAX_HISTORY) history.shift();
+    imgData.value = canvas.toDataURL();
+  }
+  window.undoAction = function(){
+    if(history.length > 1){
+      history.pop();
+      const img = new Image();
+      img.onload = () => { ctx.clearRect(0,0,canvas.width,canvas.height); ctx.drawImage(img,0,0); imgData.value = canvas.toDataURL(); };
+      img.src = history[history.length-1];
+    }
+  };
+  window.clearCanvas = function(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    saveHistory();
+  };
+
+  // ─── تحديد الأداة ───
+  window.setTool = function(tool){
+    currentTool = tool;
+    document.querySelectorAll('.draw-tool').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('tool' + tool.charAt(0).toUpperCase() + tool.slice(1));
+    if(btn) btn.classList.add('active');
+    canvas.style.cursor = tool === 'text' ? 'text' : tool === 'eraser' ? 'cell' : 'crosshair';
+    document.getElementById('textInputDiv').style.display = tool === 'text' ? 'block' : 'none';
+  };
+
+  // ─── حساب الإحداثيات ───
+  function getPos(e){
+    const r = canvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return {
+      x: (t.clientX - r.left) * (canvas.width / r.width),
+      y: (t.clientY - r.top)  * (canvas.height / r.height)
+    };
+  }
+
+  function getColor(){ return document.getElementById('penColor').value; }
+  function getSize() { return parseInt(document.getElementById('penSize').value); }
+  function getFill()  { return document.getElementById('fillShape').checked; }
+
+  // ─── رسم رأس السهم ───
+  function drawArrowHead(x1, y1, x2, y2, sz){
+    const angle = Math.atan2(y2-y1, x2-x1);
+    const len = sz * 3.5;
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - len*Math.cos(angle-Math.PI/6), y2 - len*Math.sin(angle-Math.PI/6));
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - len*Math.cos(angle+Math.PI/6), y2 - len*Math.sin(angle+Math.PI/6));
+    ctx.stroke();
+  }
+
+  // ─── رسم شكل من snapshot ───
+  function drawShape(ex, ey){
+    ctx.putImageData(snapshot, 0, 0);
+    ctx.strokeStyle = getColor();
+    ctx.fillStyle   = getColor() + '44';
+    ctx.lineWidth   = getSize();
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+
+    if(currentTool === 'line'){
+      ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(ex, ey); ctx.stroke();
+    } else if(currentTool === 'arrow'){
+      ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(ex, ey); ctx.stroke();
+      drawArrowHead(startX, startY, ex, ey, getSize());
+    } else if(currentTool === 'rect'){
+      ctx.beginPath();
+      ctx.rect(startX, startY, ex-startX, ey-startY);
+      if(getFill()) ctx.fill();
+      ctx.stroke();
+    } else if(currentTool === 'circle'){
+      const rx = Math.abs(ex-startX)/2, ry = Math.abs(ey-startY)/2;
+      const cx = startX + (ex-startX)/2, cy = startY + (ey-startY)/2;
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, rx||1, ry||1, 0, 0, Math.PI*2);
+      if(getFill()) ctx.fill();
+      ctx.stroke();
+    }
+  }
+
+  // ─── أحداث الرسم ───
+  function onStart(e){
+    e.preventDefault();
+    drawing = true;
+    const p = getPos(e);
+    startX = p.x; startY = p.y;
+
+    if(currentTool === 'text'){
+      const txt = document.getElementById('textInput').value;
+      if(!txt) return;
+      ctx.fillStyle = getColor();
+      ctx.font = `${Math.max(14, getSize()*4)}px inherit`;
+      ctx.fillText(txt, p.x, p.y);
+      saveHistory();
+      drawing = false;
+      return;
+    }
+
+    if(['line','arrow','rect','circle'].includes(currentTool)){
+      snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+    }
+  }
+
+  function onMove(e){
+    if(!drawing) return;
+    e.preventDefault();
+    const p = getPos(e);
+
+    if(['line','arrow','rect','circle'].includes(currentTool)){
+      drawShape(p.x, p.y);
+      return;
+    }
+
+    if(currentTool === 'eraser'){
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = getSize() * 4;
+      ctx.lineCap = 'round';
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = getColor();
+      ctx.lineWidth   = getSize();
+      ctx.lineCap     = 'round';
+      ctx.lineJoin    = 'round';
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    }
+  }
+
+  function onEnd(e){
+    if(!drawing) return;
+    drawing = false;
+    ctx.globalCompositeOperation = 'source-over';
+    saveHistory();
+  }
+
+  canvas.addEventListener('mousedown',  onStart);
+  canvas.addEventListener('mousemove',  onMove);
+  canvas.addEventListener('mouseup',    onEnd);
+  canvas.addEventListener('mouseleave', onEnd);
+  canvas.addEventListener('touchstart', onStart, {passive:false});
+  canvas.addEventListener('touchmove',  onMove,  {passive:false});
+  canvas.addEventListener('touchend',   onEnd);
+
+  document.getElementById('penSize').addEventListener('input', function(){
+    document.getElementById('penSizeVal').textContent = this.value;
+  });
+})();
+</script>
+{% endblock %}

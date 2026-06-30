@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}صندوق الرسائل الخاصة{% endblock %}
+{% block content %}
+<style>
+.inbox-wrap{max-width:680px;margin:36px auto;padding:0 20px;direction:rtl}
+.inbox-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
+.conv-item{
+  display:flex;align-items:center;gap:12px;
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:14px;padding:14px 16px;margin-bottom:10px;
+  text-decoration:none;color:inherit;transition:border-color .2s,background .2s;
+}
+.conv-item:hover{border-color:rgba(16,185,129,0.3);background:var(--bg-elevated)}
+.conv-item.unread-conv{border-color:rgba(16,185,129,0.35)}
+.conv-avatar{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;font-weight:800;flex-shrink:0;
+  background:rgba(139,92,246,0.2);color:#a78bfa;
+}
+.conv-name{font-size:0.9rem;font-weight:800;color:var(--text-primary)}
+.conv-preview{font-size:0.8rem;color:var(--text-muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:320px}
+.conv-time{font-size:0.72rem;color:var(--text-muted);flex-shrink:0}
+.unread-pill{
+  background:#10b981;color:#fff;font-size:0.65rem;font-weight:900;
+  padding:2px 7px;border-radius:10px;flex-shrink:0;
+}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
+</style>
+
+<div class="inbox-wrap">
+  <div class="inbox-header">
+    <span style="font-size:1.8rem">✉️</span>
+    <div style="flex:1">
+      <h1 style="font-size:1.3rem;font-weight:900">صندوق الرسائل الخاصة</h1>
+      <p style="font-size:0.82rem;color:var(--text-muted)">محادثاتك الخاصة مع الطلاب</p>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm">لوحة التحكم</a>
+  </div>
+
+  {% if not conversations %}
+  <div class="empty-state">
+    <div style="font-size:3rem;margin-bottom:10px">✉️</div>
+    <div style="font-weight:700;margin-bottom:6px">لا توجد محادثات بعد</div>
+    <div style="font-size:0.84rem">أرسل رسالة خاصة لطالب عبر صفحة إرسال الإشعارات</div>
+    <a href="{{ url_for('notifications.admin_send') }}" class="btn btn-primary" style="margin-top:14px">
+      📢 إرسال رسالة جديدة
+    </a>
+  </div>
+  {% else %}
+  {% for c in conversations %}
+  <a href="{{ url_for('messages.thread', user_id=c.user.id) }}"
+     class="conv-item {{ 'unread-conv' if c.unread > 0 }}">
+    <div class="conv-avatar">{{ c.user.name[0] }}</div>
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="conv-name">{{ c.user.name }}</span>
+        {% if c.unread > 0 %}
+        <span class="unread-pill">{{ c.unread }} جديد</span>
+        {% endif %}
+      </div>
+      <div class="conv-preview">
+        {% if c.last.sender_id == current_user.id %}أنت: {% endif %}
+        {{ c.last.body }}
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+      <span class="conv-time">{{ c.last.created_at.strftime('%H:%M · %d/%m') }}</span>
+    </div>
+  </a>
+  {% endfor %}
+
+  <div style="margin-top:16px;text-align:center">
+    <a href="{{ url_for('notifications.admin_send') }}" class="btn btn-primary">
+      📢 رسالة جديدة لطالب
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

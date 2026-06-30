@@ -1,0 +1,2 @@
+- [OpenRouter free models](openrouter-models.md) — نماذج :free تتغير؛ اختبر دائماً قبل الاستخدام
+- [GitHub as database](github-as-db.md) — نظام data_store لحماية البيانات من الحذف عند النشر على Render

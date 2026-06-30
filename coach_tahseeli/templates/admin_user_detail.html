@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}تفاصيل الطالب{% endblock %}
+{% block content %}
+<div style="max-width:960px;margin:40px auto;padding:0 24px">
+  <a href="{{ url_for('admin.users') }}" class="btn btn-secondary btn-sm" style="margin-bottom:20px">← رجوع</a>
+
+  <!-- بطاقة معلومات الطالب -->
+  <div class="card card-gold" style="margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="avatar" style="width:60px;height:60px;font-size:1.5rem">{{ user.name[0] }}</div>
+      <div>
+        <h2 style="font-weight:900;margin-bottom:4px">{{ user.name }}</h2>
+        <div style="color:var(--text-muted);font-size:0.9rem">{{ user.email }}</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <span class="badge badge-{{ 'green' if user.is_verified else 'red' }}">{{ 'مفعّل' if user.is_verified else 'غير مفعّل' }}</span>
+          <span class="badge badge-{{ 'green' if user.level == 'advanced' else 'cyan' if user.level == 'intermediate' else 'gold' }}">{{ user.level }}</span>
+          <span class="badge badge-gray">{{ user.grade }}</span>
+        </div>
+      </div>
+      <div style="margin-right:auto;text-align:center">
+        <div style="font-size:2rem;font-weight:900;color:var(--gold)">{{ user.average_score }}%</div>
+        <div style="font-size:0.8rem;color:var(--text-muted)">متوسط الدرجات</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- إحصائيات سريعة -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px">
+    <div class="card" style="padding:16px;text-align:center">
+      <div style="font-size:1.8rem;font-weight:900;color:var(--gold)">{{ evals|length }}</div>
+      <div style="font-size:0.8rem;color:var(--text-muted)">اختبارات التحصيلي</div>
+    </div>
+    <div class="card" style="padding:16px;text-align:center">
+      <div style="font-size:1.8rem;font-weight:900;color:#6366f1">{{ pro_results|length }}</div>
+      <div style="font-size:0.8rem;color:var(--text-muted)">اختبارات الرخصة المهنية</div>
+    </div>
+    <div class="card" style="padding:16px;text-align:center">
+      <div style="font-size:1.8rem;font-weight:900;color:#10b981">{{ pro_daily|length }}</div>
+      <div style="font-size:0.8rem;color:var(--text-muted)">أيام تدريب يومي مكتملة</div>
+    </div>
+    {% if pro_results %}
+    <div class="card" style="padding:16px;text-align:center">
+      {% set pro_avg = (pro_results | map(attribute='score_pct') | list | sum) / pro_results|length %}
+      <div style="font-size:1.8rem;font-weight:900;color:{{ '#10b981' if pro_avg >= 75 else '#f59e0b' if pro_avg >= 50 else '#ef4444' }}">{{ pro_avg | round(1) }}%</div>
+      <div style="font-size:0.8rem;color:var(--text-muted)">متوسط نتائج الرخصة</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       قسم 1: اختبارات التحصيلي
+  ══════════════════════════════════════════ -->
+  <div class="card" style="padding:0;margin-bottom:24px">
+    <div class="card-header" style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+      <h3 class="card-title">📋 سجل اختبارات التحصيلي</h3>
+      <span class="badge badge-gray">{{ evals|length }} اختبار</span>
+    </div>
+    {% if evals %}
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>المادة</th><th>النوع</th><th>النتيجة</th><th>الوقت</th><th>التاريخ</th></tr></thead>
+        <tbody>
+        {% for ev in evals %}
+        <tr>
+          <td>{% if ev.subject == 'physics' %}⚛️ الفيزياء{% elif ev.subject == 'chemistry' %}🧪 الكيمياء{% elif ev.subject == 'biology' %}🧬 الأحياء{% elif ev.subject == 'math' %}📐 الرياضيات{% else %}📚 متنوعة{% endif %}</td>
+          <td style="font-size:0.82rem;color:var(--text-muted)">{{ ev.exam_type }}</td>
+          <td><span class="badge badge-{{ 'green' if ev.score_pct >= 75 else 'gold' if ev.score_pct >= 50 else 'red' }}">{{ ev.score_pct }}%</span></td>
+          <td style="font-size:0.82rem;color:var(--text-muted)">{{ ev.time_taken // 60 if ev.time_taken else '—' }} د</td>
+          <td style="font-size:0.82rem;color:var(--text-muted)">{{ ev.created_at.strftime('%Y/%m/%d') }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="padding:32px;text-align:center;color:var(--text-muted)">
+      <div style="font-size:2rem;margin-bottom:8px">📭</div>
+      <p>لم يجرِ هذا الطالب أي اختبار تحصيلي بعد</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       قسم 2: اختبارات الرخصة المهنية
+  ══════════════════════════════════════════ -->
+  <div class="card" style="padding:0;margin-bottom:24px">
+    <div class="card-header" style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+      <h3 class="card-title">🎓 سجل اختبارات الرخصة المهنية</h3>
+      <span class="badge badge-gray">{{ pro_results|length }} اختبار</span>
+    </div>
+    {% if pro_results %}
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>نوع الاختبار</th>
+            <th>المعيار</th>
+            <th>النتيجة</th>
+            <th>الإجابات</th>
+            <th>التاريخ</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for r in pro_results %}
+        <tr>
+          <td>
+            {% if r.exam_type == 'daily' %}
+              🗓️ تدريب يومي
+            {% elif r.exam_type == 'comprehensive' %}
+              📊 تجميعي شامل
+            {% elif r.exam_type and r.exam_type.startswith('model_') %}
+              📝 نموذج {{ r.exam_type.split('_')[1] }}
+            {% else %}
+              📌 اختبار معيار
+            {% endif %}
+          </td>
+          <td style="font-size:0.82rem;color:var(--text-muted)">
+            {% if r.standard_num and PRO_STANDARDS.get(r.standard_num) %}
+              م{{ r.standard_num }} — {{ PRO_STANDARDS[r.standard_num].name[:30] }}
+            {% else %}
+              كل المعايير
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge badge-{{ 'green' if r.score_pct >= 75 else 'gold' if r.score_pct >= 50 else 'red' }}">
+              {{ r.score_pct }}%
+            </span>
+          </td>
+          <td style="font-size:0.82rem;color:var(--text-muted)">{{ r.score }}/{{ r.total }}</td>
+          <td style="font-size:0.82rem;color:var(--text-muted)">{{ r.created_at.strftime('%Y/%m/%d') }}</td>
+          <td>
+            <a href="{{ url_for('pro_license.exam_results', result_id=r.id) }}"
+               class="btn btn-secondary btn-sm" style="font-size:0.75rem;padding:3px 8px">
+              عرض
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div style="padding:32px;text-align:center;color:var(--text-muted)">
+      <div style="font-size:2rem;margin-bottom:8px">📭</div>
+      <p>لم يجرِ هذا الطالب أي اختبار للرخصة المهنية بعد</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       قسم 3: التدريب اليومي للرخصة المهنية
+  ══════════════════════════════════════════ -->
+  {% if pro_daily %}
+  <div class="card" style="padding:0;margin-bottom:24px">
+    <div class="card-header" style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+      <h3 class="card-title">📅 سجل التدريب اليومي — الرخصة المهنية</h3>
+      <span class="badge badge-gray">{{ pro_daily|length }} يوم مكتمل</span>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>اليوم</th><th>التاريخ</th><th>النتيجة</th><th>عدد الأسئلة</th><th>التقدم</th></tr>
+        </thead>
+        <tbody>
+        {% for s in pro_daily %}
+        <tr>
+          <td>
+            <span class="badge badge-gold">اليوم {{ s.day_num }}</span>
+          </td>
+          <td style="font-size:0.82rem;color:var(--text-muted)">{{ s.exam_date }}</td>
+          <td>
+            <span class="badge badge-{{ 'green' if s.score_pct >= 75 else 'gold' if s.score_pct >= 50 else 'red' }}">
+              {{ s.score_pct }}%
+            </span>
+          </td>
+          <td style="font-size:0.82rem;color:var(--text-muted)">{{ s.total }} سؤال</td>
+          <td style="min-width:120px">
+            <div style="background:var(--border);border-radius:8px;height:8px;overflow:hidden">
+              <div style="height:100%;border-radius:8px;width:{{ s.score_pct }}%;
+                background:{{ '#10b981' if s.score_pct >= 75 else '#f59e0b' if s.score_pct >= 50 else '#ef4444' }};
+                transition:width .3s"></div>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

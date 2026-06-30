@@ -1,0 +1,50 @@
+2026-04-07T16:06:19.494426037Z Using cached idna-3.11-py3-none-any.whl (71 kB)
+2026-04-07T16:06:19.495608753Z Using cached urllib3-2.6.3-py3-none-any.whl (131 kB)
+2026-04-07T16:06:19.496798269Z Using cached psutil-7.2.2-cp36-abi3-manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_28_x86_64.whl (155 kB)
+2026-04-07T16:06:19.497964654Z Using cached humanize-4.15.0-py3-none-any.whl (132 kB)
+2026-04-07T16:06:19.49914537Z Using cached flask-3.1.3-py3-none-any.whl (103 kB)
+2026-04-07T16:06:19.500294155Z Using cached python_pptx-1.0.2-py3-none-any.whl (472 kB)
+2026-04-07T16:06:19.501735107Z Using cached g4f-7.4.7-py3-none-any.whl (596 kB)
+2026-04-07T16:06:19.503346982Z Using cached blinker-1.9.0-py3-none-any.whl (8.5 kB)
+2026-04-07T16:06:19.504423425Z Using cached certifi-2026.2.25-py3-none-any.whl (153 kB)
+2026-04-07T16:06:19.505630931Z Using cached click-8.3.2-py3-none-any.whl (108 kB)
+2026-04-07T16:06:19.506761206Z Using cached h11-0.16.0-py3-none-any.whl (37 kB)
+2026-04-07T16:06:19.507873Z Using cached itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+2026-04-07T16:06:19.508951264Z Using cached jinja2-3.1.6-py3-none-any.whl (134 kB)
+2026-04-07T16:06:19.510118269Z Using cached lxml-6.0.2-cp314-cp314-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (5.3 MB)
+2026-04-07T16:06:19.515652649Z Using cached markupsafe-3.0.3-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (23 kB)
+2026-04-07T16:06:19.516733813Z Using cached pillow-12.2.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (7.1 MB)
+2026-04-07T16:06:19.523422998Z Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+2026-04-07T16:06:19.524543503Z Using cached werkzeug-3.1.8-py3-none-any.whl (226 kB)
+2026-04-07T16:06:19.525756859Z Using cached xlsxwriter-3.2.9-py3-none-any.whl (175 kB)
+2026-04-07T16:06:19.526977165Z Using cached aiohttp-3.13.5-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.7 MB)
+2026-04-07T16:06:19.52946992Z Using cached multidict-6.7.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (248 kB)
+2026-04-07T16:06:19.530690366Z Using cached yarl-1.23.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (101 kB)
+2026-04-07T16:06:19.531833651Z Using cached aiohappyeyeballs-2.6.1-py3-none-any.whl (15 kB)
+2026-04-07T16:06:19.532942775Z Using cached aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+2026-04-07T16:06:19.533999758Z Using cached attrs-26.1.0-py3-none-any.whl (67 kB)
+2026-04-07T16:06:19.535118873Z Using cached frozenlist-1.8.0-cp314-cp314-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (231 kB)
+2026-04-07T16:06:19.536347489Z Using cached propcache-0.4.1-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (201 kB)
+2026-04-07T16:06:19.537585926Z Using cached anyio-4.13.0-py3-none-any.whl (114 kB)
+2026-04-07T16:06:19.538727491Z Using cached brotli-1.2.0-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (1.4 MB)
+2026-04-07T16:06:19.54098292Z Using cached nest_asyncio2-1.7.2-py3-none-any.whl (7.8 kB)
+2026-04-07T16:06:19.542058404Z Using cached pycryptodome-3.23.0-cp37-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.3 MB)
+2026-04-07T16:06:19.649265296Z Installing collected packages: brotli, XlsxWriter, urllib3, typing-extensions, pycryptodome, psutil, propcache, Pillow, nest-asyncio2, multidict, markupsafe, lxml, itsdangerous, idna, humanize, h11, frozenlist, click, charset_normalizer, certifi, blinker, attrs, aiohappyeyeballs, yarl, werkzeug, requests, python-pptx, jinja2, httpcore, anyio, aiosignal, httpx, flask, aiohttp, python-telegram-bot, g4f
+2026-04-07T16:06:27.24129795Z 
+2026-04-07T16:06:27.247008704Z Successfully installed Pillow-12.2.0 XlsxWriter-3.2.9 aiohappyeyeballs-2.6.1 aiohttp-3.13.5 aiosignal-1.4.0 anyio-4.13.0 attrs-26.1.0 blinker-1.9.0 brotli-1.2.0 certifi-2026.2.25 charset_normalizer-3.4.7 click-8.3.2 flask-3.1.3 frozenlist-1.8.0 g4f-7.4.7 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 humanize-4.15.0 idna-3.11 itsdangerous-2.2.0 jinja2-3.1.6 lxml-6.0.2 markupsafe-3.0.3 multidict-6.7.1 nest-asyncio2-1.7.2 propcache-0.4.1 psutil-7.2.2 pycryptodome-3.23.0 python-pptx-1.0.2 python-telegram-bot-22.7 requests-2.33.1 typing-extensions-4.15.0 urllib3-2.6.3 werkzeug-3.1.8 yarl-1.23.0
+2026-04-07T16:06:27.25556156Z 
+2026-04-07T16:06:27.25557782Z [notice] A new release of pip is available: 25.3 -> 26.0.1
+2026-04-07T16:06:27.25558176Z [notice] To update, run: pip install --upgrade pip
+2026-04-07T16:06:29.31156469Z ==> Uploading build...
+2026-04-07T16:06:42.690475578Z ==> Uploaded in 9.1s. Compression took 4.3s
+2026-04-07T16:06:42.772372919Z ==> Build successful 🎉
+2026-04-07T16:06:47.25233576Z ==> Deploying...
+2026-04-07T16:06:47.309728635Z ==> Setting WEB_CONCURRENCY=1 by default, based on available CPUs in the instance
+2026-04-07T16:08:14.575757269Z ==> No open ports detected, continuing to scan...
+2026-04-07T16:08:14.652446963Z ==> Docs on specifying a port: https://render.com/docs/web-services#port-binding
+2026-04-07T16:08:19.027305047Z ==> Running 'gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2'
+2026-04-07T16:08:19.034055716Z bash: line 1: gunicorn: command not found
+2026-04-07T16:08:34.232501037Z ==> Exited with status 127
+2026-04-07T16:08:34.235325114Z ==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys
+2026-04-07T16:08:39.742907089Z ==> Running 'gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2'
+2026-04-07T16:08:39.757484894Z bash: line 1: gunicorn: command not found

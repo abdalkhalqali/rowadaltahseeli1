@@ -1,0 +1,251 @@
+{% extends "admin_dashboard.html" %}
+{% block content %}
+<div class="container-fluid py-4" dir="rtl">
+
+  <!-- رأس الصفحة -->
+  <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+    <div>
+      <h4 class="fw-bold mb-0">🖼️ أسئلة مزودة برسومات</h4>
+      <small class="text-muted">أسئلة الرخصة المهنية التي تحتوي على رسوم/مخططات — 20 سؤال × 18 معيار</small>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      {% if total == 0 %}
+      <form method="POST" action="{{ url_for('pro_license.admin_drawings_seed') }}" class="d-inline">
+        <button type="submit" class="btn btn-warning btn-sm fw-bold"
+          onclick="return confirm('سيتم إضافة 360 سؤال مزود برسم (20 لكل معيار). هل تريد المتابعة؟')">
+          ⚡ تحميل أسئلة الرسومات (360 سؤال)
+        </button>
+      </form>
+      {% else %}
+      <form method="POST" action="{{ url_for('pro_license.admin_drawings_seed') }}" class="d-inline">
+        <button type="submit" class="btn btn-outline-warning btn-sm"
+          onclick="return confirm('سيتم إضافة الأسئلة الجديدة فقط (التكرار يُتجاهَل). هل تريد المتابعة؟')">
+          ➕ إضافة أسئلة جديدة
+        </button>
+      </form>
+      {% endif %}
+      <a href="{{ url_for('pro_license.admin_index') }}" class="btn btn-outline-secondary btn-sm">
+        📋 كل الأسئلة
+      </a>
+    </div>
+  </div>
+
+  <!-- إحصائيات سريعة -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card text-center h-100" style="background:#1a2035;border:1px solid #2a3050;border-radius:14px">
+        <div class="card-body py-3">
+          <div style="font-size:1.8rem;font-weight:700;color:#FFB800">{{ total }}</div>
+          <small class="text-muted">إجمالي الأسئلة</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center h-100" style="background:#1a2035;border:1px solid #2a3050;border-radius:14px">
+        <div class="card-body py-3">
+          <div style="font-size:1.8rem;font-weight:700;color:#10B981">{{ with_img }}</div>
+          <small class="text-muted">مع صور مرفوعة</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center h-100" style="background:#1a2035;border:1px solid #2a3050;border-radius:14px">
+        <div class="card-body py-3">
+          <div style="font-size:1.8rem;font-weight:700;color:#00E5FF">{{ total - with_img }}</div>
+          <small class="text-muted">بدون صور (تحتاج رسوم)</small>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="card text-center h-100" style="background:#1a2035;border:1px solid #2a3050;border-radius:14px">
+        <div class="card-body py-3">
+          <div style="font-size:1.8rem;font-weight:700;color:#7C3AED">18</div>
+          <small class="text-muted">معياراً (تربوية + فيزياء)</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- فلتر المعايير -->
+  <div class="mb-4">
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <a href="{{ url_for('pro_license.admin_drawings') }}"
+         class="btn btn-sm {% if not selected_standard %}btn-warning{% else %}btn-outline-secondary{% endif %} fw-bold">
+        كل المعايير
+      </a>
+      {% for s_num in range(1,10) %}
+      <a href="{{ url_for('pro_license.admin_drawings', standard=s_num) }}"
+         class="btn btn-sm {% if selected_standard == s_num %}btn-primary{% else %}btn-outline-primary{% endif %}"
+         title="{{ pro_standards[s_num].name }}">
+        م{{ s_num }}
+        {% if counts[s_num] > 0 %}
+        <span class="badge bg-primary ms-1">{{ counts[s_num] }}</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+      <span class="text-muted mx-1">|</span>
+      {% for s_num in range(10,19) %}
+      <a href="{{ url_for('pro_license.admin_drawings', standard=s_num) }}"
+         class="btn btn-sm {% if selected_standard == s_num %}btn-danger{% else %}btn-outline-danger{% endif %}"
+         title="{{ pro_standards[s_num].name }}">
+        م{{ s_num }}
+        {% if counts[s_num] > 0 %}
+        <span class="badge bg-danger ms-1">{{ counts[s_num] }}</span>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% if selected_standard %}
+    <div class="mt-2 text-muted small">
+      المعيار {{ selected_standard }}: <strong style="color:#FFB800">{{ pro_standards[selected_standard].name }}</strong>
+      — {{ counts[selected_standard] }} سؤال
+    </div>
+    {% endif %}
+  </div>
+
+  {% if total == 0 %}
+  <!-- رسالة ترحيبية عند عدم وجود أسئلة -->
+  <div class="text-center py-5">
+    <div style="font-size:4rem;margin-bottom:1rem">🖼️</div>
+    <h5 class="fw-bold mb-2">لا توجد أسئلة مزودة برسومات بعد</h5>
+    <p class="text-muted mb-4">اضغط على زر "تحميل أسئلة الرسومات" لإضافة 360 سؤال (20 لكل معيار)</p>
+    <form method="POST" action="{{ url_for('pro_license.admin_drawings_seed') }}">
+      <button type="submit" class="btn btn-warning btn-lg fw-bold px-5"
+        onclick="return confirm('سيتم إضافة 360 سؤال مزود برسم. هل تريد المتابعة؟')">
+        ⚡ تحميل الأسئلة الآن
+      </button>
+    </form>
+  </div>
+  {% else %}
+
+  <!-- قائمة الأسئلة -->
+  <div class="row g-3">
+    {% for q in questions %}
+    <div class="col-12">
+      <div class="card" style="background:#111827;border:1px solid {% if q.image_data %}rgba(16,185,129,0.4){% else %}rgba(251,191,36,0.25){% endif %};border-radius:14px;transition:.2s">
+
+        <!-- رأس البطاقة -->
+        <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2 py-2"
+             style="background:transparent;border-bottom:1px solid #1e2535">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge" style="background:#1e2535;color:#94a3b8;font-size:.7rem">#{{ q.id }}</span>
+            <span class="badge" style="background:{% if pro_standards[q.standard_num].type == 'physics' %}rgba(244,63,94,0.15){% else %}rgba(99,102,241,0.15){% endif %};color:{% if pro_standards[q.standard_num].type == 'physics' %}#f43f5e{% else %}#818cf8{% endif %}">
+              معيار {{ q.standard_num }} — {{ pro_standards[q.standard_num].name }}
+            </span>
+            <span class="badge" style="background:{% if q.difficulty=='easy' %}rgba(16,185,129,.15){% elif q.difficulty=='medium' %}rgba(251,191,36,.15){% else %}rgba(244,63,94,.15){% endif %};color:{% if q.difficulty=='easy' %}#10b981{% elif q.difficulty=='medium' %}#fbbf24{% else %}#f43f5e{% endif %}">
+              {% if q.difficulty=='easy' %}سهل{% elif q.difficulty=='medium' %}متوسط{% else %}صعب{% endif %}
+            </span>
+            {% if q.image_data %}
+            <span class="badge" style="background:rgba(16,185,129,.2);color:#10b981">✅ صورة مرفوعة</span>
+            {% else %}
+            <span class="badge" style="background:rgba(251,191,36,.15);color:#fbbf24">⚠️ بدون صورة</span>
+            {% endif %}
+          </div>
+          <div class="d-flex gap-2">
+            <a href="{{ url_for('pro_license.admin_edit', qid=q.id) }}"
+               class="btn btn-sm btn-outline-primary" style="font-size:.75rem;padding:3px 10px">
+              ✏️ تعديل
+            </a>
+            <form method="POST" action="{{ url_for('pro_license.admin_delete', qid=q.id) }}" class="d-inline"
+                  onsubmit="return confirm('حذف السؤال #{{ q.id }}؟')">
+              <button type="submit" class="btn btn-sm btn-outline-danger" style="font-size:.75rem;padding:3px 10px">🗑️</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- جسم البطاقة -->
+        <div class="card-body py-3">
+          <div class="row g-3 align-items-start">
+
+            <!-- الصورة -->
+            <div class="col-md-3">
+              {% if q.image_data %}
+              <div class="position-relative text-center">
+                <img src="{{ q.image_data }}" alt="رسم السؤال"
+                     style="max-width:100%;max-height:180px;border-radius:10px;border:1px solid #2a3050;object-fit:contain">
+                <form method="POST" action="{{ url_for('pro_license.admin_drawings_remove_image', qid=q.id) }}"
+                      class="mt-2" onsubmit="return confirm('حذف الصورة؟')">
+                  <button type="submit" class="btn btn-sm btn-outline-danger w-100" style="font-size:.72rem">
+                    🗑️ حذف الصورة
+                  </button>
+                </form>
+              </div>
+              {% else %}
+              <div class="text-center" style="background:#0d1117;border:2px dashed #2a3050;border-radius:12px;padding:1.5rem">
+                <div style="font-size:2.5rem;margin-bottom:.5rem">🖼️</div>
+                <small class="text-muted d-block mb-2">لم تُرفَع صورة بعد</small>
+                <form method="POST" action="{{ url_for('pro_license.admin_drawings_upload_image', qid=q.id) }}"
+                      enctype="multipart/form-data">
+                  <label class="btn btn-sm btn-outline-warning w-100" style="font-size:.75rem;cursor:pointer">
+                    📎 رفع صورة
+                    <input type="file" name="image" accept="image/*" class="d-none"
+                           onchange="this.closest('form').submit()">
+                  </label>
+                </form>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- نص السؤال والإجابات -->
+            <div class="col-md-9">
+              <p class="fw-bold mb-3" style="color:#e2e8f0;font-size:.95rem;line-height:1.7">{{ q.text }}</p>
+              <div class="row g-2">
+                {% for opt, label, opt_text in [
+                  ('A','أ',q.option_a),('B','ب',q.option_b),
+                  ('C','ج',q.option_c),('D','د',q.option_d)] %}
+                <div class="col-12 col-sm-6">
+                  <div class="d-flex align-items-start gap-2 p-2 rounded"
+                       style="background:{% if q.answer|upper == opt %}rgba(16,185,129,.12){% else %}rgba(255,255,255,.03){% endif %};border:1px solid {% if q.answer|upper == opt %}rgba(16,185,129,.35){% else %}#1e2535{% endif %}">
+                    <span class="fw-bold" style="min-width:1.4rem;color:{% if q.answer|upper == opt %}#10b981{% else %}#64748b{% endif %}">{{ label }}</span>
+                    <span style="font-size:.85rem;color:{% if q.answer|upper == opt %}#10b981{% else %}#94a3b8{% endif %}">
+                      {{ opt_text }}
+                    </span>
+                    {% if q.answer|upper == opt %}
+                    <span class="ms-auto text-success">✓</span>
+                    {% endif %}
+                  </div>
+                </div>
+                {% endfor %}
+              </div>
+              {% if q.explanation %}
+              <div class="mt-3 p-2 rounded" style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2)">
+                <small style="color:#818cf8"><strong>💡 التفسير:</strong> {{ q.explanation }}</small>
+              </div>
+              {% endif %}
+
+              <!-- زر رفع الصورة إذا كانت موجودة (لتبديلها) -->
+              {% if q.image_data %}
+              <div class="mt-2">
+                <form method="POST" action="{{ url_for('pro_license.admin_drawings_upload_image', qid=q.id) }}"
+                      enctype="multipart/form-data" class="d-inline">
+                  <label class="btn btn-sm btn-outline-info" style="font-size:.72rem;cursor:pointer">
+                    🔄 تبديل الصورة
+                    <input type="file" name="image" accept="image/*" class="d-none"
+                           onchange="this.closest('form').submit()">
+                  </label>
+                </form>
+              </div>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- ملاحظة سفلية -->
+  <div class="mt-4 p-3 rounded" style="background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.2)">
+    <p class="mb-0" style="color:#fbbf24;font-size:.85rem">
+      💡 <strong>تعليمات رفع الصور:</strong>
+      لكل سؤال زر "📎 رفع صورة" — اضغطه لاختيار الرسم أو المخطط المناسب من جهازك.
+      الحجم الأقصى 5MB. الأنواع المدعومة: PNG, JPG, JPEG, GIF, WEBP, SVG.
+      الصور المرفوعة تُخزَّن في قاعدة البيانات وتظهر تلقائياً للطلاب في الاختبارات.
+    </p>
+  </div>
+
+  {% endif %}
+</div>
+{% endblock %}

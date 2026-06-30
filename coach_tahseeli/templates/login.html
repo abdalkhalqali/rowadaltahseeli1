@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}تسجيل الدخول{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div style="font-size:2.5rem;margin-bottom:8px">🚀</div>
+      <div class="logo-text">رواد التحصيلي</div>
+    </div>
+    <h1 class="auth-title">أهلاً بعودتك</h1>
+    <p class="auth-subtitle">سجّل دخولك لمواصلة رحلة التفوق</p>
+
+    <form method="POST" id="loginForm">
+      <div class="form-group">
+        <label class="form-label">📧 البريد الإلكتروني</label>
+        <input type="email" name="email" class="form-control" placeholder="example@email.com" required autofocus>
+      </div>
+      <div class="form-group">
+        <label class="form-label">🔒 كلمة المرور</label>
+        <div style="position:relative">
+          <input type="password" name="password" id="passwordInput" class="form-control"
+                 placeholder="••••••••" required style="padding-left:44px">
+          <button type="button" id="togglePwd"
+                  onclick="(function(){var i=document.getElementById('passwordInput');var b=document.getElementById('togglePwd');i.type=i.type==='password'?'text':'password';b.textContent=i.type==='password'?'👁':'🙈';})()"
+                  style="position:absolute;left:12px;top:50%;transform:translateY(-50%);
+                         background:none;border:none;cursor:pointer;font-size:1.1rem;
+                         color:var(--text-muted);padding:0;line-height:1">👁</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.88rem;color:var(--text-secondary)">
+          <input type="checkbox" name="remember" style="accent-color:var(--gold)"> تذكّرني
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full">
+        🚀 دخول
+      </button>
+    </form>
+
+    <div class="auth-divider">أو</div>
+    <div class="auth-footer">
+      ليس لديك حساب؟
+      <a href="{{ url_for('auth.register') }}" class="text-gold"> سجّل مجاناً الآن</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

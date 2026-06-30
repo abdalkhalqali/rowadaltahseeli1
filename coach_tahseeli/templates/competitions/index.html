@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}المسابقات{% endblock %}
+{% block content %}
+<div style="max-width:1000px;margin:0 auto;padding:28px 24px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px">
+    <div>
+      <h1 style="font-size:1.8rem;font-weight:900;margin-bottom:4px">🏆 المسابقات</h1>
+      <p style="color:var(--text-muted)">تنافس مع الطلاب في وقت حقيقي</p>
+    </div>
+    <a href="{{ url_for('competition.my_competitions') }}" class="btn btn-secondary btn-sm">مسابقاتي</a>
+  </div>
+
+  {% if active %}
+  <div class="section-header" style="text-align:right;margin-bottom:16px">
+    <h2 style="font-size:1.1rem;font-weight:800;display:flex;align-items:center;gap:8px">
+      <span class="badge badge-green" style="animation:pulse-dot 1s infinite;width:10px;height:10px;border-radius:50%;padding:0;background:var(--emerald)"></span>
+      مسابقات نشطة الآن
+    </h2>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px">
+    {% for comp in active %}
+    <div class="card card-cyan">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="badge badge-green">🔴 نشط</div>
+        <div class="badge badge-gray">{{ comp.subject_ar }}</div>
+      </div>
+      <h3 style="font-weight:800;margin-bottom:8px">{{ comp.name }}</h3>
+      <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px">{{ comp.description or 'مسابقة تحصيلي مباشرة' }}</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="badge badge-gold">⏱️ {{ comp.duration_min }} د</span>
+        <span class="badge badge-purple">❓ {{ comp.total_q }} سؤال</span>
+        <span class="badge badge-gray">👥 {{ comp.participant_count }}</span>
+      </div>
+      {% if comp.prize %}<div style="font-size:0.82rem;color:var(--gold);margin-bottom:12px">🎁 {{ comp.prize }}</div>{% endif %}
+      <a href="{{ url_for('competition.join', comp_id=comp.id) }}" class="btn btn-cyan btn-full">⚔️ انضم الآن</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if upcoming %}
+  <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:16px">📅 مسابقات قادمة</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:32px">
+    {% for comp in upcoming %}
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+        <div class="badge badge-gold">🕐 قريباً</div>
+        <div class="badge badge-gray">{{ comp.subject_ar }}</div>
+      </div>
+      <h3 style="font-weight:800;margin-bottom:8px">{{ comp.name }}</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+        <span class="badge badge-gold">⏱️ {{ comp.duration_min }} د</span>
+        <span class="badge badge-purple">❓ {{ comp.total_q }} سؤال</span>
+      </div>
+      {% if comp.prize %}<div style="font-size:0.82rem;color:var(--gold);margin-bottom:12px">🎁 {{ comp.prize }}</div>{% endif %}
+      <a href="{{ url_for('competition.join', comp_id=comp.id) }}" class="btn btn-outline-gold btn-full">سجّل مشاركتك</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if finished %}
+  <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:16px">✅ مسابقات منتهية</h2>
+  <div class="card" style="padding:0">
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>اسم المسابقة</th><th>المادة</th><th>المشاركون</th><th>الإجراء</th></tr></thead>
+        <tbody>
+        {% for comp in finished %}
+        <tr>
+          <td style="font-weight:600">{{ comp.name }}</td>
+          <td>{{ comp.subject_ar }}</td>
+          <td>{{ comp.participant_count }}</td>
+          <td><a href="{{ url_for('competition.leaderboard', comp_id=comp.id) }}" class="btn btn-sm btn-secondary">النتائج</a></td>
+        </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if not active and not upcoming and not finished %}
+  <div style="text-align:center;padding:60px 24px">
+    <div style="font-size:4rem;margin-bottom:16px">🏆</div>
+    <h2 style="font-weight:800;margin-bottom:8px">لا توجد مسابقات حالياً</h2>
+    <p style="color:var(--text-muted)">سيتم إطلاق مسابقات قريباً — ترقّب!</p>
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary" style="margin-top:20px">🏠 الرئيسية</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,433 @@
+{% extends 'base.html' %}
+{% block title %}
+  {% if exam_type == 'daily' %}التدريب اليومي{% elif exam_type == 'model' %}نموذج {{ model_num }}{% elif exam_type == 'comprehensive' %}الاختبار الشامل{% else %}اختبار معيار {{ standard }}{% endif %} — الرخصة المهنية
+{% endblock %}
+{% block extra_css %}
+<style>
+/* ── ثابت للاختبار ─────────────────────── */
+.exam-choices-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.choice-item{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;
+  background:rgba(255,255,255,0.03);
+  border:2px solid rgba(255,255,255,0.06);
+  border-radius:14px;cursor:pointer;
+  transition:.25s;user-select:none;
+}
+.choice-item:hover:not(.chosen){
+  background:rgba(255,255,255,0.06);
+  border-color:rgba(255,255,255,0.14);
+}
+.choice-badge{
+  width:32px;height:32px;border-radius:9px;
+  font-weight:800;font-size:0.85rem;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:.25s;
+}
+/* مؤقت */
+#timer-display{
+  background:rgba(239,68,68,0.12);
+  border:1px solid rgba(239,68,68,0.25);
+  border-radius:12px;padding:10px 18px;text-align:center;
+}
+#timer-display.warn{ animation:timerPulse 1s infinite; }
+@keyframes timerPulse{
+  0%,100%{background:rgba(239,68,68,0.12)}
+  50%{background:rgba(239,68,68,0.28)}
+}
+/* مراجعة شارة */
+.review-badge{
+  background:rgba(245,158,11,0.15);
+  border:1px solid rgba(245,158,11,0.3);
+  color:#f59e0b;border-radius:8px;
+  padding:3px 10px;font-size:0.75rem;font-weight:700;
+}
+/* استجابة الشاشات الصغيرة */
+@media(max-width:600px){
+  .exam-choices-grid{ grid-template-columns:1fr !important; }
+  .choice-item{ padding:12px 14px; }
+  .exam-top-bar{ flex-direction:column !important; align-items:flex-start !important; gap:10px !important; }
+  .exam-progress-box{ width:100% !important; }
+}
+</style>
+{% endblock %}
+{% block content %}
+{% set ts = timer_seconds|default(0)|int %}
+{% set rc = review_count|default(0)|int %}
+<div class="dashboard-wrapper">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div style="padding:16px 16px 8px;display:flex;align-items:center;gap:10px;
+                border-bottom:1px solid var(--border);margin-bottom:16px">
+      <div class="avatar" style="width:44px;height:44px;font-size:1.2rem">{{ current_user.name[0] }}</div>
+      <div>
+        <div style="font-weight:700;font-size:0.9rem">{{ current_user.name }}</div>
+        <div style="font-size:0.72rem;color:#64748b">طالب</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">الرخصة المهنية</div>
+      <a href="{{ url_for('pro_license.student_index') }}" class="sidebar-link">
+        <span class="icon">🏅</span> قائمة المعايير
+      </a>
+      <a href="{{ url_for('pro_license.history') }}" class="sidebar-link">
+        <span class="icon">📋</span> سجل نتائجي
+      </a>
+      <a href="{{ url_for('student.dashboard') }}" class="sidebar-link">
+        <span class="icon">🏠</span> لوحتي
+      </a>
+    </div>
+    <!-- تقدم الإجابة -->
+    <div class="sidebar-section" style="margin-top:8px">
+      <div class="sidebar-label">التقدم</div>
+      <div style="padding:12px 8px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;
+                    font-size:0.8rem;color:#94a3b8">
+          <span id="sidebarAnswered">0</span>
+          <span>/ {{ questions|length }} سؤال</span>
+        </div>
+        <div style="background:rgba(99,102,241,0.15);border-radius:6px;height:6px;overflow:hidden">
+          <div id="sidebarBar"
+               style="background:linear-gradient(90deg,#6366f1,#8b5cf6);
+                      height:100%;width:0%;transition:.3s"></div>
+        </div>
+      </div>
+    </div>
+    {% if ts > 0 %}
+    <!-- مؤقت الجانبي -->
+    <div class="sidebar-section" style="margin-top:4px">
+      <div class="sidebar-label">المؤقت</div>
+      <div style="padding:8px">
+        <div id="timer-display">
+          <div id="timerText" style="font-size:1.4rem;font-weight:900;color:#ef4444;line-height:1">--:--</div>
+          <div style="font-size:0.7rem;color:#94a3b8;margin-top:2px">الوقت المتبقي</div>
+        </div>
+        <div style="font-size:0.72rem;color:#475569;margin-top:6px;text-align:center">
+          {{ ts }} ثانية لكل سؤال
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </aside>
+
+  <main class="main-content">
+
+    <!-- Exam Header -->
+    <div style="background:linear-gradient(135deg,
+          {% if exam_type == 'daily' %}#1e3a5f,#1e1b4b,#312e81
+          {% elif exam_type == 'comprehensive' %}#064e3b,#065f46,#1e3a5f
+          {% elif exam_type == 'model' %}#78350f,#92400e,#1e3a5f
+          {% else %}#1e1b4b,#312e81,#1e3a5f{% endif %});
+          border-radius:20px;padding:22px 24px;margin-bottom:24px;
+          border:1px solid rgba(99,102,241,0.3);
+          box-shadow:0 8px 32px rgba(0,0,0,0.25)">
+      <div class="exam-top-bar" style="display:flex;align-items:flex-start;
+                  justify-content:space-between;gap:12px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.75rem;color:#a5b4fc;margin-bottom:4px;letter-spacing:1px">
+            {% if exam_type == 'daily' %}📅 التدريب اليومي التصاعدي
+            {% elif exam_type == 'comprehensive' %}🎯 الاختبار التجميعي الشامل
+            {% elif exam_type == 'model' %}📄 نماذج الاختبارات
+            {% else %}🏅 الرخصة المهنية للفيزياء{% endif %}
+          </div>
+          <h1 style="font-size:1.2rem;font-weight:900;color:#fff;margin:0 0 6px;
+                     line-height:1.3;word-break:break-word">🎓 {{ std_info.name }}</h1>
+          <div style="font-size:0.82rem;color:#c7d2fe;display:flex;flex-wrap:wrap;gap:8px">
+            <span>{{ questions|length }} سؤال</span>
+            {% if rc > 0 %}
+            <span class="review-badge">🔁 {{ rc }} مراجعة</span>
+            {% endif %}
+            {% if ts > 0 %}
+            <span style="background:rgba(239,68,68,0.15);color:#f87171;border-radius:6px;
+                         padding:2px 8px;font-size:0.75rem">⏱ {{ ts }} ثا/سؤال</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="exam-progress-box"
+             style="text-align:center;background:rgba(255,255,255,0.08);
+                    border-radius:14px;padding:12px 18px;border:1px solid rgba(255,255,255,0.1);
+                    flex-shrink:0">
+          <div id="headerAnswered" style="font-size:1.8rem;font-weight:900;color:#fff;line-height:1">0</div>
+          <div style="font-size:0.7rem;color:#a5b4fc">/ {{ questions|length }} أُجيب</div>
+        </div>
+      </div>
+      <!-- Progress Bar -->
+      <div style="margin-top:16px">
+        <div style="background:rgba(255,255,255,0.12);border-radius:8px;height:7px;overflow:hidden">
+          <div id="mainProgressBar"
+               style="background:linear-gradient(90deg,#10b981,#6366f1);
+                      height:100%;width:0%;transition:.4s;border-radius:8px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- نبّه للأسئلة المراجعة -->
+    {% if rc > 0 %}
+    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);
+                border-radius:14px;padding:14px 18px;margin-bottom:18px;
+                display:flex;align-items:center;gap:10px">
+      <span style="font-size:1.3rem">🔁</span>
+      <div>
+        <div style="font-weight:700;color:#f59e0b;font-size:0.9rem">أسئلة المراجعة</div>
+        <div style="font-size:0.8rem;color:#64748b">
+          الأسئلة الأولى ({{ rc }}) هي أخطاؤك من التدريب السابق — راجعها جيداً
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- نموذج الاختبار -->
+    {% if exam_type == 'daily' %}
+    <form method="POST" action="{{ url_for('pro_license.submit_daily', session_id=session_id) }}" id="examForm">
+    {% elif exam_type == 'model' %}
+    <form method="POST" action="{{ url_for('pro_license.submit_model', model_num=model_num) }}" id="examForm">
+    {% elif exam_type == 'comprehensive' %}
+    <form method="POST" action="{{ url_for('pro_license.submit_comprehensive') }}" id="examForm">
+    {% else %}
+    <form method="POST" action="{{ url_for('pro_license.submit_exam', standard=standard) }}" id="examForm">
+    {% endif %}
+
+      {% for q in questions %}
+      {% set is_review = loop.index0 < rc %}
+      <div class="exam-card" id="qcard{{ loop.index }}"
+           style="background:var(--bg-card);border:1px solid
+                  {{ 'rgba(245,158,11,0.25)' if is_review else 'var(--border)' }};
+                  border-radius:20px;padding:22px;margin-bottom:18px;transition:.3s;
+                  box-shadow:0 4px 20px rgba(0,0,0,0.2)">
+
+        <!-- رأس السؤال -->
+        <div style="display:flex;align-items:center;justify-content:space-between;
+                    margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <div style="width:34px;height:34px;border-radius:10px;
+                        background:{% if is_review %}linear-gradient(135deg,#f59e0b,#d97706){% else %}linear-gradient(135deg,#6366f1,#8b5cf6){% endif %};
+                        display:flex;align-items:center;justify-content:center;
+                        font-weight:800;font-size:0.9rem;color:#fff;flex-shrink:0">
+              {{ loop.index }}
+            </div>
+            {% if is_review %}
+            <span class="review-badge">🔁 مراجعة</span>
+            {% endif %}
+            <span style="color:#94a3b8;font-size:0.82rem">سؤال {{ loop.index }} من {{ questions|length }}</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            {% if q.difficulty == 'easy' %}
+            <span style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.2);
+                         font-size:0.73rem;padding:3px 9px;border-radius:20px">🟢 سهل</span>
+            {% elif q.difficulty == 'medium' %}
+            <span style="background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);
+                         font-size:0.73rem;padding:3px 9px;border-radius:20px">🟡 متوسط</span>
+            {% else %}
+            <span style="background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.2);
+                         font-size:0.73rem;padding:3px 9px;border-radius:20px">🔴 صعب</span>
+            {% endif %}
+            <span id="badge_q{{ loop.index }}"
+                  style="background:rgba(99,102,241,0.08);color:#475569;
+                         border:1px solid rgba(99,102,241,0.1);
+                         font-size:0.73rem;padding:3px 9px;border-radius:20px;transition:.3s">
+              ⭕ لم تُجب
+            </span>
+          </div>
+        </div>
+
+        <!-- نص السؤال -->
+        <p style="font-size:1rem;font-weight:600;line-height:1.8;color:#e2e8f0;
+                  margin:0 0 16px;padding:14px 16px;
+                  background:rgba(99,102,241,0.05);border-radius:12px;
+                  border-right:3px solid rgba(99,102,241,0.4)">
+          {{ q.text }}
+        </p>
+
+        <!-- صورة السؤال -->
+        {% if q.image_data %}
+        <div style="margin-bottom:14px;text-align:center">
+          <img src="{{ q.image_data }}" alt="رسم السؤال"
+               style="max-width:100%;max-height:240px;border:1px solid var(--border);
+                      border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.3)">
+        </div>
+        {% endif %}
+
+        <!-- كود مرفق -->
+        {% if q.code_snippet %}
+        <div style="margin-bottom:14px;border-radius:12px;overflow:hidden;
+                    border:1px solid rgba(99,102,241,0.3);background:#0a0e1a">
+          <div style="background:rgba(99,102,241,0.12);padding:8px 14px;
+                      display:flex;justify-content:space-between;align-items:center;
+                      border-bottom:1px solid rgba(99,102,241,0.2)">
+            <span style="font-size:0.73rem;color:#818cf8;font-weight:700;font-family:monospace">
+              💻 {{ q.code_type | upper if q.code_type else 'CODE' }}
+            </span>
+            <button onclick="copyProCode(this)" data-code="{{ q.code_snippet | e }}"
+              style="background:transparent;border:none;color:#818cf8;cursor:pointer;
+                     font-size:0.73rem;font-family:inherit;padding:2px 6px">
+              📋 نسخ
+            </button>
+          </div>
+          <pre style="margin:0;padding:14px 16px;font-family:'Courier New',Courier,monospace;
+                      font-size:0.85rem;color:#a5f3fc;overflow-x:auto;direction:ltr;
+                      text-align:left;line-height:1.7;white-space:pre">{{ q.code_snippet }}</pre>
+        </div>
+        {% endif %}
+
+        <!-- الخيارات -->
+        <div class="exam-choices-grid">
+          {% for letter, text, color in [
+              ('A', q.option_a, '#6366f1'),
+              ('B', q.option_b, '#10b981'),
+              ('C', q.option_c, '#f59e0b'),
+              ('D', q.option_d, '#ef4444')
+          ] %}
+          <label class="choice-item" data-qid="{{ q.id }}"
+                 data-letter="{{ letter }}" data-color="{{ color }}">
+            <input type="radio" name="q_{{ q.id }}" value="{{ letter }}"
+                   class="choice-radio" style="display:none">
+            <div class="choice-badge"
+                 style="background:{{ color }}22;color:{{ color }};
+                        border:2px solid {{ color }}33">{{ letter }}</div>
+            <span style="font-size:0.88rem;color:#cbd5e1;line-height:1.5;flex:1">{{ text }}</span>
+          </label>
+          {% endfor %}
+        </div>
+
+      </div>
+      {% endfor %}
+
+      <!-- زر التسليم -->
+      <div style="text-align:center;margin:8px 0 40px">
+        <button type="submit" onclick="return confirmSubmit()"
+                style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;
+                       border-radius:16px;padding:15px 44px;font-weight:900;font-size:1rem;
+                       cursor:pointer;font-family:inherit;
+                       box-shadow:0 8px 24px rgba(16,185,129,0.35);transition:.2s;
+                       width:100%;max-width:360px">
+          ✅ تسليم الاختبار
+        </button>
+        <p style="color:#64748b;font-size:0.8rem;margin-top:10px">
+          تأكد من الإجابة على جميع الأسئلة قبل التسليم
+        </p>
+      </div>
+
+    </form>
+  </main>
+</div>
+
+<script>
+const TOTAL   = {{ questions|length }};
+const TIMER_S = {{ ts }};
+const RC      = {{ rc }};
+let answered  = new Set();
+let timerInterval = null;
+let totalSeconds  = TIMER_S * TOTAL;
+
+/* ── تحديد إجابة ─────────────────────── */
+document.querySelectorAll('.choice-radio').forEach(r => {
+  r.addEventListener('change', function(){
+    const nm  = this.name;
+    const val = this.value;
+
+    // إلغاء التحديد السابق
+    document.querySelectorAll('.choice-item').forEach(lbl => {
+      if (lbl.querySelector('input').name === nm) {
+        const c = lbl.dataset.color;
+        lbl.classList.remove('chosen');
+        lbl.style.borderColor = 'rgba(255,255,255,0.06)';
+        lbl.style.background  = 'rgba(255,255,255,0.03)';
+        const b = lbl.querySelector('.choice-badge');
+        if (b){ b.style.background = c+'22'; b.style.borderColor = c+'33'; }
+      }
+    });
+
+    // تمييز الإجابة الجديدة
+    const lbl   = this.closest('.choice-item');
+    const color = lbl.dataset.color;
+    lbl.classList.add('chosen');
+    lbl.style.borderColor = color;
+    lbl.style.background  = color + '18';
+    const b = lbl.querySelector('.choice-badge');
+    if (b){ b.style.background = color+'44'; b.style.borderColor = color; }
+
+    answered.add(nm);
+
+    // تحديث شارة السؤال
+    document.querySelectorAll('.exam-card').forEach(card => {
+      const radios = card.querySelectorAll('.choice-radio');
+      if (radios.length && radios[0].name === nm) {
+        const badge = card.querySelector('[id^="badge_q"]');
+        if (badge){
+          badge.style.background  = 'rgba(16,185,129,0.15)';
+          badge.style.color       = '#10b981';
+          badge.style.borderColor = 'rgba(16,185,129,0.25)';
+          badge.textContent       = '✅ أُجيب';
+        }
+      }
+    });
+
+    updateProgress();
+  });
+});
+
+function updateProgress(){
+  const pct = answered.size / TOTAL * 100;
+  document.getElementById('mainProgressBar').style.width = pct + '%';
+  document.getElementById('headerAnswered').textContent  = answered.size;
+  document.getElementById('sidebarAnswered').textContent = answered.size;
+  document.getElementById('sidebarBar').style.width      = pct + '%';
+}
+
+function confirmSubmit(){
+  if (answered.size < TOTAL){
+    return confirm('لم تجب على ' + (TOTAL - answered.size) + ' سؤال بعد.\nهل تريد التسليم على أي حال؟');
+  }
+  return true;
+}
+
+/* ── نسخ الكود ─────────────────────────── */
+function copyProCode(btn){
+  const code = btn.getAttribute('data-code');
+  navigator.clipboard.writeText(code).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅ تم النسخ';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+
+/* ── المؤقت الزمني ────────────────────── */
+if (TIMER_S > 0 && totalSeconds > 0){
+  const timerText = document.getElementById('timerText');
+  const timerDisp = document.getElementById('timer-display');
+
+  function formatTime(s){
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+  }
+
+  timerText.textContent = formatTime(totalSeconds);
+
+  timerInterval = setInterval(() => {
+    totalSeconds--;
+    if (timerText) timerText.textContent = formatTime(Math.max(0, totalSeconds));
+
+    // تحذير عند أقل من 20% من الوقت
+    if (totalSeconds <= TIMER_S * TOTAL * 0.2 && timerDisp){
+      timerDisp.classList.add('warn');
+    }
+
+    if (totalSeconds <= 0){
+      clearInterval(timerInterval);
+      // تسليم تلقائي
+      const form = document.getElementById('examForm');
+      if (form){
+        if (timerText) timerText.textContent = '00:00';
+        setTimeout(() => form.submit(), 800);
+      }
+    }
+  }, 1000);
+}
+</script>
+{% endblock %}

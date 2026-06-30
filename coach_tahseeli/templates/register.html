@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block title %}إنشاء حساب{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card" style="max-width:440px">
+    <div class="auth-logo">
+      <div style="font-size:2.5rem;margin-bottom:8px">🎓</div>
+      <div class="logo-text">رواد التحصيلي</div>
+    </div>
+    <h1 class="auth-title">انضم للرواد</h1>
+    <p class="auth-subtitle">ابدأ رحلة التفوق في التحصيلي مجاناً</p>
+
+    <form method="POST" id="registerForm">
+
+      <!-- الاسم -->
+      <div class="form-group">
+        <label class="form-label">👤 الاسم الكامل</label>
+        <input type="text" name="name" class="form-control"
+               placeholder="محمد العلي" required autofocus>
+      </div>
+
+      <!-- البريد -->
+      <div class="form-group">
+        <label class="form-label">📧 البريد الإلكتروني</label>
+        <input type="email" name="email" class="form-control"
+               placeholder="example@email.com" required>
+      </div>
+
+      <!-- كلمة المرور -->
+      <div class="form-group">
+        <label class="form-label">🔒 كلمة المرور</label>
+        <input type="password" name="password" class="form-control"
+               placeholder="8 أحرف على الأقل" required minlength="8">
+      </div>
+
+      <!-- اختيار الجنس -->
+      <div class="form-group">
+        <label class="form-label">🧑‍🎓 الجنس</label>
+        <input type="hidden" name="gender" id="genderInput" value="">
+        <div class="gender-grid">
+
+          <button type="button" class="gender-btn" id="btn-male"
+                  onclick="selectGender('male')">
+            <span class="gender-icon">👨‍🎓</span>
+            <span class="gender-label">ذكر</span>
+            <span class="gender-check" id="check-male">✅</span>
+          </button>
+
+          <button type="button" class="gender-btn" id="btn-female"
+                  onclick="selectGender('female')">
+            <span class="gender-icon">👩‍🎓</span>
+            <span class="gender-label">أنثى</span>
+            <span class="gender-check" id="check-female">✅</span>
+          </button>
+
+        </div>
+        <div id="genderError" style="display:none;color:#f87171;font-size:0.8rem;margin-top:6px;text-align:center">
+          ⚠️ يرجى تحديد الجنس أولاً
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" onclick="return validateGender()">
+        🚀 إنشاء حساب مجاني
+      </button>
+    </form>
+
+    <div class="auth-divider">أو</div>
+    <div class="auth-footer">
+      لديك حساب؟
+      <a href="{{ url_for('auth.login') }}" class="text-gold"> سجّل دخولك</a>
+    </div>
+  </div>
+</div>
+
+<style>
+.gender-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 6px;
+}
+.gender-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px 12px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-family: 'Tajawal', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+.gender-btn:hover {
+  border-color: var(--gold);
+  background: rgba(255,184,0,0.06);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+}
+.gender-btn.selected {
+  border-color: var(--gold);
+  background: rgba(255,184,0,0.1);
+  color: var(--gold);
+}
+.gender-icon { font-size: 2rem; }
+.gender-label { font-weight: 700; font-size: 0.9rem; }
+.gender-check {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 0.85rem;
+  display: none;
+}
+.gender-btn.selected .gender-check { display: block; }
+</style>
+
+<script>
+function selectGender(val) {
+  document.getElementById('genderInput').value = val;
+  document.querySelectorAll('.gender-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('btn-' + val).classList.add('selected');
+  document.getElementById('genderError').style.display = 'none';
+}
+
+function validateGender() {
+  const val = document.getElementById('genderInput').value;
+  if (!val) {
+    document.getElementById('genderError').style.display = 'block';
+    return false;
+  }
+  return true;
+}
+</script>
+{% endblock %}

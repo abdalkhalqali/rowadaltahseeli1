@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+{% block title %}{{ exam_type_ar }} — {{ subject_info.ar }}{% endblock %}
+{% block content %}
+<div class="quiz-wrapper" style="padding-top:24px">
+
+  <!-- Header -->
+  <div class="quiz-header">
+    <div>
+      <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:2px">{{ subject_info.ar }}</div>
+      <div style="font-weight:800;font-size:1.1rem">{{ exam_type_ar }}</div>
+    </div>
+    <div class="quiz-timer" id="timer">
+      ⏱️ <span id="timerDisplay">{{ duration }}:00</span>
+    </div>
+    <div>
+      <span id="progressText" class="badge badge-gold">0 / {{ questions|length }}</span>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="quiz-progress-bar">
+    <div class="quiz-progress-fill" id="progressBar" style="width:0%"></div>
+  </div>
+
+  <!-- Questions -->
+  <form id="examForm">
+    {% for q in questions %}
+    <div class="question-card" id="qCard{{ loop.index0 }}"
+         style="{{ 'display:none' if loop.index0 > 0 else '' }}">
+      <div class="question-num">السؤال {{ loop.index }} من {{ questions|length }}</div>
+      <div class="question-text">{{ q.text }}</div>
+      {% if q.image_path %}
+      <div style="text-align:center;margin:12px 0">
+        <img src="{{ q.image_path }}" alt="صورة السؤال"
+             style="max-width:100%;max-height:280px;border-radius:10px;
+                    border:1px solid var(--border);cursor:zoom-in"
+             onclick="this.style.maxHeight=this.style.maxHeight==='none'?'280px':'none'">
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:4px">انقر على الصورة للتكبير</div>
+      </div>
+      {% endif %}
+      {% if q.code_snippet %}
+      <div style="margin:12px 0;border-radius:12px;overflow:hidden;
+                  border:1px solid rgba(99,102,241,0.3);background:#0a0e1a">
+        <div style="background:rgba(99,102,241,0.12);padding:7px 14px;
+                    display:flex;justify-content:space-between;align-items:center;
+                    border-bottom:1px solid rgba(99,102,241,0.2)">
+          <span style="font-size:0.72rem;color:#818cf8;font-weight:700;font-family:monospace">
+            💻 {{ q.code_type | upper if q.code_type else 'CODE' }}
+          </span>
+          <button onclick="copyExamCode(this)" data-code="{{ q.code_snippet | e }}"
+            style="background:transparent;border:none;color:#818cf8;cursor:pointer;
+                   font-size:0.72rem;font-family:inherit;padding:2px 6px">
+            📋 نسخ
+          </button>
+        </div>
+        <pre style="margin:0;padding:14px 16px;font-family:'Courier New',Courier,monospace;
+                    font-size:0.85rem;color:#a5f3fc;overflow-x:auto;direction:ltr;
+                    text-align:left;line-height:1.7;white-space:pre">{{ q.code_snippet }}</pre>
+      </div>
+      {% endif %}
+      <div class="answers">
+        {% for letter, text in [('A', q.option_a), ('B', q.option_b), ('C', q.option_c), ('D', q.option_d)] %}
+        <div class="answer-option" onclick="selectAnswer('{{ q.id }}', '{{ letter }}', this)" data-qid="{{ q.id }}" data-letter="{{ letter }}">
+          <div class="answer-letter">{{ letter }}</div>
+          <div class="answer-text">{{ text }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      <input type="hidden" id="ans_{{ q.id }}" name="ans_{{ q.id }}" value="">
+    </div>
+    {% endfor %}
+  </form>
+
+  <!-- Navigation -->
+  <div style="display:flex;gap:12px;justify-content:space-between;margin-top:20px">
+    <button class="btn btn-secondary" id="prevBtn" onclick="navigate(-1)" disabled>← السابق</button>
+    <button class="btn btn-secondary" id="nextBtn" onclick="navigate(1)">التالي →</button>
+    <button class="btn btn-primary" id="submitBtn" style="display:none" onclick="submitExam()">
+      ✅ إنهاء الاختبار
+    </button>
+  </div>
+
+</div>
+
+<!-- Copy Code Helper -->
+<script>
+function copyExamCode(btn){
+  const code = btn.getAttribute('data-code');
+  navigator.clipboard.writeText(code).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = '✅ تم النسخ';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+</script>
+
+<!-- Submit Loading -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="spinner"></div>
+  <p style="color:var(--text-muted)">جاري تصحيح إجاباتك...</p>
+</div>
+
+<script>
+const QUESTIONS = {{ questions | tojson | safe }};
+const TOTAL = QUESTIONS.length;
+let current = 0;
+let answers = {};
+let startTime = Date.now();
+let timeLeft = {{ duration }} * 60;
+
+// Timer
+const timerEl = document.getElementById('timerDisplay');
+const timerWrap = document.getElementById('timer');
+const timerInterval = setInterval(() => {
+  timeLeft--;
+  const m = Math.floor(timeLeft/60), s = timeLeft%60;
+  timerEl.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  if(timeLeft <= 60) timerWrap.classList.add('urgent');
+  if(timeLeft <= 0) { clearInterval(timerInterval); submitExam(); }
+}, 1000);
+
+function selectAnswer(qid, letter, el) {
+  answers[qid] = letter;
+  document.querySelectorAll(`[data-qid="${qid}"]`).forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  updateProgress();
+}
+
+function navigate(dir) {
+  document.getElementById(`qCard${current}`).style.display = 'none';
+  current += dir;
+  document.getElementById(`qCard${current}`).style.display = 'block';
+  updateNav();
+}
+
+function updateNav() {
+  document.getElementById('prevBtn').disabled = current === 0;
+  document.getElementById('nextBtn').style.display = current < TOTAL-1 ? '' : 'none';
+  document.getElementById('submitBtn').style.display = current === TOTAL-1 ? '' : 'none';
+}
+
+function updateProgress() {
+  const answered = Object.keys(answers).length;
+  const pct = (answered/TOTAL)*100;
+  document.getElementById('progressBar').style.width = pct+'%';
+  document.getElementById('progressText').textContent = `${answered} / ${TOTAL}`;
+}
+
+async function submitExam() {
+  clearInterval(timerInterval);
+  document.getElementById('loadingOverlay').style.display = 'flex';
+  const qIds = QUESTIONS.map(q=>q.id);
+  const timeTaken = Math.floor((Date.now()-startTime)/1000);
+  try {
+    const r = await fetch(location.href, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ answers, question_ids: qIds, time_taken: timeTaken })
+    });
+    const data = await r.json();
+    if(data.redirect) location.href = data.redirect;
+  } catch(e) {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    alert('حدث خطأ. حاول مرة أخرى.');
+  }
+}
+
+updateNav();
+</script>
+{% endblock %}

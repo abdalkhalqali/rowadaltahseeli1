@@ -1,0 +1,1200 @@
+{% extends 'base.html' %}
+{% block title %}إدارة الأسئلة{% endblock %}
+{% block content %}
+<style>
+/* ═══ Layout — يعتمد على كلاسات dashboard-wrapper الموجودة ═══ */
+
+/* ═══ Filters ═══ */
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+  padding:14px 18px;margin-bottom:20px}
+
+/* ═══ Table ═══ */
+.q-table{width:100%;border-collapse:collapse;font-size:0.84rem}
+.q-table th{background:var(--bg-elevated);padding:10px 12px;font-weight:700;
+  color:var(--text-muted);text-align:right;border-bottom:1px solid var(--border);white-space:nowrap}
+.q-table td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
+.q-table tr:hover td{background:var(--bg-elevated)}
+.q-thumb{width:44px;height:36px;object-fit:cover;border-radius:6px;
+  border:1px solid var(--border);cursor:zoom-in}
+.no-img{width:44px;height:36px;display:flex;align-items:center;justify-content:center;
+  border:1px dashed var(--border);border-radius:6px;color:var(--text-muted);font-size:1rem}
+
+/* ═══ Upload Zone ═══ */
+.upload-zone{
+  border:2px dashed var(--border);border-radius:12px;
+  padding:20px;text-align:center;cursor:pointer;transition:all .2s;
+  background:var(--bg-elevated);position:relative;
+}
+.upload-zone.dragover{border-color:#10b981;background:rgba(16,185,129,0.08)}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;z-index:2}
+.upload-zone .uz-icon{font-size:2rem;margin-bottom:8px}
+.upload-zone .uz-text{font-size:0.84rem;color:var(--text-muted)}
+.upload-zone .uz-hint{font-size:0.72rem;color:var(--text-muted);margin-top:4px}
+
+/* ═══ Image Preview ═══ */
+.img-preview-wrap{
+  position:relative;display:inline-block;margin-top:10px;
+}
+.img-preview-wrap img{
+  max-width:100%;max-height:200px;border-radius:10px;
+  border:1px solid var(--border);display:block;
+}
+.img-remove-btn{
+  position:absolute;top:-8px;left:-8px;width:22px;height:22px;border-radius:50%;
+  background:#ef4444;color:#fff;border:none;cursor:pointer;
+  font-size:0.75rem;display:flex;align-items:center;justify-content:center;
+  font-weight:900;z-index:3;
+}
+
+/* ═══ Modal ═══ */
+.qmodal{
+  position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.qmodal.open{display:flex}
+.qmodal-box{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:18px;
+  width:100%;max-width:680px;max-height:90vh;overflow-y:auto;
+  padding:28px 28px 24px;direction:rtl;
+}
+.qmodal-title{font-size:1.1rem;font-weight:900;margin-bottom:20px;
+  display:flex;align-items:center;justify-content:space-between}
+.qmodal-close{background:none;border:none;color:var(--text-muted);
+  font-size:1.4rem;cursor:pointer;padding:0;line-height:1}
+.qmodal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:4px}
+.form-label{font-size:0.8rem;font-weight:700;color:var(--text-muted)}
+.form-control{
+  padding:9px 12px;border-radius:9px;border:1px solid var(--border);
+  background:var(--bg-elevated);color:var(--text-primary);
+  font-size:0.88rem;font-family:inherit;width:100%;box-sizing:border-box;
+}
+.form-control:focus{outline:none;border-color:rgba(16,185,129,.5)}
+textarea.form-control{resize:vertical}
+
+/* ═══ Quick Edit Row ═══ */
+.edit-actions{display:flex;gap:6px;flex-wrap:nowrap}
+
+/* ═══ Mobile Responsive Table ═══ */
+@media(max-width:768px){
+  .q-table thead{display:none}
+  .q-table tr{
+    display:block;margin-bottom:12px;border:1px solid var(--border);
+    border-radius:12px;overflow:hidden;
+  }
+  .q-table td{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:8px 12px;border-bottom:1px solid var(--border);
+    font-size:0.82rem;
+  }
+  .q-table td:last-child{border-bottom:none}
+  .q-table td[data-label]:before{
+    content:attr(data-label);
+    font-weight:700;color:var(--text-muted);font-size:0.75rem;
+    flex-shrink:0;margin-left:8px;
+  }
+  .edit-actions{justify-content:flex-end;width:100%}
+  .edit-actions .btn{padding:8px 16px;font-size:0.85rem}
+  .filter-bar{flex-direction:column}
+  .filter-bar .form-control{width:100%!important}
+}
+
+/* ═══ Image Lightbox ═══ */
+#lightbox{
+  position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:2000;
+  display:none;align-items:center;justify-content:center;cursor:zoom-out;
+}
+#lightbox.open{display:flex}
+#lightbox img{max-width:90vw;max-height:90vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+
+/* ═══ Status badge ═══ */
+.img-badge{display:inline-block;font-size:0.65rem;padding:2px 6px;border-radius:6px;
+  background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3);font-weight:700}
+
+/* ═══ Upload progress ═══ */
+.upload-progress{
+  height:3px;border-radius:2px;background:rgba(16,185,129,.2);
+  margin-top:8px;overflow:hidden;display:none;
+}
+.upload-progress-bar{height:100%;background:#10b981;width:0;transition:width .3s}
+
+/* ═══ Swipe Mobile ═══ */
+@media(max-width:768px){
+  .q-table tr{
+    cursor:grab;user-select:none;
+    transition:transform .18s ease,box-shadow .18s;
+    will-change:transform;
+  }
+  .swipe-hint{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:4px 12px;font-size:0.72rem;color:#475569;
+    background:var(--bg-elevated);border-bottom:1px solid var(--border);
+  }
+}
+
+/* ═══ Drawing Canvas ═══ */
+.draw-panel{
+  background:#0d1628;border:1px solid rgba(99,102,241,0.25);
+  border-radius:12px;padding:12px;margin-bottom:14px;
+}
+.draw-toolbar{
+  display:flex;gap:4px;flex-wrap:wrap;align-items:center;
+  margin-bottom:8px;
+}
+.dtool{
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+  color:#94a3b8;border-radius:7px;cursor:pointer;padding:4px 9px;
+  font-size:0.78rem;font-family:inherit;min-width:30px;
+}
+.dtool.active{background:rgba(99,102,241,0.2);color:#6366f1;border-color:rgba(99,102,241,0.4)}
+</style>
+
+<div class="dashboard-wrapper">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">الإدارة</div>
+      <a href="{{ url_for('admin.dashboard') }}"          class="sidebar-link"><span class="icon">📊</span> لوحة التحكم</a>
+      {% if is_super_admin %}<a href="{{ url_for('admin.users') }}" class="sidebar-link"><span class="icon">👥</span> المستخدمون</a>{% endif %}
+      <a href="{{ url_for('admin.questions') }}"          class="sidebar-link active"><span class="icon">❓</span> الأسئلة</a>
+      <a href="{{ url_for('admin.import_questions') }}"  class="sidebar-link" style="border-right:3px solid #7c3aed;background:rgba(124,58,237,.08)"><span class="icon">📥</span> استيراد دفعي</a>
+      <a href="{{ url_for('admin.create_competition') }}" class="sidebar-link"><span class="icon">🏆</span> مسابقة جديدة</a>
+      <a href="{{ url_for('notifications.admin_send') }}" class="sidebar-link"><span class="icon">📢</span> إرسال إشعار</a>
+      <a href="{{ url_for('messages.admin_inbox') }}"     class="sidebar-link"><span class="icon">✉️</span> الرسائل
+        {% if unread_dm_count > 0 %}<span style="background:#10b981;color:#fff;font-size:0.62rem;padding:1px 5px;border-radius:8px;margin-right:4px">{{ unread_dm_count }}</span>{% endif %}
+      </a>
+      <a href="{{ url_for('auth.logout') }}"              class="sidebar-link"><span class="icon">🚪</span> خروج</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main style="flex:1;padding:24px;overflow-y:auto;min-width:0">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <h1 style="font-size:1.4rem;font-weight:900;margin-bottom:2px">❓ إدارة الأسئلة</h1>
+        <div style="font-size:0.82rem;color:var(--text-muted)">
+          إجمالي: {{ pagination.total }} سؤال
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="openModal('addModal')">➕ إضافة سؤال</button>
+    </div>
+
+    <!-- فلتر -->
+    <div class="filter-bar">
+      <form method="GET" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;width:100%">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">المادة</label>
+          <select name="subject" class="form-control" style="width:140px">
+            <option value="">الكل</option>
+            <option value="physics"   {{ 'selected' if subject=='physics' }}>⚛️ فيزياء</option>
+            <option value="chemistry" {{ 'selected' if subject=='chemistry' }}>🧪 كيمياء</option>
+            <option value="biology"   {{ 'selected' if subject=='biology' }}>🧬 أحياء</option>
+            <option value="math"      {{ 'selected' if subject=='math' }}>📐 رياضيات</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">الصعوبة</label>
+          <select name="difficulty" class="form-control" style="width:120px">
+            <option value="">الكل</option>
+            <option value="easy"   {{ 'selected' if request.args.get('difficulty')=='easy' }}>سهل</option>
+            <option value="medium" {{ 'selected' if request.args.get('difficulty')=='medium' }}>متوسط</option>
+            <option value="hard"   {{ 'selected' if request.args.get('difficulty')=='hard' }}>صعب</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">بحث</label>
+          <input name="search" class="form-control" style="width:200px"
+                 placeholder="ابحث في نص السؤال…"
+                 value="{{ request.args.get('search','') }}">
+        </div>
+        <button type="submit" class="btn btn-secondary btn-sm" style="align-self:flex-end">🔍 فلتر</button>
+        <a href="{{ url_for('admin.questions') }}" class="btn btn-secondary btn-sm" style="align-self:flex-end">إعادة تعيين</a>
+      </form>
+    </div>
+
+    <!-- جدول الأسئلة -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="overflow-x:auto">
+        <table class="q-table">
+          <thead>
+            <tr>
+              <th style="width:40px">#</th>
+              <th style="width:50px">صورة</th>
+              <th>السؤال</th>
+              <th>المادة</th>
+              <th>الصعوبة</th>
+              <th>الصف</th>
+              <th style="width:110px">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for q in pagination.items %}
+          <tr id="row-{{ q.id }}">
+            <td data-label="#" style="color:var(--text-muted);font-size:0.75rem;font-weight:700">{{ q.id }}</td>
+            <td data-label="صورة">
+              {% if q.image_path %}
+              <img src="{{ q.image_path }}" class="q-thumb"
+                   onclick="showLightbox('{{ q.image_path }}')" alt="صورة">
+              {% else %}
+              <div class="no-img" title="لا توجد صورة">➕</div>
+              {% endif %}
+            </td>
+            <td data-label="السؤال">
+              <div style="font-size:0.86rem;line-height:1.5;max-width:360px">
+                {{ q.text[:100] }}{% if q.text|length > 100 %}…{% endif %}
+              </div>
+              {% if q.image_path %}
+              <span class="img-badge">🖼 صورة</span>
+              {% endif %}
+              {% if q.code_snippet %}
+              <span class="img-badge" style="background:rgba(99,102,241,.15);color:#818cf8;border-color:rgba(99,102,241,.3)">💻 كود</span>
+              {% endif %}
+            </td>
+            <td data-label="المادة">
+              <span class="badge badge-gold" style="font-size:0.75rem">
+                {% if q.subject == 'physics' %}⚛️ فيزياء
+                {% elif q.subject == 'chemistry' %}🧪 كيمياء
+                {% elif q.subject == 'biology' %}🧬 أحياء
+                {% else %}📐 رياضيات{% endif %}
+              </span>
+            </td>
+            <td data-label="الصعوبة">
+              <span class="badge badge-{{ 'green' if q.difficulty == 'easy' else 'gold' if q.difficulty == 'medium' else 'red' }}"
+                    style="font-size:0.75rem">
+                {{ 'سهل' if q.difficulty == 'easy' else 'متوسط' if q.difficulty == 'medium' else 'صعب' }}
+              </span>
+            </td>
+            <td data-label="الصف" style="font-size:0.78rem;color:var(--text-muted)">
+              {{ {'grade_10':'الأول ث','grade_11':'الثاني ث','grade_12':'الثالث ث'}.get(q.grade, q.grade) }}
+            </td>
+            <td data-label="إجراءات">
+              <div class="edit-actions">
+                <button class="btn btn-sm btn-secondary"
+                        onclick='openEditModal({{ q.to_dict()|tojson|safe }})'
+                        title="تعديل">✏️ تعديل</button>
+                <button class="btn btn-sm btn-danger"
+                        onclick="deleteQ({{ q.id }})" title="حذف">🗑 حذف</button>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text-muted)">
+            لا توجد أسئلة — أضف أول سؤال!
+          </td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination" style="padding:16px;justify-content:center">
+        {% if pagination.has_prev %}
+        <a href="?page={{ pagination.prev_num }}&subject={{ subject }}" class="page-btn">←</a>
+        {% endif %}
+        {% for p in pagination.iter_pages(left_edge=2,right_edge=2,left_current=2,right_current=2) %}
+          {% if p %}
+          <a href="?page={{ p }}&subject={{ subject }}"
+             class="page-btn {{ 'active' if p == pagination.page }}">{{ p }}</a>
+          {% else %}
+          <span class="page-btn" style="opacity:.4">…</span>
+          {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <a href="?page={{ pagination.next_num }}&subject={{ subject }}" class="page-btn">→</a>
+        {% endif %}
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════
+     Modal: إضافة سؤال
+══════════════════════════════════════ -->
+<div class="qmodal" id="addModal">
+  <div class="qmodal-box">
+    <div class="qmodal-title">
+      ➕ إضافة سؤال جديد
+      <button class="qmodal-close" onclick="closeModal('addModal')">×</button>
+    </div>
+
+    <!-- منطقة رفع الصورة -->
+    <div style="margin-bottom:16px">
+      <label class="form-label">🖼 صورة السؤال (اختياري)</label>
+      <div class="upload-zone" id="addUploadZone"
+           ondragover="handleDragOver(event,'addUploadZone')"
+           ondragleave="handleDragLeave('addUploadZone')"
+           ondrop="handleDrop(event,'add')">
+        <input type="file" id="addFileInput" accept="image/*"
+               onchange="handleFileSelect(event,'add')">
+        <div class="uz-icon">📎</div>
+        <div class="uz-text">اسحب وأفلت الصورة هنا، أو انقر للاختيار</div>
+        <div class="uz-hint">PNG · JPG · WebP · GIF · SVG — حتى 5 MB</div>
+        <div class="uz-hint" style="color:#10b981;margin-top:4px">أو الصق (Ctrl+V) صورة من الحافظة</div>
+      </div>
+      <div class="upload-progress" id="addUploadProgress">
+        <div class="upload-progress-bar" id="addUploadBar"></div>
+      </div>
+      <div id="addImgPreview" style="margin-top:8px"></div>
+      <input type="hidden" id="add_image_path" value="">
+    </div>
+
+    <!-- حقول السؤال -->
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">نص السؤال *</label>
+      <textarea class="form-control" id="add_text" rows="3"
+                placeholder="اكتب نص السؤال هنا…"></textarea>
+    </div>
+
+    <div class="qmodal-grid" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">الخيار A *</label>
+        <input class="form-control" id="add_a" placeholder="الخيار الأول">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الخيار B *</label>
+        <input class="form-control" id="add_b" placeholder="الخيار الثاني">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الخيار C *</label>
+        <input class="form-control" id="add_c" placeholder="الخيار الثالث">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الخيار D *</label>
+        <input class="form-control" id="add_d" placeholder="الخيار الرابع">
+      </div>
+    </div>
+
+    <div class="qmodal-grid" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">الإجابة الصحيحة *</label>
+        <select class="form-control" id="add_ans">
+          <option value="A">A</option><option value="B">B</option>
+          <option value="C">C</option><option value="D">D</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">المادة *</label>
+        <select class="form-control" id="add_subj">
+          <option value="physics">⚛️ الفيزياء</option>
+          <option value="chemistry">🧪 الكيمياء</option>
+          <option value="biology">🧬 الأحياء</option>
+          <option value="math">📐 الرياضيات</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">الصف الدراسي</label>
+        <select class="form-control" id="add_grade">
+          <option value="grade_10">الصف الأول الثانوي</option>
+          <option value="grade_11">الصف الثاني الثانوي</option>
+          <option value="grade_12" selected>الصف الثالث الثانوي</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">الصعوبة</label>
+        <select class="form-control" id="add_diff">
+          <option value="easy">سهل</option>
+          <option value="medium" selected>متوسط</option>
+          <option value="hard">صعب</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">نوع الاختبار</label>
+        <select class="form-control" id="add_type">
+          <option value="general">عام</option>
+          <option value="chapter_1">الفصل الأول</option>
+          <option value="chapter_2">الفصل الثاني</option>
+          <option value="chapter_3">الفصل الثالث</option>
+          <option value="final_test">شامل</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">الفصل / الوحدة</label>
+        <input class="form-control" id="add_chapter" placeholder="مثال: الفصل الثاني">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">شرح الإجابة (اختياري)</label>
+      <textarea class="form-control" id="add_exp" rows="2"
+                placeholder="اشرح لماذا هذه الإجابة صحيحة…"></textarea>
+    </div>
+
+    <!-- ═══ مقطع الكود (إضافة) ═══ -->
+    <div style="margin-bottom:14px;background:rgba(99,102,241,0.04);
+                border:1px solid rgba(99,102,241,0.2);border-radius:12px;padding:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:0.8rem;font-weight:700;color:#818cf8">💻 كود مرفق (اختياري)</span>
+        <button type="button" onclick="toggleCode('add')" id="add_code_toggle"
+          style="background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.3);
+                 border-radius:7px;padding:3px 10px;font-size:0.75rem;cursor:pointer;font-family:inherit">
+          + إضافة كود
+        </button>
+      </div>
+      <div id="add_code_section" style="display:none;margin-top:8px">
+        <div class="form-group" style="margin-bottom:8px">
+          <label class="form-label">لغة الكود</label>
+          <select class="form-control" id="add_code_type" style="width:160px">
+            <option value="python">🐍 Python</option>
+            <option value="javascript">🟨 JavaScript</option>
+            <option value="java">☕ Java</option>
+            <option value="cpp">⚙️ C++</option>
+            <option value="sql">🗄️ SQL</option>
+            <option value="pseudocode">📝 Pseudocode</option>
+            <option value="text">📄 نص عادي</option>
+          </select>
+        </div>
+        <textarea class="form-control" id="add_code_snippet" rows="6"
+          placeholder="الصق الكود هنا…"
+          style="font-family:'Courier New',Courier,monospace;font-size:0.82rem;
+                 direction:ltr;text-align:left;background:#0a0e1a;
+                 border-color:rgba(99,102,241,0.3);resize:vertical;
+                 color:#a5f3fc;line-height:1.6"></textarea>
+      </div>
+    </div>
+
+    <!-- ═══ لوحة الرسم (إضافة) ═══ -->
+    <div class="draw-panel" style="margin-bottom:14px">
+      <div style="font-size:0.8rem;font-weight:700;color:#94a3b8;margin-bottom:8px">🎨 رسم بياني (اختياري)</div>
+      <div class="draw-toolbar">
+        <button type="button" class="dtool active" id="aTool_pen"    onclick="setATool('pen')">✏️</button>
+        <button type="button" class="dtool"        id="aTool_line"   onclick="setATool('line')">╱</button>
+        <button type="button" class="dtool"        id="aTool_arrow"  onclick="setATool('arrow')">→</button>
+        <button type="button" class="dtool"        id="aTool_rect"   onclick="setATool('rect')">⬜</button>
+        <button type="button" class="dtool"        id="aTool_circle" onclick="setATool('circle')">⭕</button>
+        <button type="button" class="dtool"        id="aTool_text"   onclick="setATool('text')">T</button>
+        <button type="button" class="dtool"        id="aTool_eraser" onclick="setATool('eraser')">🧹</button>
+        <input type="color" id="aPenColor" value="#6366f1"
+          style="width:28px;height:26px;padding:1px;border-radius:5px;border:none;cursor:pointer;background:transparent">
+        <input type="range" id="aPenSize" min="1" max="18" value="2" style="width:60px;accent-color:#6366f1">
+        <label style="font-size:0.72rem;color:#64748b;display:flex;align-items:center;gap:3px">
+          <input type="checkbox" id="aFillShape" style="accent-color:#6366f1"> تعبئة</label>
+        <button type="button" onclick="undoACanvas()"
+          style="background:rgba(99,102,241,0.1);color:#6366f1;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:0.75rem;font-family:inherit">↩ تراجع</button>
+        <button type="button" onclick="clearACanvas()"
+          style="background:rgba(239,68,68,0.1);color:#ef4444;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:0.75rem;font-family:inherit">🗑 مسح</button>
+        <button type="button" onclick="uploadACanvas()"
+          style="background:rgba(16,185,129,0.1);color:#10b981;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:0.75rem;font-family:inherit">📎 استخدم كصورة</button>
+      </div>
+      <div id="aTextInputDiv" style="display:none;margin-bottom:6px">
+        <input id="aTextInput" type="text" placeholder="اكتب النص ثم انقر على اللوحة..."
+          style="background:#111827;border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:#e2e8f0;font-family:inherit;font-size:0.85rem;width:260px">
+      </div>
+      <canvas id="aDrawCanvas" width="700" height="240"
+        style="border:1px solid rgba(99,102,241,0.3);border-radius:10px;cursor:crosshair;
+               background:#fff;max-width:100%;display:block;touch-action:none"></canvas>
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="saveQuestion()" id="addSaveBtn">
+        💾 حفظ السؤال
+      </button>
+      <button class="btn btn-secondary" onclick="closeModal('addModal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     Modal: تعديل سؤال
+══════════════════════════════════════ -->
+<div class="qmodal" id="editModal">
+  <div class="qmodal-box">
+    <div class="qmodal-title">
+      ✏️ تعديل السؤال <span id="editQId" style="font-size:0.8rem;color:var(--text-muted)"></span>
+      <button class="qmodal-close" onclick="closeModal('editModal')">×</button>
+    </div>
+
+    <!-- صورة التعديل -->
+    <div style="margin-bottom:16px">
+      <label class="form-label">🖼 صورة السؤال</label>
+      <div id="editCurrentImg" style="margin-bottom:8px"></div>
+      <div class="upload-zone" id="editUploadZone"
+           ondragover="handleDragOver(event,'editUploadZone')"
+           ondragleave="handleDragLeave('editUploadZone')"
+           ondrop="handleDrop(event,'edit')">
+        <input type="file" id="editFileInput" accept="image/*"
+               onchange="handleFileSelect(event,'edit')">
+        <div class="uz-icon">📎</div>
+        <div class="uz-text">رفع صورة جديدة أو استبدال الصورة الحالية</div>
+        <div class="uz-hint">PNG · JPG · WebP · GIF — حتى 5 MB</div>
+      </div>
+      <div class="upload-progress" id="editUploadProgress">
+        <div class="upload-progress-bar" id="editUploadBar"></div>
+      </div>
+      <div id="editImgPreview" style="margin-top:8px"></div>
+      <input type="hidden" id="edit_image_path" value="">
+      <input type="hidden" id="edit_qid" value="">
+    </div>
+
+    <div class="form-group" style="margin-bottom:12px">
+      <label class="form-label">نص السؤال *</label>
+      <textarea class="form-control" id="edit_text" rows="3"></textarea>
+    </div>
+
+    <div class="qmodal-grid" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">الخيار A</label>
+        <input class="form-control" id="edit_a">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الخيار B</label>
+        <input class="form-control" id="edit_b">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الخيار C</label>
+        <input class="form-control" id="edit_c">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الخيار D</label>
+        <input class="form-control" id="edit_d">
+      </div>
+    </div>
+
+    <div class="qmodal-grid" style="margin-bottom:12px">
+      <div class="form-group">
+        <label class="form-label">الإجابة الصحيحة</label>
+        <select class="form-control" id="edit_ans">
+          <option value="A">A</option><option value="B">B</option>
+          <option value="C">C</option><option value="D">D</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">المادة</label>
+        <select class="form-control" id="edit_subj">
+          <option value="physics">⚛️ الفيزياء</option>
+          <option value="chemistry">🧪 الكيمياء</option>
+          <option value="biology">🧬 الأحياء</option>
+          <option value="math">📐 الرياضيات</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">الصف الدراسي</label>
+        <select class="form-control" id="edit_grade">
+          <option value="grade_10">الأول الثانوي</option>
+          <option value="grade_11">الثاني الثانوي</option>
+          <option value="grade_12">الثالث الثانوي</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">الصعوبة</label>
+        <select class="form-control" id="edit_diff">
+          <option value="easy">سهل</option>
+          <option value="medium">متوسط</option>
+          <option value="hard">صعب</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">نوع الاختبار</label>
+        <select class="form-control" id="edit_type">
+          <option value="general">عام</option>
+          <option value="chapter_1">الفصل الأول</option>
+          <option value="chapter_2">الفصل الثاني</option>
+          <option value="chapter_3">الفصل الثالث</option>
+          <option value="final_test">شامل</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">الفصل / الوحدة</label>
+        <input class="form-control" id="edit_chapter">
+      </div>
+    </div>
+
+    <div class="form-group" style="margin-bottom:14px">
+      <label class="form-label">شرح الإجابة</label>
+      <textarea class="form-control" id="edit_exp" rows="2"></textarea>
+    </div>
+
+    <!-- ═══ مقطع الكود (تعديل) ═══ -->
+    <div style="margin-bottom:14px;background:rgba(99,102,241,0.04);
+                border:1px solid rgba(99,102,241,0.2);border-radius:12px;padding:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:0.8rem;font-weight:700;color:#818cf8">💻 كود مرفق (اختياري)</span>
+        <button type="button" onclick="toggleCode('edit')" id="edit_code_toggle"
+          style="background:rgba(99,102,241,0.15);color:#818cf8;border:1px solid rgba(99,102,241,0.3);
+                 border-radius:7px;padding:3px 10px;font-size:0.75rem;cursor:pointer;font-family:inherit">
+          + إضافة كود
+        </button>
+      </div>
+      <div id="edit_code_section" style="display:none;margin-top:8px">
+        <div class="form-group" style="margin-bottom:8px">
+          <label class="form-label">لغة الكود</label>
+          <select class="form-control" id="edit_code_type" style="width:160px">
+            <option value="python">🐍 Python</option>
+            <option value="javascript">🟨 JavaScript</option>
+            <option value="java">☕ Java</option>
+            <option value="cpp">⚙️ C++</option>
+            <option value="sql">🗄️ SQL</option>
+            <option value="pseudocode">📝 Pseudocode</option>
+            <option value="text">📄 نص عادي</option>
+          </select>
+        </div>
+        <textarea class="form-control" id="edit_code_snippet" rows="6"
+          placeholder="الصق الكود هنا…"
+          style="font-family:'Courier New',Courier,monospace;font-size:0.82rem;
+                 direction:ltr;text-align:left;background:#0a0e1a;
+                 border-color:rgba(99,102,241,0.3);resize:vertical;
+                 color:#a5f3fc;line-height:1.6"></textarea>
+      </div>
+    </div>
+
+    <!-- ═══ لوحة الرسم (تعديل) ═══ -->
+    <div class="draw-panel" style="margin-bottom:14px">
+      <div style="font-size:0.8rem;font-weight:700;color:#94a3b8;margin-bottom:8px">🎨 رسم بياني (اختياري)</div>
+      <div class="draw-toolbar">
+        <button type="button" class="dtool active" id="eTool_pen"    onclick="setETool('pen')">✏️</button>
+        <button type="button" class="dtool"        id="eTool_line"   onclick="setETool('line')">╱</button>
+        <button type="button" class="dtool"        id="eTool_arrow"  onclick="setETool('arrow')">→</button>
+        <button type="button" class="dtool"        id="eTool_rect"   onclick="setETool('rect')">⬜</button>
+        <button type="button" class="dtool"        id="eTool_circle" onclick="setETool('circle')">⭕</button>
+        <button type="button" class="dtool"        id="eTool_text"   onclick="setETool('text')">T</button>
+        <button type="button" class="dtool"        id="eTool_eraser" onclick="setETool('eraser')">🧹</button>
+        <input type="color" id="ePenColor" value="#6366f1"
+          style="width:28px;height:26px;padding:1px;border-radius:5px;border:none;cursor:pointer;background:transparent">
+        <input type="range" id="ePenSize" min="1" max="18" value="2" style="width:60px;accent-color:#6366f1">
+        <label style="font-size:0.72rem;color:#64748b;display:flex;align-items:center;gap:3px">
+          <input type="checkbox" id="eFillShape" style="accent-color:#6366f1"> تعبئة</label>
+        <button type="button" onclick="undoECanvas()"
+          style="background:rgba(99,102,241,0.1);color:#6366f1;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:0.75rem;font-family:inherit">↩ تراجع</button>
+        <button type="button" onclick="clearECanvas()"
+          style="background:rgba(239,68,68,0.1);color:#ef4444;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:0.75rem;font-family:inherit">🗑 مسح</button>
+        <button type="button" onclick="uploadECanvas()"
+          style="background:rgba(16,185,129,0.1);color:#10b981;border:none;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:0.75rem;font-family:inherit">📎 استخدم كصورة</button>
+      </div>
+      <div id="eTextInputDiv" style="display:none;margin-bottom:6px">
+        <input id="eTextInput" type="text" placeholder="اكتب النص ثم انقر على اللوحة..."
+          style="background:#111827;border:1px solid var(--border);border-radius:7px;padding:6px 10px;color:#e2e8f0;font-family:inherit;font-size:0.85rem;width:260px">
+      </div>
+      <canvas id="eDrawCanvas" width="700" height="240"
+        style="border:1px solid rgba(99,102,241,0.3);border-radius:10px;cursor:crosshair;
+               background:#fff;max-width:100%;display:block;touch-action:none"></canvas>
+    </div>
+
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" onclick="updateQuestion()" id="editSaveBtn">
+        💾 حفظ التعديلات
+      </button>
+      <button class="btn btn-secondary" onclick="closeModal('editModal')">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div id="lightbox" onclick="this.classList.remove('open')">
+  <img id="lightboxImg" src="" alt="صورة السؤال">
+</div>
+
+<script>
+// ═══ Modal Helpers ═══
+function openModal(id){ document.getElementById(id).classList.add('open') }
+function closeModal(id){ document.getElementById(id).classList.remove('open') }
+
+// Close on backdrop click
+document.querySelectorAll('.qmodal').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) closeModal(m.id) })
+})
+
+// ═══ Lightbox ═══
+function showLightbox(src){
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+
+// ═══ Upload: Drag & Drop ═══
+function handleDragOver(e, zoneId){
+  e.preventDefault();
+  document.getElementById(zoneId).classList.add('dragover');
+}
+function handleDragLeave(zoneId){
+  document.getElementById(zoneId).classList.remove('dragover');
+}
+function handleDrop(e, mode){
+  e.preventDefault();
+  const zoneId = mode + 'UploadZone';
+  document.getElementById(zoneId).classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if(file && file.type.startsWith('image/')) uploadImage(file, mode);
+}
+
+// ═══ Upload: File Input ═══
+function handleFileSelect(e, mode){
+  const file = e.target.files[0];
+  if(file) uploadImage(file, mode);
+}
+
+// ═══ Upload: Clipboard Paste ═══
+document.addEventListener('paste', e => {
+  const active = document.querySelector('.qmodal.open');
+  if(!active) return;
+  const mode = active.id === 'addModal' ? 'add' : 'edit';
+  const items = e.clipboardData.items;
+  for(let item of items){
+    if(item.type.startsWith('image/')){
+      const file = item.getAsFile();
+      if(file) uploadImage(file, mode);
+      break;
+    }
+  }
+});
+
+// ═══ Upload Function ═══
+async function uploadImage(file, mode){
+  if(file.size > 5 * 1024 * 1024){
+    alert('حجم الصورة يتجاوز 5 MB. اختر صورة أصغر.');
+    return;
+  }
+
+  const progressWrap = document.getElementById(mode + 'UploadProgress');
+  const progressBar  = document.getElementById(mode + 'UploadBar');
+  progressWrap.style.display = 'block';
+
+  // Simulate progress
+  let pct = 0;
+  const interval = setInterval(() => {
+    pct = Math.min(pct + 15, 85);
+    progressBar.style.width = pct + '%';
+  }, 100);
+
+  const formData = new FormData();
+  formData.append('image', file);
+
+  try {
+    const r = await fetch('/admin/questions/upload-image', {
+      method: 'POST', body: formData
+    });
+    const data = await r.json();
+    clearInterval(interval);
+
+    if(data.success){
+      progressBar.style.width = '100%';
+      setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0'; }, 600);
+
+      document.getElementById(mode + '_image_path').value = data.url;
+      showImgPreview(data.url, mode);
+    } else {
+      clearInterval(interval);
+      progressWrap.style.display = 'none';
+      alert('خطأ في رفع الصورة: ' + (data.error || 'غير معروف'));
+    }
+  } catch(err) {
+    clearInterval(interval);
+    progressWrap.style.display = 'none';
+    alert('فشل الاتصال بالخادم');
+  }
+}
+
+// ═══ Preview ═══
+function showImgPreview(url, mode){
+  const wrap = document.getElementById(mode + 'ImgPreview');
+  wrap.innerHTML = `
+    <div class="img-preview-wrap">
+      <img src="${url}" onclick="showLightbox('${url}')">
+      <button class="img-remove-btn" onclick="removeImg('${mode}')" title="حذف الصورة">×</button>
+    </div>`;
+}
+
+function removeImg(mode){
+  document.getElementById(mode + '_image_path').value = '';
+  document.getElementById(mode + 'ImgPreview').innerHTML = '';
+  if(mode === 'edit'){
+    document.getElementById('editCurrentImg').innerHTML = '';
+  }
+}
+
+// ═══ Save Question ═══
+async function saveQuestion(){
+  const btn = document.getElementById('addSaveBtn');
+  const text = document.getElementById('add_text').value.trim();
+  const a = document.getElementById('add_a').value.trim();
+  const b = document.getElementById('add_b').value.trim();
+  const c = document.getElementById('add_c').value.trim();
+  const d = document.getElementById('add_d').value.trim();
+
+  if(!text || !a || !b || !c || !d){
+    alert('يرجى ملء جميع الحقول المطلوبة');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'جاري الحفظ…';
+
+  const data = {
+    text, option_a: a, option_b: b, option_c: c, option_d: d,
+    answer:     document.getElementById('add_ans').value,
+    subject:    document.getElementById('add_subj').value,
+    grade:      document.getElementById('add_grade').value,
+    difficulty: document.getElementById('add_diff').value,
+    exam_type:  document.getElementById('add_type').value,
+    chapter:    document.getElementById('add_chapter').value,
+    explanation:  document.getElementById('add_exp').value,
+    image_path:   document.getElementById('add_image_path').value,
+    code_snippet: document.getElementById('add_code_snippet').value,
+    code_type:    document.getElementById('add_code_type').value,
+  };
+
+  const r = await fetch('/admin/questions/add', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  const result = await r.json();
+
+  btn.disabled = false;
+  btn.textContent = '💾 حفظ السؤال';
+
+  if(result.success){
+    closeModal('addModal');
+    location.reload();
+  } else {
+    alert('حدث خطأ أثناء الحفظ');
+  }
+}
+
+// ═══ Open Edit Modal ═══
+function openEditModal(q){
+  document.getElementById('edit_qid').value   = q.id;
+  document.getElementById('editQId').textContent = `#${q.id}`;
+  document.getElementById('edit_text').value  = q.text;
+  document.getElementById('edit_a').value     = q.option_a;
+  document.getElementById('edit_b').value     = q.option_b;
+  document.getElementById('edit_c').value     = q.option_c;
+  document.getElementById('edit_d').value     = q.option_d;
+  document.getElementById('edit_ans').value   = q.answer;
+  document.getElementById('edit_subj').value  = q.subject;
+  document.getElementById('edit_grade').value = q.grade || 'grade_12';
+  document.getElementById('edit_diff').value  = q.difficulty;
+  document.getElementById('edit_type').value  = q.exam_type || 'general';
+  document.getElementById('edit_chapter').value = q.chapter || '';
+  document.getElementById('edit_exp').value   = q.explanation || '';
+  document.getElementById('edit_image_path').value = q.image_path || '';
+
+  // ─── كود ───
+  document.getElementById('edit_code_snippet').value = q.code_snippet || '';
+  document.getElementById('edit_code_type').value    = q.code_type    || 'python';
+  const codeSection = document.getElementById('edit_code_section');
+  const codeToggle  = document.getElementById('edit_code_toggle');
+  if(q.code_snippet){
+    codeSection.style.display = 'block';
+    codeToggle.textContent = '− إخفاء الكود';
+  } else {
+    codeSection.style.display = 'none';
+    codeToggle.textContent = '+ إضافة كود';
+  }
+
+  // عرض الصورة الحالية
+  const currentWrap = document.getElementById('editCurrentImg');
+  const newPreview  = document.getElementById('editImgPreview');
+  newPreview.innerHTML = '';
+
+  if(q.image_path){
+    currentWrap.innerHTML = `
+      <div style="margin-bottom:8px">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:4px">الصورة الحالية:</div>
+        <div class="img-preview-wrap">
+          <img src="${q.image_path}" onclick="showLightbox('${q.image_path}')">
+          <button class="img-remove-btn" onclick="removeImg('edit')" title="حذف الصورة">×</button>
+        </div>
+      </div>`;
+  } else {
+    currentWrap.innerHTML = '';
+  }
+
+  openModal('editModal');
+}
+
+// ═══ Update Question ═══
+async function updateQuestion(){
+  const btn = document.getElementById('editSaveBtn');
+  const qid = document.getElementById('edit_qid').value;
+
+  btn.disabled = true;
+  btn.textContent = 'جاري الحفظ…';
+
+  const data = {
+    text:       document.getElementById('edit_text').value.trim(),
+    option_a:   document.getElementById('edit_a').value.trim(),
+    option_b:   document.getElementById('edit_b').value.trim(),
+    option_c:   document.getElementById('edit_c').value.trim(),
+    option_d:   document.getElementById('edit_d').value.trim(),
+    answer:     document.getElementById('edit_ans').value,
+    subject:    document.getElementById('edit_subj').value,
+    grade:      document.getElementById('edit_grade').value,
+    difficulty: document.getElementById('edit_diff').value,
+    exam_type:  document.getElementById('edit_type').value,
+    chapter:      document.getElementById('edit_chapter').value,
+    explanation:  document.getElementById('edit_exp').value,
+    image_path:   document.getElementById('edit_image_path').value,
+    code_snippet: document.getElementById('edit_code_snippet').value,
+    code_type:    document.getElementById('edit_code_type').value,
+  };
+
+  const r = await fetch(`/admin/questions/${qid}/edit`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  const result = await r.json();
+
+  btn.disabled = false;
+  btn.textContent = '💾 حفظ التعديلات';
+
+  if(result.success){
+    closeModal('editModal');
+    location.reload();
+  } else {
+    alert('حدث خطأ أثناء التعديل');
+  }
+}
+
+// ═══ Toggle Code Section ═══
+function toggleCode(mode){
+  const sec = document.getElementById(mode + '_code_section');
+  const btn = document.getElementById(mode + '_code_toggle');
+  if(sec.style.display === 'none' || !sec.style.display){
+    sec.style.display = 'block';
+    btn.textContent = '− إخفاء الكود';
+  } else {
+    sec.style.display = 'none';
+    btn.textContent = '+ إضافة كود';
+  }
+}
+
+// ═══ Delete Question ═══
+async function deleteQ(id){
+  if(!confirm('هل تريد حذف هذا السؤال نهائياً؟')) return;
+  const r = await fetch(`/admin/questions/${id}/delete`, {method:'POST'});
+  if((await r.json()).success){
+    document.getElementById(`row-${id}`).remove();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  لوحة الرسم — مصنع يُنتج instance لكل canvas
+// ═══════════════════════════════════════════════════════
+function makeCanvas(prefix){
+  const cvs  = document.getElementById(prefix + 'DrawCanvas');
+  const ctx  = cvs.getContext('2d');
+  let tool   = 'pen', drawing = false;
+  let sx = 0, sy = 0, snap = null;
+  let hist   = [], MAX_H = 20;
+
+  function saveH(){ hist.push(cvs.toDataURL()); if(hist.length > MAX_H) hist.shift(); }
+  saveH();
+
+  function getColor(){ return document.getElementById(prefix + 'PenColor').value; }
+  function getSize() { return +document.getElementById(prefix + 'PenSize').value; }
+  function getFill()  { return document.getElementById(prefix + 'FillShape').checked; }
+
+  function getPos(e){
+    const r = cvs.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return {
+      x:(t.clientX - r.left)*(cvs.width/r.width),
+      y:(t.clientY - r.top )*(cvs.height/r.height)
+    };
+  }
+
+  function drawArrow(x1,y1,x2,y2,sz){
+    const a=Math.atan2(y2-y1,x2-x1), len=sz*3.5;
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-len*Math.cos(a-Math.PI/6),y2-len*Math.sin(a-Math.PI/6));
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-len*Math.cos(a+Math.PI/6),y2-len*Math.sin(a+Math.PI/6));
+    ctx.stroke();
+  }
+
+  function drawShape(ex,ey){
+    ctx.putImageData(snap,0,0);
+    ctx.strokeStyle=getColor(); ctx.fillStyle=getColor()+'44';
+    ctx.lineWidth=getSize(); ctx.lineCap='round'; ctx.lineJoin='round';
+    if(tool==='line'){
+      ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
+    } else if(tool==='arrow'){
+      ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
+      drawArrow(sx,sy,ex,ey,getSize());
+    } else if(tool==='rect'){
+      ctx.beginPath(); ctx.rect(sx,sy,ex-sx,ey-sy);
+      if(getFill()) ctx.fill(); ctx.stroke();
+    } else if(tool==='circle'){
+      const rx=Math.abs(ex-sx)/2, ry=Math.abs(ey-sy)/2;
+      const cx=sx+(ex-sx)/2, cy=sy+(ey-sy)/2;
+      ctx.beginPath(); ctx.ellipse(cx,cy,rx||1,ry||1,0,0,Math.PI*2);
+      if(getFill()) ctx.fill(); ctx.stroke();
+    }
+  }
+
+  function onStart(e){
+    e.preventDefault(); drawing=true;
+    const p=getPos(e); sx=p.x; sy=p.y;
+    if(tool==='text'){
+      const txt=document.getElementById(prefix+'TextInput').value;
+      if(!txt){drawing=false;return;}
+      ctx.fillStyle=getColor();
+      ctx.font=`${Math.max(14,getSize()*4)}px inherit`;
+      ctx.fillText(txt,p.x,p.y); saveH(); drawing=false; return;
+    }
+    if(['line','arrow','rect','circle'].includes(tool)){
+      snap=ctx.getImageData(0,0,cvs.width,cvs.height);
+    } else {
+      ctx.beginPath(); ctx.moveTo(p.x,p.y);
+    }
+  }
+
+  function onMove(e){
+    if(!drawing) return; e.preventDefault();
+    const p=getPos(e);
+    if(['line','arrow','rect','circle'].includes(tool)){ drawShape(p.x,p.y); return; }
+    if(tool==='eraser'){
+      ctx.globalCompositeOperation='destination-out';
+      ctx.lineWidth=getSize()*4; ctx.lineCap='round';
+      ctx.lineTo(p.x,p.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(p.x,p.y);
+    } else {
+      ctx.globalCompositeOperation='source-over';
+      ctx.strokeStyle=getColor(); ctx.lineWidth=getSize();
+      ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.lineTo(p.x,p.y); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(p.x,p.y);
+    }
+  }
+
+  function onEnd(e){
+    if(!drawing) return; drawing=false;
+    ctx.globalCompositeOperation='source-over'; saveH();
+  }
+
+  cvs.addEventListener('mousedown',onStart); cvs.addEventListener('mousemove',onMove);
+  cvs.addEventListener('mouseup',onEnd);     cvs.addEventListener('mouseleave',onEnd);
+  cvs.addEventListener('touchstart',onStart,{passive:false});
+  cvs.addEventListener('touchmove',onMove,{passive:false});
+  cvs.addEventListener('touchend',onEnd);
+
+  return {
+    setTool(t){
+      tool=t;
+      document.querySelectorAll('[id^="'+prefix+'Tool_"]').forEach(b=>b.classList.remove('active'));
+      const btn=document.getElementById(prefix+'Tool_'+t); if(btn) btn.classList.add('active');
+      cvs.style.cursor=t==='text'?'text':t==='eraser'?'cell':'crosshair';
+      document.getElementById(prefix+'TextInputDiv').style.display=t==='text'?'block':'none';
+    },
+    undo(){
+      if(hist.length>1){ hist.pop();
+        const img=new Image(); img.onload=()=>{ctx.clearRect(0,0,cvs.width,cvs.height);ctx.drawImage(img,0,0);}; img.src=hist[hist.length-1];
+      }
+    },
+    clear(){ ctx.clearRect(0,0,cvs.width,cvs.height); saveH(); },
+    loadImg(src){
+      if(!src) return;
+      const img=new Image(); img.crossOrigin='anonymous';
+      img.onload=()=>{ctx.clearRect(0,0,cvs.width,cvs.height);ctx.drawImage(img,0,0,cvs.width,cvs.height);saveH();};
+      img.src=src;
+    },
+    async upload(targetInputId){
+      // إن كانت اللوحة فارغة تماماً — لا ترفع
+      const blank=document.createElement('canvas');
+      blank.width=cvs.width; blank.height=cvs.height;
+      if(cvs.toDataURL()===blank.toDataURL()){ alert('اللوحة فارغة — ارسم شيئاً أولاً'); return; }
+      cvs.toBlob(async blob=>{
+        const fd=new FormData(); fd.append('image',blob,'drawing.png');
+        const r=await fetch('/admin/questions/upload-image',{method:'POST',body:fd});
+        const d=await r.json();
+        if(d.success){
+          document.getElementById(targetInputId).value=d.url;
+          alert('✅ تم رفع الرسم كصورة للسؤال');
+        } else { alert('خطأ في الرفع: '+(d.error||'')); }
+      },'image/png');
+    }
+  };
+}
+
+// ─── تهيئة اللوحتين بعد تحميل الصفحة ───
+var eCanv, aCanv;
+document.addEventListener('DOMContentLoaded', function(){
+  eCanv = makeCanvas('e');
+  aCanv = makeCanvas('a');
+});
+
+// ─── دوال عامة للتعديل ───
+function setETool(t)    { eCanv.setTool(t); }
+function undoECanvas()  { eCanv.undo(); }
+function clearECanvas() { eCanv.clear(); }
+function uploadECanvas(){ eCanv.upload('edit_image_path'); }
+
+// ─── دوال عامة للإضافة ───
+function setATool(t)    { aCanv.setTool(t); }
+function undoACanvas()  { aCanv.undo(); }
+function clearACanvas() { aCanv.clear(); }
+function uploadACanvas(){ aCanv.upload('add_image_path'); }
+
+// تحميل صورة السؤال الحالية في لوحة التعديل عند فتح الـ modal
+const _origOpenEditModal = openEditModal;
+openEditModal = function(q){
+  _origOpenEditModal(q);
+  if(q.image_path){ eCanv.loadImg(q.image_path); }
+  else { eCanv.clear(); }
+};
+
+
+// ═══════════════════════════════════════════════════════
+//  Swipe على الموبايل — يمين=تعديل، يسار=حذف
+// ═══════════════════════════════════════════════════════
+(function(){
+  if(window.innerWidth > 768) return;
+
+  const table = document.querySelector('.q-table tbody');
+  if(!table) return;
+
+  // مؤشر مساعد
+  const hint = document.createElement('div');
+  hint.className = 'swipe-hint';
+  hint.innerHTML = '<span>← سحب يساراً للحذف</span><span>سحب يميناً للتعديل →</span>';
+  table.parentElement.insertBefore(hint, table);
+
+  let startX, startY, row, rowId, tx = 0, moving = false;
+
+  table.addEventListener('touchstart', e => {
+    const tr = e.target.closest('tr[id^="row-"]');
+    if(!tr) return;
+    row   = tr;
+    rowId = +tr.id.replace('row-','');
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    tx = 0; moving = false;
+    row.style.transition = 'none';
+  }, {passive:true});
+
+  table.addEventListener('touchmove', e => {
+    if(!row) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    if(!moving && Math.abs(dy) > Math.abs(dx)) { row = null; return; }
+    moving = true;
+    tx = Math.max(-100, Math.min(100, dx));
+    row.style.transform = `translateX(${tx}px)`;
+    // لون خلفية تلميحي
+    if(tx < -40){
+      row.style.boxShadow = 'inset 3px 0 0 #ef4444';
+    } else if(tx > 40){
+      row.style.boxShadow = 'inset -3px 0 0 #6366f1';
+    } else {
+      row.style.boxShadow = '';
+    }
+  }, {passive:true});
+
+  table.addEventListener('touchend', () => {
+    if(!row) return;
+    row.style.transition = 'transform .2s, box-shadow .2s';
+    row.style.transform  = '';
+    row.style.boxShadow  = '';
+    if(tx < -60){
+      deleteQ(rowId);
+    } else if(tx > 60){
+      // ابحث عن زر التعديل في هذا الصف
+      const editBtn = row.querySelector('[onclick*="openEditModal"]');
+      if(editBtn) editBtn.click();
+    }
+    row = null; tx = 0;
+  });
+})();
+</script>
+{% endblock %}

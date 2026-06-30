@@ -1,0 +1,694 @@
+{% extends 'base.html' %}
+{% block title %}مركز المحتوى التعليمي{% endblock %}
+{% block extra_css %}
+<style>
+/* ═══════ Layout ═══════ */
+.browse-wrap{display:flex;height:calc(100vh - 64px);overflow:hidden}
+.browse-side{
+  width:280px;flex-shrink:0;
+  background:#0a0e1a;border-left:1px solid #1e2436;
+  display:flex;flex-direction:column;
+  transition:transform .3s;
+}
+.browse-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.browse-content{flex:1;overflow-y:auto;padding:0}
+
+/* ═══════ Sidebar Tree ═══════ */
+.side-header{
+  padding:14px 16px;border-bottom:1px solid #1e2436;
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.side-search{
+  padding:10px 12px;border-bottom:1px solid #1e2436;flex-shrink:0;
+}
+.side-search input{
+  width:100%;background:#111827;border:1px solid #1e2436;border-radius:8px;
+  padding:7px 11px;color:#e2e8f0;font-size:0.82rem;outline:none;
+  font-family:inherit;
+}
+.side-search input:focus{border-color:#6366f1}
+.side-tree{flex:1;overflow-y:auto;padding:8px}
+.side-tree::-webkit-scrollbar{width:4px}
+.side-tree::-webkit-scrollbar-thumb{background:#1e2436;border-radius:4px}
+
+.tree-node{margin-bottom:2px}
+.tree-btn{
+  width:100%;display:flex;align-items:center;gap:8px;
+  padding:8px 10px;border-radius:8px;border:none;cursor:pointer;
+  background:transparent;color:#94a3b8;font-family:inherit;font-size:0.82rem;
+  text-align:right;transition:.15s;position:relative;
+}
+.tree-btn:hover{background:#111827;color:#e2e8f0}
+.tree-btn.active{background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(139,92,246,0.1));color:#a5b4fc;border:1px solid rgba(99,102,241,0.25)}
+.tree-btn .t-icon{font-size:1rem;flex-shrink:0}
+.tree-btn .t-name{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tree-btn .t-cnt{font-size:0.65rem;color:#374151;background:#0d1117;padding:1px 5px;border-radius:8px;flex-shrink:0}
+.tree-btn .t-toggle{font-size:0.7rem;transition:transform .2s;flex-shrink:0;color:#4b5563}
+.tree-btn.open .t-toggle{transform:rotate(180deg)}
+.tree-children{padding-right:14px;border-right:1px dashed #1a2035;margin-right:6px;display:none}
+.tree-children.open{display:block}
+
+/* ═══════ Content area header ═══════ */
+.content-header{
+  padding:16px 24px;border-bottom:1px solid #1e2436;
+  background:#0d1117;display:flex;align-items:center;gap:12px;flex-shrink:0;flex-wrap:wrap;
+}
+.content-title{font-size:1.1rem;font-weight:900;color:#e2e8f0;flex:1}
+.content-desc{font-size:0.8rem;color:#64748b;margin-top:2px}
+
+/* ═══════ Cards ═══════ */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:20px}
+.content-card{
+  background:#111827;border:1px solid #1e2436;border-radius:14px;
+  overflow:hidden;transition:.2s;cursor:pointer;
+}
+.content-card:hover{border-color:#6366f1;transform:translateY(-2px);box-shadow:0 8px 24px rgba(99,102,241,0.15)}
+.card-type-bar{height:3px}
+.card-type-bar.pdf{background:linear-gradient(90deg,#ef4444,#dc2626)}
+.card-type-bar.image{background:linear-gradient(90deg,#10b981,#059669)}
+.card-type-bar.video{background:linear-gradient(90deg,#6366f1,#8b5cf6)}
+.card-type-bar.python{background:linear-gradient(90deg,#3b82f6,#2563eb)}
+.card-type-bar.html{background:linear-gradient(90deg,#f97316,#ea580c)}
+.card-type-bar.interactive{background:linear-gradient(90deg,#8b5cf6,#7c3aed)}
+.card-type-bar.file{background:linear-gradient(90deg,#64748b,#475569)}
+.card-body{padding:14px}
+.card-title{font-weight:800;font-size:0.9rem;color:#e2e8f0;margin-bottom:6px;line-height:1.4}
+.card-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.card-badge{font-size:0.65rem;padding:2px 7px;border-radius:8px;font-weight:700}
+.card-badge.pdf{background:rgba(239,68,68,0.15);color:#ef4444}
+.card-badge.image{background:rgba(16,185,129,0.15);color:#10b981}
+.card-badge.video{background:rgba(99,102,241,0.15);color:#6366f1}
+.card-badge.python{background:rgba(59,130,246,0.15);color:#3b82f6}
+.card-badge.html{background:rgba(249,115,22,0.15);color:#f97316}
+.card-badge.interactive{background:rgba(139,92,246,0.15);color:#8b5cf6}
+.card-badge.easy{background:rgba(16,185,129,0.1);color:#10b981}
+.card-badge.medium{background:rgba(245,158,11,0.1);color:#f59e0b}
+.card-badge.hard{background:rgba(239,68,68,0.1);color:#ef4444}
+.card-summary{font-size:0.75rem;color:#64748b;line-height:1.5;margin-bottom:10px}
+.card-actions{display:flex;gap:6px;flex-wrap:wrap}
+.card-btn{
+  flex:1;padding:6px 10px;border-radius:8px;border:none;cursor:pointer;
+  font-size:0.78rem;font-weight:700;font-family:inherit;transition:.15s;
+  display:flex;align-items:center;justify-content:center;gap:4px;
+}
+.card-btn.view{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
+.card-btn.view:hover{opacity:.9}
+.card-btn.download{background:#1e2436;color:#94a3b8;border:1px solid #2a2f3e}
+.card-btn.download:hover{background:#2a2f3e;color:#e2e8f0}
+.card-btn.run{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff}
+.card-btn.run:hover{opacity:.9}
+.card-btn.ask{background:rgba(99,102,241,0.1);color:#a5b4fc;border:1px solid rgba(99,102,241,0.2)}
+.card-btn.ask:hover{background:rgba(99,102,241,0.2)}
+
+/* ═══════ Viewer Panel ═══════ */
+.viewer-panel{
+  position:fixed;inset:0;z-index:3000;
+  background:rgba(0,0,0,0.85);
+  display:none;flex-direction:column;
+}
+.viewer-panel.open{display:flex}
+.viewer-bar{
+  background:#0d1117;border-bottom:1px solid #1e2436;
+  padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;
+}
+.viewer-title{flex:1;font-weight:800;color:#e2e8f0;font-size:0.9rem}
+.viewer-close{background:#1e2436;border:1px solid #2a2f3e;color:#94a3b8;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.85rem;transition:.15s}
+.viewer-close:hover{background:#2a2f3e;color:#e2e8f0}
+.viewer-body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* ═══════ Code Editor ═══════ */
+.code-editor-wrap{display:flex;flex-direction:column;height:100%;background:#0d1117}
+.code-toolbar{
+  padding:8px 12px;background:#111827;border-bottom:1px solid #1e2436;
+  display:flex;gap:8px;align-items:center;flex-shrink:0;
+}
+.code-toolbar button{
+  padding:5px 14px;border-radius:8px;border:none;cursor:pointer;
+  font-size:0.78rem;font-weight:700;font-family:inherit;transition:.15s;
+}
+.btn-run{background:linear-gradient(135deg,#10b981,#059669);color:#fff}
+.btn-reset{background:#1e2436;color:#94a3b8;border:1px solid #2a2f3e}
+.btn-copy{background:#1e2436;color:#94a3b8;border:1px solid #2a2f3e}
+.code-panels{display:flex;flex:1;overflow:hidden;gap:0}
+.code-input-panel{flex:1;display:flex;flex-direction:column;border-left:1px solid #1e2436}
+.code-output-panel{width:45%;display:flex;flex-direction:column;background:#080b14}
+.code-label{padding:6px 12px;font-size:0.72rem;color:#4b5563;font-weight:700;background:#0d1117;border-bottom:1px solid #1e2436;flex-shrink:0}
+#pyEditor{flex:1;width:100%;background:#0d1117;color:#e2e8f0;border:none;outline:none;padding:12px;font-family:'Courier New',monospace;font-size:0.85rem;resize:none;line-height:1.6}
+#pyOutput{flex:1;padding:12px;font-family:'Courier New',monospace;font-size:0.82rem;color:#10b981;overflow-y:auto;white-space:pre-wrap;line-height:1.6}
+.output-error{color:#ef4444}
+.output-info{color:#64748b;font-style:italic}
+
+/* ═══════ HTML Preview ═══════ */
+.html-wrap{display:flex;flex:1;overflow:hidden;gap:0}
+.html-editor-side{flex:1;display:flex;flex-direction:column;border-left:1px solid #1e2436}
+.html-preview-side{flex:1;display:flex;flex-direction:column;background:#fff}
+#htmlEditor{flex:1;background:#0d1117;color:#e2e8f0;border:none;outline:none;padding:12px;font-family:'Courier New',monospace;font-size:0.82rem;resize:none;line-height:1.6}
+#htmlPreview{flex:1;border:none;background:#fff}
+
+/* ═══════ Interactive Quiz ═══════ */
+.quiz-wrap{flex:1;overflow-y:auto;padding:24px;max-width:700px;margin:0 auto;width:100%}
+.quiz-progress-bar{height:4px;background:#1e2436;border-radius:4px;margin-bottom:20px;overflow:hidden}
+.quiz-progress-fill{height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:4px;transition:.4s}
+.quiz-q{font-size:1rem;font-weight:700;color:#e2e8f0;margin-bottom:16px;line-height:1.6}
+.quiz-opts{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.quiz-opt{
+  padding:12px 16px;border-radius:10px;border:1px solid #1e2436;
+  background:#111827;color:#94a3b8;cursor:pointer;font-size:0.88rem;
+  transition:.2s;text-align:right;font-family:inherit;width:100%;
+}
+.quiz-opt:hover:not(:disabled){background:#1e2436;color:#e2e8f0;border-color:#6366f1}
+.quiz-opt.correct{background:rgba(16,185,129,0.15);border-color:#10b981;color:#10b981}
+.quiz-opt.wrong{background:rgba(239,68,68,0.1);border-color:#ef4444;color:#ef4444}
+.quiz-exp{background:#1e2436;border-radius:10px;padding:12px;font-size:0.82rem;color:#94a3b8;margin-top:8px;display:none}
+.quiz-nav{display:flex;gap:8px;justify-content:center}
+.quiz-result{text-align:center;padding:32px}
+
+/* ═══════ Welcome screen ═══════ */
+.welcome-screen{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:16px;color:#374151;padding:40px}
+.welcome-icon{font-size:4rem}
+.welcome-title{font-size:1.2rem;font-weight:800;color:#64748b;text-align:center}
+.welcome-sub{font-size:0.85rem;color:#374151;text-align:center;max-width:320px;line-height:1.6}
+
+/* Mobile */
+@media(max-width:768px){
+  .browse-side{position:fixed;inset-block:64px 0;right:0;z-index:500;transform:translateX(100%);width:260px}
+  .browse-side.open{transform:translateX(0)}
+  .side-toggle{display:flex!important}
+  .code-panels{flex-direction:column}
+  .code-output-panel{width:100%;height:45%}
+  .html-wrap{flex-direction:column}
+  .cards-grid{grid-template-columns:1fr}
+  .viewer-panel{padding-top:0}
+}
+.side-toggle{display:none;background:#6366f1;color:#fff;border:none;border-radius:8px;padding:6px 12px;cursor:pointer;font-size:0.85rem}
+.side-overlay{display:none;position:fixed;inset:64px 0 0 0;background:rgba(0,0,0,0.5);z-index:499}
+.side-overlay.open{display:block}
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="sideOverlay" class="side-overlay" onclick="toggleSidePanel()"></div>
+<div class="browse-wrap">
+
+  <!-- ═══ شريط الأقسام الجانبي ═══ -->
+  <aside class="browse-side" id="browseAside">
+    <div class="side-header">
+      <span style="font-weight:800;font-size:0.88rem;color:#e2e8f0">🗂 المحتوى التعليمي</span>
+      <button onclick="toggleSidePanel()" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:1rem;display:none" id="asideClose">✕</button>
+    </div>
+    <div class="side-search">
+      <input type="text" placeholder="🔍 بحث في الأقسام..." oninput="filterTree(this.value)" id="treeSearch">
+    </div>
+    <div class="side-tree" id="treeRoot">
+      {% if tree %}
+        {{ render_tree(tree) }}
+      {% else %}
+      <div style="text-align:center;padding:32px;color:#374151;font-size:0.82rem">لم يُضَف محتوى بعد</div>
+      {% endif %}
+    </div>
+  </aside>
+
+  <!-- ═══ منطقة المحتوى ═══ -->
+  <main class="browse-main">
+    <!-- Header -->
+    <div class="content-header">
+      <button class="side-toggle" onclick="toggleSidePanel()">☰ الأقسام</button>
+      <div style="flex:1">
+        <div class="content-title" id="contentTitle">مركز المحتوى التعليمي</div>
+        <div class="content-desc" id="contentDesc">اختر قسماً من القائمة الجانبية للبدء</div>
+      </div>
+    </div>
+
+    <!-- Content body -->
+    <div class="browse-content" id="contentArea">
+      <div class="welcome-screen">
+        <div class="welcome-icon">📚</div>
+        <div class="welcome-title">مرحباً {{ current_user.name.split()[0] }}!</div>
+        <div class="welcome-sub">اختر قسماً من القائمة الجانبية لعرض الملفات والأكواد التعليمية</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ═══ نافذة عرض المحتوى ═══ -->
+<div class="viewer-panel" id="viewerPanel">
+  <div class="viewer-bar">
+    <div class="viewer-title" id="viewerTitle">—</div>
+    <a id="viewerDownload" href="#" target="_blank" style="background:#1e2436;border:1px solid #2a2f3e;color:#94a3b8;border-radius:8px;padding:6px 12px;font-size:0.78rem;text-decoration:none;display:none">⬇️ تحميل</a>
+    <button class="viewer-close" onclick="closeViewer()">✕ إغلاق</button>
+  </div>
+  <div class="viewer-body" id="viewerBody">
+    <!-- dynamic content here -->
+  </div>
+</div>
+
+{% endblock %}
+
+{% macro render_tree(nodes, depth=0) %}
+  {% for node in nodes %}
+  <div class="tree-node" data-name="{{ node.name|lower }}">
+    <button class="tree-btn {% if node.children %}has-children{% endif %}"
+            onclick="onTreeClick(this, {{ node.id }}, {{ 1 if node.children else 0 }})"
+            data-id="{{ node.id }}">
+      <span class="t-icon">{{ node.icon }}</span>
+      <span class="t-name">{{ node.name }}</span>
+      {% set cnt = node.file_count + node.code_count %}
+      {% if cnt > 0 %}<span class="t-cnt">{{ cnt }}</span>{% endif %}
+      {% if node.children %}<span class="t-toggle">▼</span>{% endif %}
+    </button>
+    {% if node.children %}
+    <div class="tree-children" id="ch-{{ node.id }}">
+      {{ render_tree(node.children, depth+1) }}
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% endmacro %}
+
+{% block extra_js %}
+<script>
+var currentSectionId = null;
+var pyodide = null;
+var pyodideLoading = false;
+
+/* ═══ Sidebar Tree ═══ */
+function onTreeClick(btn, sectionId, hasChildren){
+  if(hasChildren){
+    btn.classList.toggle('open');
+    var ch = document.getElementById('ch-'+sectionId);
+    if(ch) ch.classList.toggle('open');
+  }
+  loadSection(sectionId);
+  document.querySelectorAll('.tree-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // mobile close
+  if(window.innerWidth<=768) toggleSidePanel(false);
+}
+
+function toggleSidePanel(forceClose){
+  var aside = document.getElementById('browseAside');
+  var overlay = document.getElementById('sideOverlay');
+  var closeBtn = document.getElementById('asideClose');
+  if(forceClose===false || aside.classList.contains('open')){
+    aside.classList.remove('open');
+    overlay.classList.remove('open');
+  } else {
+    aside.classList.add('open');
+    overlay.classList.add('open');
+  }
+  if(closeBtn) closeBtn.style.display = aside.classList.contains('open') ? 'block' : 'none';
+}
+
+function filterTree(q){
+  q = q.toLowerCase().trim();
+  document.querySelectorAll('.tree-node').forEach(function(n){
+    var name = n.dataset.name || '';
+    n.style.display = (!q || name.includes(q)) ? '' : 'none';
+  });
+  if(q){
+    document.querySelectorAll('.tree-children').forEach(function(c){ c.classList.add('open'); });
+  }
+}
+
+/* ═══ Load Section Content ═══ */
+async function loadSection(sid){
+  currentSectionId = sid;
+  var area = document.getElementById('contentArea');
+  area.innerHTML = '<div style="padding:40px;text-align:center;color:#6366f1">⏳ جاري تحميل المحتوى...</div>';
+  try {
+    var r = await fetch('/cms/section/'+sid);
+    var d = await r.json();
+    document.getElementById('contentTitle').textContent = d.icon+' '+d.name;
+    document.getElementById('contentDesc').textContent  = d.description || '';
+
+    var html = '';
+
+    // رسالة بديلة
+    if(d.link){
+      html += `<div style="padding:20px">
+        <div style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.25);border-radius:12px;padding:16px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:1.5rem">🔗</span>
+          <div>
+            <div style="font-weight:700;color:#e2e8f0;margin-bottom:4px">رابط القسم</div>
+            <a href="${d.link}" target="_blank" style="color:#6366f1;font-size:0.85rem">${d.link}</a>
+          </div>
+          <button onclick="openIframe('${d.link}','${d.name}')" class="card-btn view" style="flex:none;padding:6px 14px">فتح داخل المنصة</button>
+        </div>
+      </div>`;
+    } else if(!d.files.length && !d.codes.length){
+      if(d.fallback_msg){
+        html += `<div style="padding:32px;text-align:center">
+          <div style="font-size:2.5rem;margin-bottom:12px">💬</div>
+          <div style="font-size:0.95rem;color:#94a3b8;line-height:1.7;max-width:400px;margin:0 auto">${d.fallback_msg}</div>
+        </div>`;
+      } else {
+        html += `<div style="padding:32px;text-align:center;color:#374151">لا يوجد محتوى في هذا القسم بعد</div>`;
+      }
+    }
+
+    // الملفات
+    if(d.files.length){
+      html += `<div style="padding:16px 20px 0;font-size:0.85rem;font-weight:800;color:#64748b">📎 الملفات (${d.files.length})</div>`;
+      html += '<div class="cards-grid">';
+      d.files.forEach(function(f){
+        var ico = {pdf:'📄',image:'🖼️',video:'🎬',audio:'🎵',code:'💻',file:'📎'}[f.file_type]||'📎';
+        html += `<div class="content-card" onclick="openFile('${f.file_url}','${esc(f.title)}','${f.file_type}',${f.id})">
+          <div class="card-type-bar ${f.file_type}"></div>
+          <div class="card-body">
+            <div class="card-title">${ico} ${esc(f.title)}</div>
+            <div class="card-meta">
+              <span class="card-badge ${f.file_type}">${f.file_type}</span>
+              ${f.ai_difficulty ? `<span class="card-badge ${f.ai_difficulty}">${f.ai_difficulty}</span>` : ''}
+              <span style="font-size:0.7rem;color:#374151">${(f.file_size/1024).toFixed(1)} KB</span>
+            </div>
+            ${f.ai_summary ? `<div class="card-summary">${esc(f.ai_summary)}</div>` : ''}
+            ${f.ai_keywords ? `<div style="font-size:0.7rem;color:#374151;margin-bottom:8px">🔑 ${esc(f.ai_keywords)}</div>` : ''}
+            <div class="card-actions" onclick="event.stopPropagation()">
+              <button class="card-btn view" onclick="openFile('${f.file_url}','${esc(f.title)}','${f.file_type}',${f.id})">👁 عرض</button>
+              <a class="card-btn download" href="${f.file_url}" download="${esc(f.title)}">⬇️ تحميل</a>
+              <button class="card-btn ask" onclick="askAIAbout('ملف: ${esc(f.title)}\\nموضوع: ${esc(f.ai_topic)}\\n${esc(f.ai_summary)}')">🤖 اسأل</button>
+            </div>
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    // الأكواد
+    if(d.codes.length){
+      html += `<div style="padding:${d.files.length?'0':16}px 20px 0;font-size:0.85rem;font-weight:800;color:#64748b">💻 الأكواد (${d.codes.length})</div>`;
+      html += '<div class="cards-grid">';
+      d.codes.forEach(function(c){
+        var ico = {python:'🐍',html:'🌐',interactive:'❓'}[c.code_type]||'💻';
+        var typeLbl = {python:'Python',html:'HTML/JS',interactive:'أسئلة تفاعلية'}[c.code_type]||c.code_type;
+        var diffLbl = {easy:'سهل',medium:'متوسط',hard:'صعب'}[c.difficulty]||c.difficulty;
+        html += `<div class="content-card">
+          <div class="card-type-bar ${c.code_type}"></div>
+          <div class="card-body">
+            <div class="card-title">${ico} ${esc(c.title)}</div>
+            <div class="card-meta">
+              <span class="card-badge ${c.code_type}">${typeLbl}</span>
+              <span class="card-badge ${c.difficulty}">${diffLbl}</span>
+            </div>
+            ${c.description ? `<div class="card-summary">${esc(c.description)}</div>` : ''}
+            ${c.ai_summary ? `<div class="card-summary">${esc(c.ai_summary)}</div>` : ''}
+            <div class="card-actions">
+              <button class="card-btn run" onclick="openCode(${c.id},'${esc(c.title)}','${c.code_type}','${esc(c.code_content)}','${esc(c.questions_json)}')">
+                ${c.code_type==='interactive' ? '▶ ابدأ الاختبار' : '▶ تشغيل / تحرير'}
+              </button>
+              <button class="card-btn ask" onclick="askAIAbout('كود ${typeLbl}: ${esc(c.title)}\\n${esc(c.description)}\\n${esc(c.ai_summary)}')">🤖 اسأل</button>
+            </div>
+          </div>
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    area.innerHTML = html || '<div style="padding:32px;text-align:center;color:#374151">لا يوجد محتوى</div>';
+  } catch(e){
+    area.innerHTML = '<div style="padding:32px;text-align:center;color:#ef4444">خطأ في تحميل المحتوى</div>';
+  }
+}
+
+function esc(s){
+  if(!s) return '';
+  return String(s).replace(/'/g,"\\'").replace(/\n/g,' ').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ═══ File Viewer ═══ */
+function openFile(url, title, type, id){
+  var panel = document.getElementById('viewerPanel');
+  var body  = document.getElementById('viewerBody');
+  var dl    = document.getElementById('viewerDownload');
+  document.getElementById('viewerTitle').textContent = title;
+  dl.href = url; dl.style.display='inline-block';
+  panel.classList.add('open');
+
+  if(type==='pdf'){
+    body.innerHTML = `<iframe src="${url}" style="width:100%;height:100%;border:none"></iframe>`;
+  } else if(type==='image'){
+    body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#0d1117">
+      <img src="${url}" style="max-width:100%;max-height:100%;object-fit:contain">
+    </div>`;
+  } else if(type==='video'){
+    body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#0d1117">
+      <video src="${url}" controls style="max-width:100%;max-height:90%"></video>
+    </div>`;
+  } else if(type==='audio'){
+    body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:#0d1117;flex-direction:column;gap:16px">
+      <div style="font-size:4rem">🎵</div>
+      <audio src="${url}" controls style="width:80%;max-width:400px"></audio>
+    </div>`;
+  } else {
+    body.innerHTML = `<iframe src="${url}" style="width:100%;height:100%;border:none"></iframe>`;
+  }
+}
+
+function openIframe(url, title){
+  var panel = document.getElementById('viewerPanel');
+  var body  = document.getElementById('viewerBody');
+  document.getElementById('viewerTitle').textContent = title;
+  document.getElementById('viewerDownload').style.display='none';
+  panel.classList.add('open');
+  body.innerHTML = `<iframe src="${url}" style="width:100%;height:100%;border:none" allowfullscreen></iframe>`;
+}
+
+function closeViewer(){
+  document.getElementById('viewerPanel').classList.remove('open');
+  document.getElementById('viewerBody').innerHTML='';
+}
+
+/* ═══ Code Viewer ═══ */
+function openCode(id, title, type, code, questionsRaw){
+  var panel = document.getElementById('viewerPanel');
+  var body  = document.getElementById('viewerBody');
+  var dl    = document.getElementById('viewerDownload');
+  document.getElementById('viewerTitle').textContent = title;
+  dl.style.display='none';
+  panel.classList.add('open');
+
+  // Fetch full code if not provided
+  if(!code || code.length < 2){
+    fetch('/cms/code/'+id).then(r=>r.json()).then(function(d){
+      renderCodePanel(body, title, d.code_type, d.code_content, d.questions_json);
+    });
+    return;
+  }
+  renderCodePanel(body, title, type, code, questionsRaw);
+}
+
+function renderCodePanel(body, title, type, code, questionsRaw){
+  if(type==='python'){
+    renderPython(body, code);
+  } else if(type==='html'){
+    renderHTML(body, code);
+  } else if(type==='interactive'){
+    renderQuiz(body, questionsRaw);
+  }
+}
+
+/* ── Python Runner (Pyodide) ── */
+function renderPython(body, code){
+  body.innerHTML = `
+  <div class="code-editor-wrap">
+    <div class="code-toolbar">
+      <button class="btn-run" onclick="runPython()">▶ تشغيل</button>
+      <button class="btn-reset" onclick="resetPython()">↺ إعادة</button>
+      <button class="btn-copy" onclick="copyCode()">📋 نسخ</button>
+      <span id="pyStatus" style="font-size:0.75rem;color:#64748b;margin-right:auto"></span>
+    </div>
+    <div class="code-panels">
+      <div class="code-input-panel">
+        <div class="code-label">🐍 Python — اكتب وعدّل الكود</div>
+        <textarea id="pyEditor">${escHTML(code)}</textarea>
+      </div>
+      <div class="code-output-panel">
+        <div class="code-label">📋 النتيجة</div>
+        <div id="pyOutput"><span class="output-info">اضغط ▶ تشغيل لرؤية النتيجة</span></div>
+      </div>
+    </div>
+  </div>`;
+  window._pyOrigCode = code;
+}
+
+var _pyRunning = false;
+var _pyodideReady = false;
+
+async function loadPyodide(){
+  if(_pyodideReady) return true;
+  if(pyodideLoading) { await new Promise(r=>setTimeout(r,3000)); return _pyodideReady; }
+  pyodideLoading = true;
+  document.getElementById('pyStatus').textContent = '⏳ تحميل Python...';
+  try {
+    if(!window.loadPyodide){
+      await loadScript('https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js');
+    }
+    pyodide = await window.loadPyodide({indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.25.0/full/'});
+    _pyodideReady = true;
+    document.getElementById('pyStatus').textContent = '✅ Python جاهز';
+    return true;
+  } catch(e){
+    document.getElementById('pyStatus').textContent = '❌ فشل تحميل Python';
+    return false;
+  }
+}
+
+function loadScript(src){
+  return new Promise(function(resolve, reject){
+    var s = document.createElement('script');
+    s.src = src; s.onload=resolve; s.onerror=reject;
+    document.head.appendChild(s);
+  });
+}
+
+async function runPython(){
+  if(_pyRunning) return;
+  _pyRunning = true;
+  var out = document.getElementById('pyOutput');
+  var code = document.getElementById('pyEditor').value;
+  out.innerHTML = '<span class="output-info">⏳ جاري التشغيل...</span>';
+  var ready = await loadPyodide();
+  if(!ready){
+    out.innerHTML = '<span class="output-error">❌ Python غير متاح. تحقق من اتصالك بالإنترنت</span>';
+    _pyRunning = false; return;
+  }
+  var output = '';
+  pyodide.setStdout({batched: function(s){ output += s + '\n'; }});
+  pyodide.setStderr({batched: function(s){ output += '⚠️ ' + s + '\n'; }});
+  try {
+    await pyodide.runPythonAsync(code);
+    out.innerHTML = output ? `<span style="color:#10b981">${escHTML(output)}</span>` : '<span class="output-info">✅ تم التنفيذ (لا يوجد مخرجات)</span>';
+  } catch(e){
+    out.innerHTML = `<span class="output-error">❌ خطأ:\n${escHTML(e.message)}</span>`;
+  }
+  _pyRunning = false;
+}
+
+function resetPython(){
+  var editor = document.getElementById('pyEditor');
+  if(editor && window._pyOrigCode !== undefined) editor.value = window._pyOrigCode;
+  var out = document.getElementById('pyOutput');
+  if(out) out.innerHTML = '<span class="output-info">اضغط ▶ تشغيل لرؤية النتيجة</span>';
+}
+function copyCode(){
+  var editor = document.getElementById('pyEditor');
+  if(editor){ navigator.clipboard.writeText(editor.value); }
+}
+
+/* ── HTML/CSS/JS Live Preview ── */
+function renderHTML(body, code){
+  body.innerHTML = `
+  <div class="code-editor-wrap">
+    <div class="code-toolbar">
+      <button class="btn-run" onclick="updatePreview()">▶ معاينة حية</button>
+      <button class="btn-reset" onclick="resetHTML()">↺ إعادة</button>
+      <button class="btn-copy" onclick="copyHTMLCode()">📋 نسخ</button>
+    </div>
+    <div class="html-wrap">
+      <div class="html-editor-side">
+        <div class="code-label">🌐 HTML/CSS/JS — اكتب وعدّل</div>
+        <textarea id="htmlEditor" oninput="debouncePreview()">${escHTML(code)}</textarea>
+      </div>
+      <div class="html-preview-side">
+        <div class="code-label" style="background:#1e2436;color:#64748b">👁 المعاينة الحية</div>
+        <iframe id="htmlPreview" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>
+    </div>
+  </div>`;
+  window._htmlOrigCode = code;
+  setTimeout(updatePreview, 200);
+}
+
+function updatePreview(){
+  var code = document.getElementById('htmlEditor').value;
+  var frame = document.getElementById('htmlPreview');
+  if(!frame) return;
+  var doc = frame.contentDocument || frame.contentWindow.document;
+  doc.open(); doc.write(code); doc.close();
+}
+var _previewTimer;
+function debouncePreview(){ clearTimeout(_previewTimer); _previewTimer = setTimeout(updatePreview, 600); }
+function resetHTML(){ var e=document.getElementById('htmlEditor'); if(e&&window._htmlOrigCode!==undefined){e.value=window._htmlOrigCode;updatePreview();} }
+function copyHTMLCode(){ var e=document.getElementById('htmlEditor'); if(e) navigator.clipboard.writeText(e.value); }
+
+/* ── Interactive Quiz ── */
+var _quizData=[], _quizIdx=0, _quizScore=0, _quizAnswered=false;
+
+function renderQuiz(body, questionsRaw){
+  try{ _quizData = JSON.parse(questionsRaw||'[]'); } catch(e){ _quizData=[]; }
+  if(!_quizData.length){
+    body.innerHTML='<div style="padding:32px;text-align:center;color:#64748b">لا توجد أسئلة في هذا الاختبار</div>';
+    return;
+  }
+  _quizIdx=0; _quizScore=0; _quizAnswered=false;
+  body.innerHTML='<div class="quiz-wrap" id="quizWrap"></div>';
+  renderQuizQuestion();
+}
+
+function renderQuizQuestion(){
+  var wrap = document.getElementById('quizWrap');
+  if(!wrap) return;
+  if(_quizIdx >= _quizData.length){ renderQuizResult(); return; }
+  var q = _quizData[_quizIdx];
+  var pct = Math.round((_quizIdx/_quizData.length)*100);
+  wrap.innerHTML = `
+    <div style="font-size:0.75rem;color:#64748b;margin-bottom:8px">سؤال ${_quizIdx+1} من ${_quizData.length}</div>
+    <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
+    <div class="quiz-q">${escHTML(q.q||q.question||'')}</div>
+    <div class="quiz-opts" id="quizOpts">
+      ${(q.options||[]).map((o,i)=>`<button class="quiz-opt" onclick="selectOpt(this,${i},${q.ans},'${esc(q.exp||'')}')">
+        ${['أ','ب','ج','د'][i]}) ${escHTML(o)}
+      </button>`).join('')}
+    </div>
+    <div class="quiz-exp" id="quizExp">${escHTML(q.exp||'')}</div>
+    <div class="quiz-nav" style="margin-top:12px">
+      <button id="nextBtn" class="btn btn-primary" style="display:none" onclick="nextQuestion()">التالي ←</button>
+    </div>`;
+}
+
+function selectOpt(btn, idx, ans, exp){
+  if(_quizAnswered) return;
+  _quizAnswered = true;
+  document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);
+  if(idx===ans){ btn.classList.add('correct'); _quizScore++; }
+  else { btn.classList.add('wrong'); document.querySelectorAll('.quiz-opt')[ans].classList.add('correct'); }
+  if(exp){ var e=document.getElementById('quizExp'); if(e){e.style.display='block';} }
+  var nb = document.getElementById('nextBtn'); if(nb) nb.style.display='block';
+}
+function nextQuestion(){ _quizIdx++; _quizAnswered=false; renderQuizQuestion(); }
+function renderQuizResult(){
+  var wrap=document.getElementById('quizWrap');
+  if(!wrap) return;
+  var pct=Math.round((_quizScore/_quizData.length)*100);
+  var msg = pct>=80?'ممتاز! 🌟':pct>=60?'جيد! 💪':pct>=40?'مقبول، استمر في التدريب 📚':'تحتاج مراجعة أكثر 🔄';
+  wrap.innerHTML=`<div class="quiz-result">
+    <div style="font-size:4rem;margin-bottom:16px">${pct>=80?'🏆':pct>=60?'👍':'📖'}</div>
+    <div style="font-size:1.5rem;font-weight:900;color:#e2e8f0;margin-bottom:8px">${_quizScore} / ${_quizData.length}</div>
+    <div style="font-size:2rem;font-weight:900;color:${pct>=80?'#10b981':pct>=60?'#f59e0b':'#ef4444'};margin-bottom:12px">${pct}%</div>
+    <div style="color:#94a3b8;margin-bottom:24px">${msg}</div>
+    <button class="btn btn-primary" onclick="renderQuiz(document.getElementById('viewerBody'),'${esc(JSON.stringify(_quizData))}')">🔄 إعادة الاختبار</button>
+  </div>`;
+}
+
+/* ═══ AI Ask ═══ */
+function askAIAbout(context){
+  var chatInput = document.getElementById('chatInput');
+  var chatWindow = document.getElementById('chatWindow');
+  if(chatInput){
+    chatInput.value = 'اشرح لي: ' + context.substring(0,100);
+    if(chatWindow) chatWindow.classList.add('open');
+    chatInput.focus();
+  }
+}
+
+function escHTML(s){
+  if(!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Close viewer on Escape
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') closeViewer();
+});
+</script>
+{% endblock %}

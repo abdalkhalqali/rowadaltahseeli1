@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}تحقق من بريدك{% endblock %}
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card" style="text-align:center">
+    <div style="font-size:3rem;margin-bottom:16px">📬</div>
+    <h1 class="auth-title">تحقق من بريدك</h1>
+    <p class="auth-subtitle">
+      أرسلنا رمز تحقق من 6 أرقام إلى<br>
+      <strong style="color:var(--gold)">{{ email }}</strong>
+    </p>
+    <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:20px">
+      💡 يمكنك لصق الرمز مباشرة بالضغط على أي خانة
+    </p>
+
+    <form method="POST" id="otpForm">
+      <!-- الخانات من اليسار لليمين دائماً بغض النظر عن اتجاه الصفحة -->
+      <div class="otp-wrapper" id="otpWrapper" dir="ltr" style="direction:ltr;justify-content:center">
+        {% for i in range(6) %}
+        <input type="text" class="otp-input" maxlength="1" pattern="[0-9]"
+               inputmode="numeric" autocomplete="one-time-code"
+               style="direction:ltr;text-align:center">
+        {% endfor %}
+      </div>
+      <input type="hidden" name="otp" id="otpValue">
+      <button type="submit" class="btn btn-primary btn-full" id="otpSubmit" disabled>
+        ✅ تحقق
+      </button>
+    </form>
+
+    <div style="margin-top:20px">
+      <a href="{{ url_for('auth.resend_otp') }}" class="text-gold" style="font-size:0.9rem">
+        لم تستلم الرمز؟ أعد الإرسال
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+const inputs = Array.from(document.querySelectorAll('.otp-input'));
+const hidden  = document.getElementById('otpValue');
+const btn     = document.getElementById('otpSubmit');
+let isPasting = false;
+
+/* ---- تحديث القيمة المخفية وزر التأكيد ---- */
+function updateOTP() {
+  const val = inputs.map(i => i.value).join('');
+  hidden.value = val;
+  btn.disabled = val.length !== 6;
+  inputs.forEach(i => i.style.borderColor = val.length === 6 ? 'var(--gold)' : '');
+}
+
+/* ---- لصق الرمز في أي خانة يملأ الكل ---- */
+function handlePaste(e) {
+  e.preventDefault();
+  isPasting = true;
+  const txt = (e.clipboardData || window.clipboardData)
+                .getData('text').replace(/\D/g, '').slice(0, 6);
+  if (!txt) { isPasting = false; return; }
+  inputs.forEach((inp, j) => { inp.value = txt[j] || ''; });
+  const last = Math.min(txt.length - 1, 5);
+  inputs[last].focus();
+  updateOTP();
+  setTimeout(() => { isPasting = false; }, 50);
+}
+
+/* ---- كتابة رقم وانتقال تلقائي للخانة التالية ---- */
+inputs.forEach((inp, i) => {
+
+  /* لصق */
+  inp.addEventListener('paste', handlePaste);
+
+  /* إدخال — يُتجاهل أثناء اللصق حتى لا يحذف الأرقام */
+  inp.addEventListener('input', e => {
+    if (isPasting) return;
+    inp.value = inp.value.replace(/\D/g, '').slice(-1);
+    if (inp.value && i < 5) inputs[i + 1].focus();
+    updateOTP();
+  });
+
+  /* حذف والتراجع للخانة السابقة */
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'Backspace') {
+      if (inp.value) { inp.value = ''; updateOTP(); }
+      else if (i > 0) { inputs[i - 1].focus(); inputs[i - 1].value = ''; updateOTP(); }
+    } else if (e.key === 'ArrowLeft' && i > 0) {
+      inputs[i - 1].focus();
+    } else if (e.key === 'ArrowRight' && i < 5) {
+      inputs[i + 1].focus();
+    }
+  });
+
+  /* عند الضغط على خانة ممتلئة → تحديد المحتوى لإعادة كتابته */
+  inp.addEventListener('focus', () => inp.select());
+});
+
+/* ---- اضغط في أي مكان في المجموعة → ركّز على أول خانة فارغة ---- */
+document.getElementById('otpWrapper').addEventListener('click', () => {
+  const empty = inputs.find(i => !i.value);
+  (empty || inputs[5]).focus();
+});
+
+/* تركيز تلقائي عند فتح الصفحة */
+inputs[0].focus();
+</script>
+{% endblock %}

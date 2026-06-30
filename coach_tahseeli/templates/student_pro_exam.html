@@ -1,0 +1,460 @@
+{% extends 'base.html' %}
+{% block title %}الرخصة المهنية للفيزياء{% endblock %}
+{% block extra_css %}
+<style>
+.pro-section-card{background:var(--bg-card);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:24px}
+.pro-section-header{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;cursor:pointer;user-select:none;transition:background .2s}
+.pro-section-header:hover{background:rgba(255,255,255,0.03)}
+.pro-section-body{padding:0 22px 22px}
+.std-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:16px;transition:.25s}
+.std-card:hover{border-color:rgba(99,102,241,0.4);background:rgba(99,102,241,0.05)}
+.std-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.timer-btn{border:2px solid var(--border);background:transparent;border-radius:10px;padding:7px 14px;color:#94a3b8;cursor:pointer;font-family:inherit;font-size:0.82rem;transition:.2s}
+.timer-btn.active,.timer-btn:hover{border-color:#6366f1;background:rgba(99,102,241,0.12);color:#a5b4fc}
+.model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.model-card{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:14px;padding:18px;text-align:center;transition:.25s;text-decoration:none;display:block}
+.model-card:hover{border-color:rgba(245,158,11,0.5);background:rgba(245,158,11,0.07);transform:translateY(-2px)}
+.chevron{transition:transform .3s;display:inline-block}
+.collapsed .chevron{transform:rotate(-90deg)}
+@media(max-width:640px){
+  .std-grid{grid-template-columns:1fr}
+  .model-grid{grid-template-columns:repeat(2,1fr)}
+  .daily-inner{flex-direction:column!important;gap:16px!important}
+  .daily-stats{justify-content:flex-start!important;flex-wrap:wrap}
+  .exam-header-main{flex-direction:column!important;gap:12px!important}
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="dashboard-wrapper">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div style="padding:16px 16px 8px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:16px">
+      <div class="avatar" style="width:44px;height:44px;font-size:1.2rem">{{ current_user.name[0] }}</div>
+      <div>
+        <div style="font-weight:700;font-size:0.9rem">{{ current_user.name }}</div>
+        <div style="font-size:0.72rem;color:#64748b">طالب</div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">الرخصة المهنية</div>
+      <a href="{{ url_for('pro_license.student_index') }}" class="sidebar-link active"><span class="icon">🏅</span> الصفحة الرئيسية</a>
+      <a href="{{ url_for('pro_license.daily_start') }}" class="sidebar-link"><span class="icon">📅</span> التدريب اليومي</a>
+      <a href="{{ url_for('pro_license.comprehensive_exam') }}" class="sidebar-link"><span class="icon">🎯</span> الاختبار الشامل</a>
+      <a href="{{ url_for('pro_license.history') }}" class="sidebar-link"><span class="icon">📋</span> سجل نتائجي</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">الرئيسية</div>
+      <a href="{{ url_for('student.dashboard') }}" class="sidebar-link"><span class="icon">🏠</span> لوحتي</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- Page Header -->
+    <div style="background:linear-gradient(135deg,#1e1b4b,#312e81,#1e3a5f);border-radius:20px;
+                padding:26px 28px;margin-bottom:28px;border:1px solid rgba(99,102,241,0.3)">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="font-size:2.5rem;line-height:1">🏅</div>
+        <div style="flex:1;min-width:200px">
+          <h1 style="font-size:1.4rem;font-weight:900;color:#fff;margin:0 0 4px">الرخصة المهنية للفيزياء</h1>
+          <p style="color:#a5b4fc;font-size:0.88rem;margin:0">
+            18 معياراً · {{ total_q }} سؤال متاح · تدريب تصاعدي ذكي
+          </p>
+        </div>
+        <a href="{{ url_for('pro_license.history') }}"
+           style="background:rgba(255,255,255,0.1);color:#e2e8f0;border:1px solid rgba(255,255,255,0.15);
+                  border-radius:10px;padding:9px 18px;text-decoration:none;font-size:0.85rem;white-space:nowrap">
+          📋 سجل نتائجي
+        </a>
+      </div>
+    </div>
+
+    <!-- ═══ قسم التدريب اليومي ═══ -->
+    <div style="margin-bottom:24px">
+      {% if today_done %}
+      <div style="background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.06));
+                  border:1px solid rgba(16,185,129,0.25);border-radius:20px;padding:24px 28px">
+        <div class="daily-inner" style="display:flex;align-items:center;justify-content:space-between;gap:20px">
+          <div>
+            <div style="font-size:1.6rem;margin-bottom:6px">✅</div>
+            <div style="font-weight:800;font-size:1.1rem;color:#10b981;margin-bottom:4px">أكملت تدريب اليوم!</div>
+            <div style="color:#64748b;font-size:0.85rem">
+              اليوم {{ day_num }} · النتيجة:
+              <span style="color:#10b981;font-weight:700">{{ daily_score }}%</span>
+              · عد غداً للتدريب التالي
+            </div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:2.5rem;font-weight:900;color:#10b981">{{ daily_score }}%</div>
+            <div style="font-size:0.75rem;color:#64748b">نتيجة اليوم</div>
+          </div>
+        </div>
+      </div>
+      {% else %}
+      <div style="background:linear-gradient(135deg,rgba(99,102,241,0.15),rgba(139,92,246,0.1));
+                  border:1px solid rgba(99,102,241,0.3);border-radius:20px;padding:24px 28px">
+        <div class="daily-inner" style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px">
+          <div style="flex:1">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+              <div style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border-radius:10px;
+                          padding:4px 12px;font-size:0.8rem;font-weight:700">اليوم {{ day_num }}</div>
+              {% if day_num <= 3 %}
+              <div style="background:rgba(16,185,129,0.15);color:#10b981;border-radius:8px;padding:3px 10px;font-size:0.78rem">🟢 مستوى سهل-متوسط</div>
+              {% elif day_num <= 7 %}
+              <div style="background:rgba(245,158,11,0.15);color:#f59e0b;border-radius:8px;padding:3px 10px;font-size:0.78rem">🟡 مستوى متوسط-صعب</div>
+              {% else %}
+              <div style="background:rgba(239,68,68,0.15);color:#ef4444;border-radius:8px;padding:3px 10px;font-size:0.78rem">🔴 مستوى متقدم</div>
+              {% endif %}
+            </div>
+            <div style="font-weight:800;font-size:1.15rem;color:#e2e8f0;margin-bottom:6px">📅 التدريب اليومي التصاعدي</div>
+            <div style="color:#94a3b8;font-size:0.85rem;line-height:1.6;margin-bottom:14px">
+              15 سؤال جديد بمستوى يتصاعد يوماً بعد يوم
+              {% if review_count > 0 %}
+              + <span style="color:#f59e0b;font-weight:600">{{ review_count }} سؤال مراجعة</span> من أخطاء أمس
+              {% endif %}
+            </div>
+            <!-- اختر المؤقت -->
+            <div style="margin-bottom:16px">
+              <div style="font-size:0.8rem;color:#64748b;margin-bottom:8px">⏱ اختر المؤقت الزمني (اختياري)</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap" id="daily-timer-btns">
+                <button class="timer-btn active" data-sec="0" onclick="selectTimer(this,'daily')">بدون مؤقت</button>
+                <button class="timer-btn" data-sec="30" onclick="selectTimer(this,'daily')">30 ثانية/سؤال</button>
+                <button class="timer-btn" data-sec="60" onclick="selectTimer(this,'daily')">دقيقة/سؤال</button>
+                <button class="timer-btn" data-sec="90" onclick="selectTimer(this,'daily')">90 ثانية/سؤال</button>
+              </div>
+            </div>
+            <a id="daily-start-btn" href="{{ url_for('pro_license.daily_start') }}"
+               style="display:inline-flex;align-items:center;gap:8px;
+                      background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+                      border-radius:12px;padding:12px 28px;font-weight:800;font-size:0.95rem;
+                      text-decoration:none;box-shadow:0 6px 20px rgba(99,102,241,0.35);
+                      transition:.2s">
+              🚀 ابدأ التدريب اليومي
+            </a>
+          </div>
+          <div class="daily-stats" style="display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0">
+            <div style="background:rgba(255,255,255,0.06);border-radius:14px;padding:16px 20px;text-align:center">
+              <div style="font-size:2rem;font-weight:900;color:#a5b4fc">{{ day_num }}</div>
+              <div style="font-size:0.72rem;color:#64748b">يوم التدريب</div>
+            </div>
+            {% if review_count > 0 %}
+            <div style="background:rgba(245,158,11,0.1);border-radius:14px;padding:12px 18px;text-align:center">
+              <div style="font-size:1.5rem;font-weight:900;color:#f59e0b">{{ review_count }}</div>
+              <div style="font-size:0.72rem;color:#64748b">مراجعة</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ═══ الاختبار الشامل ═══ -->
+    <div style="margin-bottom:24px">
+      <div style="background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(5,150,105,0.07));
+                  border:1px solid rgba(16,185,129,0.25);border-radius:20px;padding:22px 28px">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+          <div>
+            <div style="font-weight:800;font-size:1.05rem;color:#10b981;margin-bottom:4px">🎯 الاختبار التجميعي الشامل</div>
+            <div style="color:#64748b;font-size:0.85rem">
+              ~36 سؤال من جميع المعايير الـ 18 دفعة واحدة — يحاكي الاختبار الحقيقي
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div id="comp-timer-wrap" style="display:flex;gap:6px">
+              <button class="timer-btn active" data-sec="0" onclick="selectTimer(this,'comp')">بدون مؤقت</button>
+              <button class="timer-btn" data-sec="60" onclick="selectTimer(this,'comp')">دقيقة/سؤال</button>
+              <button class="timer-btn" data-sec="90" onclick="selectTimer(this,'comp')">90 ثا/سؤال</button>
+            </div>
+            <a id="comp-start-btn" href="{{ url_for('pro_license.comprehensive_exam') }}"
+               style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border-radius:12px;
+                      padding:10px 22px;font-weight:800;text-decoration:none;font-size:0.9rem;white-space:nowrap">
+              ابدأ الشامل ←
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ نماذج الاختبارات السابقة ═══ -->
+    {% if n_models > 0 %}
+    <div class="pro-section-card" id="models-section">
+      <div class="pro-section-header" onclick="toggleSection('models-section')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#f59e0b,#d97706);
+                      display:flex;align-items:center;justify-content:center;font-size:1.2rem">📄</div>
+          <div>
+            <div style="font-weight:800;font-size:1rem;color:#e2e8f0">نماذج الاختبارات</div>
+            <div style="font-size:0.78rem;color:#64748b">{{ n_models }} نموذج متاح · 36 سؤال لكل نموذج</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="background:rgba(245,158,11,0.15);color:#f59e0b;border-radius:8px;
+                       padding:3px 10px;font-size:0.78rem;font-weight:700">{{ n_models }} نموذج</span>
+          <span class="chevron" style="color:#64748b;font-size:1.2rem">▼</span>
+        </div>
+      </div>
+      <div class="pro-section-body section-collapsible">
+        <!-- اختيار المؤقت للنماذج -->
+        <div style="margin-bottom:16px;padding:14px;background:rgba(245,158,11,0.06);border-radius:12px;
+                    border:1px solid rgba(245,158,11,0.15)">
+          <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:8px">⏱ المؤقت الزمني للنماذج</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap" id="model-timer-btns">
+            <button class="timer-btn active" data-sec="0" onclick="selectTimer(this,'model')">بدون مؤقت</button>
+            <button class="timer-btn" data-sec="60" onclick="selectTimer(this,'model')">دقيقة/سؤال</button>
+            <button class="timer-btn" data-sec="90" onclick="selectTimer(this,'model')">90 ثانية/سؤال</button>
+            <button class="timer-btn" data-sec="120" onclick="selectTimer(this,'model')">دقيقتين/سؤال</button>
+          </div>
+        </div>
+        <div class="model-grid">
+          {% for m in range(1, n_models+1) %}
+          <a class="model-card" id="model-link-{{ m }}"
+             href="{{ url_for('pro_license.model_exam', model_num=m) }}"
+             style="color:inherit">
+            <div style="font-size:1.8rem;margin-bottom:8px">📄</div>
+            <div style="font-weight:700;font-size:0.9rem;color:#e2e8f0;margin-bottom:4px">نموذج {{ m }}</div>
+            <div style="font-size:0.75rem;color:#64748b">36 سؤال</div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ المعايير التربوية ═══ -->
+    <div class="pro-section-card" id="edu-section">
+      <div class="pro-section-header" onclick="toggleSection('edu-section')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                      display:flex;align-items:center;justify-content:center;font-size:1.2rem">📘</div>
+          <div>
+            <div style="font-weight:800;font-size:1rem;color:#e2e8f0">المعايير التربوية</div>
+            <div style="font-size:0.78rem;color:#64748b">9 معايير · فلسفة التعليم، التدريس، التقييم…</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="background:rgba(99,102,241,0.15);color:#a5b4fc;border-radius:8px;
+                       padding:3px 10px;font-size:0.78rem;font-weight:700">9 معايير</span>
+          <span class="chevron" style="color:#64748b;font-size:1.2rem">▼</span>
+        </div>
+      </div>
+      <div class="pro-section-body section-collapsible">
+        <!-- اختيار المؤقت -->
+        <div style="margin-bottom:14px;padding:12px 14px;background:rgba(99,102,241,0.06);border-radius:10px;
+                    border:1px solid rgba(99,102,241,0.12)">
+          <div style="font-size:0.78rem;color:#64748b;margin-bottom:6px">⏱ اختر المؤقت لهذه المعايير</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="edu-timer-btns">
+            <button class="timer-btn active" data-sec="0" onclick="selectTimer(this,'edu')">بدون مؤقت</button>
+            <button class="timer-btn" data-sec="30" onclick="selectTimer(this,'edu')">30 ثا/سؤال</button>
+            <button class="timer-btn" data-sec="60" onclick="selectTimer(this,'edu')">دقيقة/سؤال</button>
+            <button class="timer-btn" data-sec="90" onclick="selectTimer(this,'edu')">90 ثا/سؤال</button>
+          </div>
+        </div>
+        <div class="std-grid">
+          {% for s_num, s_data in stats.items() %}
+          {% if s_data.type == 'educational' %}
+          <div class="std-card">
+            <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+              <div style="width:30px;height:30px;border-radius:8px;background:rgba(99,102,241,0.2);
+                          color:#a5b4fc;font-weight:900;font-size:0.8rem;flex-shrink:0;
+                          display:flex;align-items:center;justify-content:center">{{ s_num }}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:0.88rem;color:#e2e8f0;line-height:1.4;margin-bottom:4px">{{ s_data.name }}</div>
+                <div style="font-size:0.75rem;color:#475569">{{ s_data.count }} سؤال</div>
+              </div>
+              {% if s_data.last_result %}
+              <div style="font-size:0.72rem;font-weight:700;
+                          color:{{ '#10b981' if s_data.last_result.score_pct >= 70 else '#f59e0b' if s_data.last_result.score_pct >= 50 else '#ef4444' }};
+                          background:{{ 'rgba(16,185,129,0.1)' if s_data.last_result.score_pct >= 70 else 'rgba(245,158,11,0.1)' if s_data.last_result.score_pct >= 50 else 'rgba(239,68,68,0.1)' }};
+                          padding:3px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0">
+                {{ s_data.last_result.score_pct }}%
+              </div>
+              {% endif %}
+            </div>
+            {% if s_data.last_result %}
+            <div style="background:rgba(255,255,255,0.06);border-radius:6px;height:4px;overflow:hidden;margin-bottom:10px">
+              <div style="background:{{ '#10b981' if s_data.last_result.score_pct >= 70 else '#f59e0b' if s_data.last_result.score_pct >= 50 else '#ef4444' }};
+                          height:100%;width:{{ s_data.last_result.score_pct }}%;transition:.6s"></div>
+            </div>
+            {% endif %}
+            {% if s_data.count > 0 %}
+            <a class="edu-exam-link" data-std="{{ s_num }}"
+               href="{{ url_for('pro_license.start_exam', standard=s_num) }}"
+               style="display:block;text-align:center;background:rgba(99,102,241,0.15);color:#a5b4fc;
+                      border:1px solid rgba(99,102,241,0.2);border-radius:10px;padding:8px;
+                      text-decoration:none;font-size:0.85rem;font-weight:700;transition:.2s">
+              {{ '🔄 إعادة الاختبار' if s_data.last_result else '▶️ ابدأ الاختبار' }}
+            </a>
+            {% else %}
+            <div style="text-align:center;color:#475569;font-size:0.8rem;padding:8px">لم تُضف أسئلة بعد</div>
+            {% endif %}
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ المعايير العلمية — الفيزياء ═══ -->
+    <div class="pro-section-card" id="phy-section">
+      <div class="pro-section-header" onclick="toggleSection('phy-section')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#f59e0b,#d97706);
+                      display:flex;align-items:center;justify-content:center;font-size:1.2rem">⚛️</div>
+          <div>
+            <div style="font-weight:800;font-size:1rem;color:#e2e8f0">المعايير العلمية — الفيزياء</div>
+            <div style="font-size:0.78rem;color:#64748b">9 معايير · ميكانيكا، كهرباء، موجات، فيزياء حديثة…</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="background:rgba(245,158,11,0.15);color:#f59e0b;border-radius:8px;
+                       padding:3px 10px;font-size:0.78rem;font-weight:700">9 معايير</span>
+          <span class="chevron" style="color:#64748b;font-size:1.2rem">▼</span>
+        </div>
+      </div>
+      <div class="pro-section-body section-collapsible">
+        <div style="margin-bottom:14px;padding:12px 14px;background:rgba(245,158,11,0.06);border-radius:10px;
+                    border:1px solid rgba(245,158,11,0.12)">
+          <div style="font-size:0.78rem;color:#64748b;margin-bottom:6px">⏱ اختر المؤقت لهذه المعايير</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="phy-timer-btns">
+            <button class="timer-btn active" data-sec="0" onclick="selectTimer(this,'phy')">بدون مؤقت</button>
+            <button class="timer-btn" data-sec="30" onclick="selectTimer(this,'phy')">30 ثا/سؤال</button>
+            <button class="timer-btn" data-sec="60" onclick="selectTimer(this,'phy')">دقيقة/سؤال</button>
+            <button class="timer-btn" data-sec="90" onclick="selectTimer(this,'phy')">90 ثا/سؤال</button>
+          </div>
+        </div>
+        <div class="std-grid">
+          {% for s_num, s_data in stats.items() %}
+          {% if s_data.type == 'physics' %}
+          <div class="std-card">
+            <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+              <div style="width:30px;height:30px;border-radius:8px;background:rgba(245,158,11,0.2);
+                          color:#f59e0b;font-weight:900;font-size:0.8rem;flex-shrink:0;
+                          display:flex;align-items:center;justify-content:center">{{ s_num }}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:700;font-size:0.88rem;color:#e2e8f0;line-height:1.4;margin-bottom:4px">{{ s_data.name }}</div>
+                <div style="font-size:0.75rem;color:#475569">{{ s_data.count }} سؤال</div>
+              </div>
+              {% if s_data.last_result %}
+              <div style="font-size:0.72rem;font-weight:700;
+                          color:{{ '#10b981' if s_data.last_result.score_pct >= 70 else '#f59e0b' if s_data.last_result.score_pct >= 50 else '#ef4444' }};
+                          background:{{ 'rgba(16,185,129,0.1)' if s_data.last_result.score_pct >= 70 else 'rgba(245,158,11,0.1)' if s_data.last_result.score_pct >= 50 else 'rgba(239,68,68,0.1)' }};
+                          padding:3px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0">
+                {{ s_data.last_result.score_pct }}%
+              </div>
+              {% endif %}
+            </div>
+            {% if s_data.last_result %}
+            <div style="background:rgba(255,255,255,0.06);border-radius:6px;height:4px;overflow:hidden;margin-bottom:10px">
+              <div style="background:{{ '#10b981' if s_data.last_result.score_pct >= 70 else '#f59e0b' if s_data.last_result.score_pct >= 50 else '#ef4444' }};
+                          height:100%;width:{{ s_data.last_result.score_pct }}%;transition:.6s"></div>
+            </div>
+            {% endif %}
+            {% if s_data.count > 0 %}
+            <a class="phy-exam-link" data-std="{{ s_num }}"
+               href="{{ url_for('pro_license.start_exam', standard=s_num) }}"
+               style="display:block;text-align:center;background:rgba(245,158,11,0.12);color:#f59e0b;
+                      border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:8px;
+                      text-decoration:none;font-size:0.85rem;font-weight:700;transition:.2s">
+              {{ '🔄 إعادة الاختبار' if s_data.last_result else '▶️ ابدأ الاختبار' }}
+            </a>
+            {% else %}
+            <div style="text-align:center;color:#475569;font-size:0.8rem;padding:8px">لم تُضف أسئلة بعد</div>
+            {% endif %}
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── أوقات المؤقت لكل قسم
+const timers = { daily:0, comp:0, edu:0, phy:0, model:0 };
+
+function selectTimer(btn, group) {
+  const container = document.getElementById(group + '-timer-btns') ||
+                    document.getElementById(group === 'model' ? 'model-timer-btns' : null);
+  if (!container) return;
+  container.querySelectorAll('.timer-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  timers[group] = parseInt(btn.dataset.sec) || 0;
+  updateExamLinks(group);
+}
+
+function updateExamLinks(group) {
+  const sec = timers[group] || 0;
+  if (group === 'daily') {
+    const a = document.getElementById('daily-start-btn');
+    if (a) {
+      const base = a.href.split('?')[0];
+      a.href = sec > 0 ? base + '?timer=' + sec : base;
+    }
+  }
+  if (group === 'comp') {
+    const a = document.getElementById('comp-start-btn');
+    if (a) {
+      const base = a.href.split('?')[0];
+      a.href = sec > 0 ? base + '?timer=' + sec : base;
+    }
+  }
+  if (group === 'edu') {
+    document.querySelectorAll('.edu-exam-link').forEach(a => {
+      const base = a.href.split('?')[0];
+      a.href = sec > 0 ? base + '?timer=' + sec : base;
+    });
+  }
+  if (group === 'phy') {
+    document.querySelectorAll('.phy-exam-link').forEach(a => {
+      const base = a.href.split('?')[0];
+      a.href = sec > 0 ? base + '?timer=' + sec : base;
+    });
+  }
+  if (group === 'model') {
+    document.querySelectorAll('[id^="model-link-"]').forEach(a => {
+      const base = a.href.split('?')[0];
+      a.href = sec > 0 ? base + '?timer=' + sec : base;
+    });
+  }
+}
+
+// ── أكورديون الأقسام
+function toggleSection(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const body = el.querySelector('.section-collapsible');
+  const chevron = el.querySelector('.chevron');
+  const isOpen = body.style.display !== 'none';
+  if (isOpen) {
+    body.style.display = 'none';
+    chevron.style.transform = 'rotate(-90deg)';
+  } else {
+    body.style.display = 'block';
+    chevron.style.transform = 'rotate(0deg)';
+  }
+}
+
+// فتح القسمين الرئيسيين بشكل افتراضي، إغلاق النماذج
+document.addEventListener('DOMContentLoaded', () => {
+  ['edu-section','phy-section'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      const body = el.querySelector('.section-collapsible');
+      if (body) body.style.display = 'block';
+    }
+  });
+  const modelsEl = document.getElementById('models-section');
+  if (modelsEl) {
+    const body = modelsEl.querySelector('.section-collapsible');
+    const chevron = modelsEl.querySelector('.chevron');
+    if (body) body.style.display = 'none';
+    if (chevron) chevron.style.transform = 'rotate(-90deg)';
+  }
+});
+</script>
+{% endblock %}

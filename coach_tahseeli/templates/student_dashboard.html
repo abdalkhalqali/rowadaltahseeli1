@@ -1,0 +1,1893 @@
+{% extends 'base.html' %}
+{% block title %}لوحة الطالب — رواد التحصيلي{% endblock %}
+{% block content %}
+
+{# ── قاموس الصفوف (يشمل all_grades) ── #}
+{% set GRADES = {
+  'grade_10':   {'ar': 'أول ثانوي',  'icon': '1️⃣', 'color': 'var(--cyan)'},
+  'grade_11':   {'ar': 'ثاني ثانوي', 'icon': '2️⃣', 'color': 'var(--gold)'},
+  'grade_12':   {'ar': 'ثالث ثانوي', 'icon': '3️⃣', 'color': 'var(--emerald)'},
+  'all_grades': {'ar': 'كل الصفوف',  'icon': '🌐',  'color': 'var(--gold)'}
+} %}
+
+{# اسم الصف الحالي #}
+{% if current_user.grade in GRADES %}
+  {% set CG = GRADES[current_user.grade] %}
+{% else %}
+  {% set CG = none %}
+{% endif %}
+
+<div class="dashboard-wrapper">
+
+<!-- ═══════════════ Sidebar ═══════════════ -->
+<aside class="sidebar">
+  <div style="padding:16px 16px 8px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:16px">
+    <div class="avatar" style="width:44px;height:44px;font-size:1.2rem">{{ current_user.name[0] }}</div>
+    <div>
+      <div style="font-weight:700;font-size:0.95rem">{{ current_user.name }}</div>
+      {% if CG %}
+        <div class="badge badge-gold" style="font-size:0.72rem">🏫 {{ CG.ar }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">الرئيسية</div>
+    <a href="{{ url_for('student.dashboard') }}" class="sidebar-link active"><span class="icon">🏠</span> لوحتي</a>
+    <a href="{{ url_for('student.progress') }}" class="sidebar-link"><span class="icon">📈</span> تقدمي</a>
+    <a href="{{ url_for('student.assessment') }}" class="sidebar-link"><span class="icon">🎯</span> تقييم المستوى</a>
+    <a href="{{ url_for('competition.index') }}" class="sidebar-link"><span class="icon">🏆</span> المسابقات</a>
+  </div>
+
+  <div class="sidebar-section" style="margin-top:8px">
+    <div class="sidebar-label">الأقسام</div>
+    <a href="#sec-stats"    class="sidebar-link"><span class="icon">📊</span> إحصائياتي</a>
+    <a href="#sec-grades"   class="sidebar-link"><span class="icon">📚</span> اختبارات الصفوف</a>
+    <a href="#sec-pro"      class="sidebar-link" style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.22)"><span class="icon">🏆</span> تدريبات المحترفين</a>
+    <a href="#sec-prev"     class="sidebar-link"><span class="icon">📋</span> نماذج سابقة</a>
+    <a href="#sec-famous"   class="sidebar-link"><span class="icon">⭐</span> اختبارات شهيرة</a>
+    <a href="#sec-expected" class="sidebar-link"><span class="icon">🔮</span> اختبارات متوقعة</a>
+    <a href="#sec-arena"    class="sidebar-link" style="background:rgba(255,184,0,0.08);border:1px solid rgba(255,184,0,0.2);margin-top:6px"><span class="icon">⚔️</span> ساحة التنافس</a>
+    <a href="#sec-community" class="sidebar-link" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.22);margin-top:6px">
+      <span class="icon">👥</span> مجتمع المحترفين
+    </a>
+    <a href="{{ url_for('lectures.student_lectures', branch='tahseeli') }}" class="sidebar-link" style="background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);margin-top:6px"><span class="icon">🎬</span> المحاضرات والدروس</a>
+    <a href="{{ url_for('lectures.student_lectures', branch='professional_license') }}" class="sidebar-link" style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.22)"><span class="icon">🏅</span> محاضرات الرخصة المهنية</a>
+    <a href="{{ url_for('pro_license.student_index') }}" class="sidebar-link" style="background:rgba(244,63,94,0.14);border:1px solid rgba(244,63,94,0.38)"><span class="icon">🎯</span> اختبار الرخصة المهنية</a>
+    <a href="{{ url_for('cms.student_cms') }}" class="sidebar-link" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);margin-top:6px"><span class="icon">📚</span> مركز المحتوى التعليمي</a>
+  </div>
+
+  <div class="sidebar-section" style="margin-top:8px">
+    <div class="sidebar-label">أخرى</div>
+    <a href="{{ url_for('notifications.index') }}" class="sidebar-link" style="position:relative">
+      <span class="icon">🔔</span> إشعاراتي
+      {% if unread_notif_count > 0 %}
+      <span style="margin-right:auto;background:#ef4444;color:#fff;font-size:0.65rem;
+                   font-weight:900;padding:1px 6px;border-radius:8px">{{ unread_notif_count }}</span>
+      {% endif %}
+    </a>
+    <a href="{{ url_for('stories.create') }}" class="sidebar-link" style="background:rgba(255,184,0,0.08);border:1px solid rgba(255,184,0,0.2)">
+      <span class="icon">📸</span> نشر حالة
+    </a>
+    <a onclick="openAccountMenu()" class="sidebar-link" style="cursor:pointer">
+      <span class="icon">⚙️</span> حسابي
+    </a>
+  </div>
+
+  <!-- بيو المستخدم -->
+  <div style="margin:12px 8px 0;padding:12px;background:var(--bg-elevated);
+              border-radius:10px;border:1px solid var(--border)">
+    <div style="font-size:0.75rem;color:#475569;margin-bottom:6px">نبذة عني</div>
+    <div id="bioDisplay" style="color:#94a3b8;font-size:0.82rem;line-height:1.5;min-height:20px">
+      {{ current_user.bio or 'أضف نبذة عنك...' }}
+    </div>
+    <button onclick="openBioEdit()"
+      style="margin-top:8px;background:none;border:1px solid var(--border);border-radius:8px;
+             padding:4px 10px;color:#475569;font-size:0.75rem;cursor:pointer;font-family:inherit">
+      ✏️ تعديل
+    </button>
+  </div>
+</aside>
+
+<!-- ══ نافذة حسابي ══ -->
+<div id="accountMenuOverlay" onclick="closeAccountMenu()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000"></div>
+<div id="accountMenuPanel"
+  style="display:none;position:fixed;bottom:0;left:0;right:0;
+         background:#141824;border-radius:20px 20px 0 0;
+         border-top:1px solid var(--border);padding:24px;z-index:1001;
+         max-width:480px;margin:0 auto">
+  <div style="text-align:center;margin-bottom:20px">
+    <div class="avatar" style="width:56px;height:56px;font-size:1.5rem;margin:0 auto 10px">
+      {{ current_user.name[0] }}
+    </div>
+    <div style="font-weight:700;font-size:1rem">{{ current_user.name }}</div>
+    <div style="color:#475569;font-size:0.82rem">{{ current_user.email }}</div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <a href="{{ url_for('auth.logout') }}"
+      style="background:var(--bg-elevated);border:1px solid var(--border);
+             border-radius:12px;padding:14px;text-align:center;color:#e2e8f0;
+             text-decoration:none;font-weight:600;font-size:0.95rem">
+      🚪 تسجيل الخروج
+    </a>
+    <button onclick="openDeleteConfirm()"
+      style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);
+             border-radius:12px;padding:14px;color:#ef4444;font-weight:700;
+             cursor:pointer;font-family:inherit;font-size:0.95rem">
+      🗑 حذف الحساب نهائياً
+    </button>
+    <button onclick="closeAccountMenu()"
+      style="background:none;border:none;color:#475569;cursor:pointer;
+             font-family:inherit;font-size:0.9rem;padding:8px">
+      إلغاء
+    </button>
+  </div>
+</div>
+
+<!-- ══ نافذة تأكيد حذف الحساب ══ -->
+<div id="deleteConfirmOverlay" onclick="closeDeleteConfirm()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1100"></div>
+<div id="deleteConfirmPanel"
+  style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+         background:#141824;border:1px solid #ef4444;border-radius:20px;
+         padding:32px;max-width:360px;width:90%;text-align:center;z-index:1101">
+  <div style="font-size:3rem;margin-bottom:12px">⚠️</div>
+  <h3 style="color:#ef4444;margin-bottom:8px">حذف الحساب نهائياً</h3>
+  <p style="color:#94a3b8;font-size:0.9rem;margin-bottom:24px;line-height:1.6">
+    سيُحذف حسابك وجميع بياناتك (نتائجك، منشوراتك، حالاتك) بشكل دائم.<br>
+    لا يمكن التراجع عن هذا الإجراء.
+  </p>
+  <div style="display:flex;gap:12px;justify-content:center">
+    <button onclick="closeDeleteConfirm()"
+      style="background:var(--bg-elevated);border:1px solid var(--border);
+             border-radius:10px;padding:10px 20px;color:#e2e8f0;
+             cursor:pointer;font-family:inherit">
+      إلغاء
+    </button>
+    <form action="{{ url_for('student.delete_account') }}" method="POST" style="margin:0">
+      <button type="submit"
+        style="background:#ef4444;border:none;border-radius:10px;padding:10px 20px;
+               color:#fff;font-weight:900;cursor:pointer;font-family:inherit">
+        نعم، احذف حسابي
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- ══ نافذة تعديل البيو ══ -->
+<div id="bioEditOverlay" onclick="closeBioEdit()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1100"></div>
+<div id="bioEditPanel"
+  style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+         background:#141824;border:1px solid var(--border);border-radius:20px;
+         padding:28px;max-width:400px;width:90%;z-index:1101">
+  <h3 style="margin-bottom:16px;font-size:1.1rem">✏️ نبذة عني</h3>
+  <textarea id="bioTextarea" maxlength="300"
+    style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);
+           border-radius:10px;color:#e2e8f0;padding:12px;font-size:0.9rem;
+           resize:vertical;min-height:100px;font-family:inherit;direction:rtl"
+    placeholder="اكتب نبذة قصيرة عنك (300 حرف كحد أقصى)">{{ current_user.bio or '' }}</textarea>
+  <div style="color:#475569;font-size:0.78rem;text-align:left;margin-top:4px"><span id="bioCharCount">{{ current_user.bio|length if current_user.bio else 0 }}</span>/300</div>
+  <div style="display:flex;gap:10px;margin-top:16px">
+    <button onclick="closeBioEdit()"
+      style="flex:1;background:var(--bg-elevated);border:1px solid var(--border);
+             border-radius:10px;padding:10px;color:#94a3b8;cursor:pointer;font-family:inherit">
+      إلغاء
+    </button>
+    <button onclick="saveBio()"
+      style="flex:2;background:var(--gold);border:none;border-radius:10px;
+             padding:10px;color:#080b14;font-weight:900;cursor:pointer;font-family:inherit">
+      حفظ
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════ Main ═══════════════ -->
+<main class="main-content">
+
+  <!-- ── ترحيب ── -->
+  <div style="margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div>
+      <h1 style="font-size:1.7rem;font-weight:900;margin-bottom:4px">
+        مرحباً <span class="text-gold">{{ current_user.name.split()[0] }}</span> 👋
+      </h1>
+      <p style="color:var(--text-muted)">استمر في التدريب لتحقيق أعلى الدرجات في التحصيلي — كُن رائداً لا تابعاً</p>
+    </div>
+    {% if CG %}
+    <div style="background:var(--bg-card);border:1px solid var(--border-gold);border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:8px">
+      <span>{{ CG.icon }}</span>
+      <span style="font-weight:700;color:var(--gold)">{{ CG.ar }}</span>
+      <button onclick="document.getElementById('gradeModal').classList.add('active')"
+        style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;padding:0 4px">✏️</button>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ══ شريط الحالات ══ -->
+  <div id="storiesBar" style="margin-bottom:20px;display:none">
+    <div style="display:flex;align-items:center;gap:12px;overflow-x:auto;padding-bottom:8px;
+                scrollbar-width:none">
+
+      <!-- حالتي -->
+      <div id="myStoryBtn" onclick="goToMyStory()"
+        style="display:flex;flex-direction:column;align-items:center;gap:6px;
+               cursor:pointer;flex-shrink:0;min-width:60px">
+        <div id="myStoryAvatar"
+          style="width:52px;height:52px;border-radius:50%;display:flex;align-items:center;
+                 justify-content:center;font-size:1.2rem;font-weight:700;
+                 background:var(--bg-elevated);border:2px dashed var(--border);
+                 position:relative;transition:border-color .2s">
+          {{ current_user.name[0] }}
+          <span style="position:absolute;bottom:-2px;right:-2px;
+                       background:var(--gold);color:#080b14;border-radius:50%;
+                       width:18px;height:18px;font-size:0.7rem;font-weight:900;
+                       display:flex;align-items:center;justify-content:center;
+                       border:2px solid var(--bg)">+</span>
+        </div>
+        <div style="font-size:0.68rem;color:#94a3b8;white-space:nowrap">حالتي</div>
+      </div>
+
+      <!-- حالات الآخرين -->
+      <div id="othersStories" style="display:flex;gap:12px"></div>
+    </div>
+  </div>
+
+  <!-- ── تنبيه نقاط الضعف ── -->
+  {% if weak %}
+  <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);
+              border-radius:var(--radius);padding:14px 18px;margin-bottom:20px;
+              display:flex;align-items:center;gap:12px">
+    <span style="font-size:1.2rem">⚠️</span>
+    <div>
+      <div style="font-weight:700;margin-bottom:2px;color:var(--danger);font-size:0.9rem">نقاط تحتاج مراجعة</div>
+      <div style="font-size:0.82rem;color:var(--text-muted)">
+        {% for w in weak %}
+          {% if w == 'physics' %}الفيزياء{% elif w == 'chemistry' %}الكيمياء{% elif w == 'biology' %}الأحياء{% elif w == 'math' %}الرياضيات{% endif %}{% if not loop.last %} · {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════
+       جدول المحتويات
+  ══════════════════════════════════════════════════════ -->
+  <div class="toc-box">
+    <div class="toc-title"><span>🗂️</span><span>محتويات الصفحة</span></div>
+    <div class="toc-grid">
+      <button class="toc-item" onclick="scrollToSection('sec-stats')">
+        <span class="toc-icon" style="background:rgba(255,184,0,0.12);color:var(--gold)">📊</span>
+        <span class="toc-label">إحصائياتي</span>
+      </button>
+      <button class="toc-item" onclick="scrollToSection('sec-grades')">
+        <span class="toc-icon" style="background:rgba(0,229,255,0.12);color:var(--cyan)">📚</span>
+        <span class="toc-label">اختبارات الصفوف</span>
+      </button>
+      <button class="toc-item" onclick="scrollToSection('sec-pro')">
+        <span class="toc-icon" style="background:rgba(244,63,94,0.12);color:#f43f5e">🏆</span>
+        <span class="toc-label">تدريبات المحترفين</span>
+      </button>
+      <button class="toc-item" onclick="scrollToSection('sec-prev')">
+        <span class="toc-icon" style="background:rgba(124,58,237,0.12);color:var(--purple)">📋</span>
+        <span class="toc-label">نماذج سابقة</span>
+      </button>
+      <button class="toc-item" onclick="scrollToSection('sec-famous')">
+        <span class="toc-icon" style="background:rgba(16,185,129,0.12);color:var(--emerald)">⭐</span>
+        <span class="toc-label">اختبارات شهيرة</span>
+      </button>
+      <button class="toc-item" onclick="scrollToSection('sec-expected')">
+        <span class="toc-icon" style="background:rgba(239,68,68,0.1);color:#f87171">🔮</span>
+        <span class="toc-label">اختبارات متوقعة</span>
+      </button>
+      <button class="toc-item" onclick="scrollToSection('sec-recent')">
+        <span class="toc-icon" style="background:rgba(255,255,255,0.06);color:var(--text-muted)">📋</span>
+        <span class="toc-label">آخر نتائجي</span>
+      </button>
+      <button class="toc-item" onclick="scrollToSection('sec-community')">
+        <span class="toc-icon" style="background:rgba(16,185,129,0.12);color:#10b981">👥</span>
+        <span class="toc-label">مجتمع المحترفين</span>
+      </button>
+    </div>
+
+    {# ── شريط ساحة التنافس — عرض كامل ── #}
+    <button class="toc-arena-strip" onclick="scrollToSection('sec-arena')">
+      <div class="toc-arena-right">
+        <span class="toc-arena-sword">⚔️</span>
+        <div>
+          <div class="toc-arena-title">ساحة التنافس — اختبر نفسك بين الرواد</div>
+          <div class="toc-arena-sub">
+            {% if current_user.average_score >= 50 %}
+              ✅ أنت مؤهّل للدخول — اختر ساحتك
+            {% elif current_user.exams_taken == 0 %}
+              🔒 أكمل اختباراً واحداً على الأقل للفتح
+            {% else %}
+              🔒 معدّلك {{ current_user.average_score }}% — يلزم 50% للدخول
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="toc-arena-stages">
+        <span class="toc-arena-stage" style="--sc:rgba(16,185,129,0.7)">🌸 مختبر الرواد</span>
+        <span class="toc-arena-stage" style="--sc:rgba(0,229,255,0.7)">🚀 منصة الإطلاق</span>
+        <span class="toc-arena-stage" style="--sc:rgba(255,184,0,0.7)">⚡ ساحة التحدي الكبرى</span>
+      </div>
+    </button>
+
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       § 1 — إحصائياتي (accordion)
+  ══════════════════════════════════════════════════════ -->
+  <div id="sec-stats" class="section-anchor">
+    <div class="acc-card" id="acc-stats">
+      <button class="acc-header" onclick="toggleAcc('acc-stats')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="acc-icon-wrap" style="background:rgba(255,184,0,0.12)">📊</div>
+          <div>
+            <div class="acc-title">إحصائياتي</div>
+            <div class="acc-sub">نظرة سريعة على أدائك وتقدمك</div>
+          </div>
+        </div>
+        <div class="acc-badge-row">
+          <span class="badge badge-gold">{{ current_user.exams_taken }} اختبار</span>
+          <span class="acc-arrow open" id="arrow-acc-stats">▼</span>
+        </div>
+      </button>
+      <div class="acc-body" id="body-acc-stats" style="display:block">
+        <div style="padding:20px">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-card-top"><div class="stat-icon" style="background:var(--gold-glow)">📝</div><span class="badge badge-gold">إجمالي</span></div>
+              <div class="stat-num text-gold">{{ current_user.exams_taken }}</div>
+              <div class="stat-label">اختبار أجريته</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-top"><div class="stat-icon" style="background:var(--cyan-glow)">✅</div></div>
+              <div class="stat-num" style="color:var(--cyan)">{{ current_user.average_score }}%</div>
+              <div class="stat-label">متوسط درجاتك</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-top"><div class="stat-icon" style="background:var(--emerald-glow)">🔥</div></div>
+              <div class="stat-num" style="color:var(--emerald)">{{ current_user.streak_days }}</div>
+              <div class="stat-label">أيام متتالية</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-card-top"><div class="stat-icon" style="background:var(--purple-glow)">🏆</div></div>
+              <div class="stat-num" style="color:var(--purple)">{{ current_user.total_score }}</div>
+              <div class="stat-label">إجابات صحيحة</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       § 2 — اختبارات حسب الصف (accordion)
+  ══════════════════════════════════════════════════════ -->
+  <div id="sec-grades" class="section-anchor">
+    <div class="acc-card" id="acc-grades">
+      <button class="acc-header" onclick="toggleAcc('acc-grades')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="acc-icon-wrap" style="background:rgba(0,229,255,0.12)">📚</div>
+          <div>
+            <div class="acc-title">اختبارات حسب الصف</div>
+            <div class="acc-sub">
+              {% if CG %}صفّك الحالي: {{ CG.icon }} {{ CG.ar }}{% else %}اختر صفّك لعرض الاختبارات المناسبة{% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="acc-badge-row">
+          {% if CG %}<span class="badge badge-cyan">{{ CG.ar }}</span>{% endif %}
+          <span class="acc-arrow open" id="arrow-acc-grades">▼</span>
+        </div>
+      </button>
+
+      <div class="acc-body" id="body-acc-grades" style="display:block">
+        <div style="padding:20px 20px 0">
+
+          <!-- تبويبات الصفوف داخل الأكورديون -->
+          <div class="grade-tabs" style="margin-bottom:20px">
+            {% for g, ginfo in GRADES.items() %}
+            <button class="grade-tab {% if current_user.grade == g %}active{% endif %}"
+                    data-grade="{{ g }}"
+                    onclick="switchGrade('{{ g }}')"
+                    style="--g-color:{{ ginfo.color }}">
+              {{ ginfo.icon }} {{ ginfo.ar }}
+            </button>
+            {% endfor %}
+          </div>
+
+          <!-- اختيار الصف لأول مرة -->
+          {% if current_user.grade == 'unknown' %}
+          <div class="grade-pick-box" style="margin-bottom:20px">
+            <div style="font-size:2rem;margin-bottom:10px">🏫</div>
+            <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:6px">اختر صفّك الدراسي</h2>
+            <p style="color:var(--text-muted);margin-bottom:20px;font-size:0.85rem">سيتم تخصيص اختباراتك بناءً على صفّك</p>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;max-width:600px;margin:0 auto">
+              {% for g, ginfo in GRADES.items() %}
+              <form method="POST" action="{{ url_for('student.set_grade') }}">
+                <input type="hidden" name="grade" value="{{ g }}">
+                <button type="submit" class="grade-select-btn" style="--g-color:{{ ginfo.color }}">
+                  <span style="font-size:1.8rem;display:block;margin-bottom:6px">{{ ginfo.icon }}</span>
+                  <span style="font-weight:800;font-size:0.9rem">{{ ginfo.ar }}</span>
+                </button>
+              </form>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- ── ألواح الصفوف الثلاثة ── -->
+          {% for g, ginfo in GRADES.items() if g != 'all_grades' %}
+          <div class="grade-panel" id="panel-{{ g }}"
+               style="display:{{ 'block' if current_user.grade == g else 'none' }}">
+
+            <div class="grade-panel-header" style="border-color:{{ ginfo.color }}33">
+              <div class="grade-panel-icon" style="background:{{ ginfo.color }}22;font-size:1.6rem">{{ ginfo.icon }}</div>
+              <div style="flex:1">
+                <h3 style="font-size:1rem;font-weight:800;color:{{ ginfo.color }};margin-bottom:2px">{{ ginfo.ar }}</h3>
+                <p style="font-size:0.8rem;color:var(--text-muted)">اختر المادة ونوع الاختبار المناسب</p>
+              </div>
+              {% if current_user.grade != g %}
+              <form method="POST" action="{{ url_for('student.set_grade') }}" style="flex-shrink:0">
+                <input type="hidden" name="grade" value="{{ g }}">
+                <button type="submit" class="btn btn-sm btn-secondary">تعيين كصفّي</button>
+              </form>
+              {% else %}
+              <span class="badge badge-green" style="flex-shrink:0">✅ صفّك الحالي</span>
+              {% endif %}
+            </div>
+
+            <div class="subject-grid">
+              {% for subj, info in subjects.items() %}
+              {% set s = stats[subj] %}
+              <div class="subject-card">
+                <div class="subject-card-head">
+                  <span style="font-size:1.5rem">{{ info.icon }}</span>
+                  <div>
+                    <div style="font-weight:700;font-size:0.92rem">{{ info.ar }}</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted)">{{ s.count }} اختبار · أعلى {{ s.best }}%</div>
+                  </div>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:{{ s.avg }}%;background:{{ info.color }}"></div></div>
+                <div class="exam-btn-list">
+
+                  {# ── تقييم المستوى ── #}
+                  <button class="exam-btn xpnd-btn"
+                          onclick="togglePick('lv-{{ g }}-{{ subj }}')"
+                          style="--ec:{{ ginfo.color }};cursor:pointer;text-align:right;width:100%;border:none;font-family:inherit">
+                    🎯 تقييم المستوى
+                  </button>
+                  <div id="lv-{{ g }}-{{ subj }}" class="count-pills" style="display:none">
+                    {% for c in [10,20,30,50,100] %}
+                    <a href="/student/exam/{{ subj }}/level_test?count={{ c }}&grade_filter={{ g }}"
+                       class="cpill" style="--cp:{{ ginfo.color }}">{{ c }}</a>
+                    {% endfor %}
+                  </div>
+
+                  {# ── تدريب يومي ── #}
+                  <button class="exam-btn xpnd-btn"
+                          onclick="togglePick('dy-{{ g }}-{{ subj }}')"
+                          style="--ec:{{ ginfo.color }};cursor:pointer;text-align:right;width:100%;border:none;font-family:inherit">
+                    ⚡ تدريب يومي — اليوم {{ daily_info[subj].day_number }}
+                  </button>
+                  <div id="dy-{{ g }}-{{ subj }}" class="count-pills" style="display:none">
+                    {% for c in [5,10,15,20,30] %}
+                    <a href="/student/daily-train/{{ subj }}?count={{ c }}&grade_filter={{ g }}"
+                       class="cpill" style="--cp:{{ ginfo.color }}">{{ c }}</a>
+                    {% endfor %}
+                  </div>
+
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <div class="competition-banner" style="margin-bottom:4px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:1.4rem">🏆</span>
+                <div>
+                  <div style="font-weight:700;font-size:0.9rem">مسابقات {{ ginfo.ar }}</div>
+                  <div style="font-size:0.77rem;color:var(--text-muted)">تنافس مع طلاب نفس صفّك</div>
+                </div>
+              </div>
+              <a href="{{ url_for('competition.index') }}" class="btn btn-sm btn-secondary">عرض المسابقات →</a>
+            </div>
+          </div>
+          {% endfor %}
+
+          <!-- ── لوح كل الصفوف ── -->
+          <div class="grade-panel" id="panel-all_grades"
+               style="display:{{ 'block' if current_user.grade == 'all_grades' else 'none' }}">
+
+            <div class="grade-panel-header" style="border-color:rgba(255,184,0,0.3)">
+              <div class="grade-panel-icon" style="background:rgba(255,184,0,0.15);font-size:1.6rem">🌐</div>
+              <div style="flex:1">
+                <h3 style="font-size:1rem;font-weight:800;color:var(--gold);margin-bottom:2px">كل الصفوف — شامل</h3>
+                <p style="font-size:0.8rem;color:var(--text-muted)">اختبارات تغطي منهج الصفوف الثلاثة مجتمعةً</p>
+              </div>
+              {% if current_user.grade == 'all_grades' %}
+              <span class="badge badge-green" style="flex-shrink:0">✅ اختيارك الحالي</span>
+              {% endif %}
+            </div>
+
+            <div class="subject-grid">
+              {% for subj, info in subjects.items() %}
+              {% set s = stats[subj] %}
+              <div class="subject-card">
+                <div class="subject-card-head">
+                  <span style="font-size:1.5rem">{{ info.icon }}</span>
+                  <div>
+                    <div style="font-weight:700;font-size:0.92rem">{{ info.ar }} — شامل</div>
+                    <div style="font-size:0.7rem;color:var(--text-muted)">{{ s.count }} اختبار · أعلى {{ s.best }}%</div>
+                  </div>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" style="width:{{ s.avg }}%;background:{{ info.color }}"></div></div>
+                <div class="exam-btn-list">
+
+                  {# ── تقييم المستوى (شامل) ── #}
+                  <button class="exam-btn xpnd-btn"
+                          onclick="togglePick('lv-all_grades-{{ subj }}')"
+                          style="--ec:var(--gold);cursor:pointer;text-align:right;width:100%;border:none;font-family:inherit">
+                    🎯 تقييم المستوى — شامل
+                  </button>
+                  <div id="lv-all_grades-{{ subj }}" class="count-pills" style="display:none">
+                    {% for c in [10,20,30,50,100] %}
+                    <a href="/student/exam/{{ subj }}/level_test?count={{ c }}&grade_filter=all_grades"
+                       class="cpill" style="--cp:var(--gold)">{{ c }}</a>
+                    {% endfor %}
+                  </div>
+
+                  {# ── تدريب يومي (شامل) ── #}
+                  <button class="exam-btn xpnd-btn"
+                          onclick="togglePick('dy-all_grades-{{ subj }}')"
+                          style="--ec:var(--cyan);cursor:pointer;text-align:right;width:100%;border:none;font-family:inherit">
+                    ⚡ تدريب يومي شامل — اليوم {{ daily_info[subj].day_number }}
+                  </button>
+                  <div id="dy-all_grades-{{ subj }}" class="count-pills" style="display:none">
+                    {% for c in [5,10,15,20,30] %}
+                    <a href="/student/daily-train/{{ subj }}?count={{ c }}&grade_filter=all_grades"
+                       class="cpill" style="--cp:var(--cyan)">{{ c }}</a>
+                    {% endfor %}
+                  </div>
+
+                  <a href="{{ url_for('student.exam', subject=subj, exam_type='final_test') }}" class="exam-btn" style="--ec:var(--emerald)">📊 اختبار شامل</a>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <div style="margin-top:14px;margin-bottom:4px;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.15);
+                        border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span>🤖</span>
+                <div>
+                  <div style="font-weight:700;font-size:0.88rem">اختبار تقييم ذكي</div>
+                  <div style="font-size:0.76rem;color:var(--text-muted)">الذكاء الاصطناعي يحلل أداءك ويُعطيك توصيات</div>
+                </div>
+              </div>
+              <a href="{{ url_for('student.assessment') }}" class="btn btn-sm" style="background:var(--cyan);color:#000">ابدأ الآن</a>
+            </div>
+          </div>
+
+          {% if current_user.grade == 'unknown' %}
+          <div class="empty-panel-msg" style="margin-bottom:4px">
+            <div style="font-size:2rem;margin-bottom:8px">👆</div>
+            <p>اختر صفّك أولاً لعرض الاختبارات المناسبة</p>
+          </div>
+          {% endif %}
+
+        </div>{# end padding div #}
+      </div>{# end acc-body #}
+    </div>{# end acc-card #}
+  </div>{# end sec-grades #}
+
+
+  <!-- ══════════════════════════════════════════════════════
+       § 2b — تدريبات المحترفين
+  ══════════════════════════════════════════════════════ -->
+  <div id="sec-pro" class="section-anchor">
+    <div class="acc-card" id="acc-pro">
+      <button class="acc-header" onclick="toggleAcc('acc-pro')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="acc-icon-wrap" style="background:rgba(244,63,94,0.15)">🏆</div>
+          <div>
+            <div class="acc-title">تدريبات المحترفين</div>
+            <div class="acc-sub">اختبارات احترافية مخصصة لتحقيق أعلى الدرجات</div>
+          </div>
+        </div>
+        <div class="acc-badge-row">
+          <span class="badge" style="background:rgba(244,63,94,0.15);color:#f43f5e;border:1px solid rgba(244,63,94,0.3)">جديد 🔥</span>
+          <span class="acc-arrow open" id="arrow-acc-pro">▼</span>
+        </div>
+      </button>
+
+      <div class="acc-body" id="body-acc-pro" style="display:block">
+        <div style="padding:20px">
+
+          <div class="pro-grid">
+
+            {# ═══ الكرت 1: الاختبار الشامل ═══ #}
+            <div class="pro-card" style="--pcc:#00E5FF">
+              <div class="pro-card-icon">⚡</div>
+              <div class="pro-card-title">الاختبار الشامل</div>
+              <div class="pro-card-desc">كل المواد الأربع في اختبار واحد متكامل بزمن صارم</div>
+              <div class="pro-card-picks">
+                <div class="pro-pick-label">اختر عدد الأسئلة:</div>
+                <div class="pro-pills">
+                  {% for c in [20,40,60,80] %}
+                  <a href="/student/pro/comprehensive?count={{ c }}"
+                     class="pro-pill" style="--pp:#00E5FF">{{ c }} سؤال</a>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+            {# ═══ الكرت 2: اختبار مادة بمستوى ═══ #}
+            <div class="pro-card" style="--pcc:var(--gold)">
+              <div class="pro-card-icon">🎯</div>
+              <div class="pro-card-title">اختبار مادة بمستوى</div>
+              <div class="pro-card-desc">اختر المادة والمستوى الذي تريد التدرب عليه</div>
+              <div class="pro-card-picks">
+                <div class="pro-pick-label">المادة:</div>
+                <div class="pro-pills" id="lv-subj-pills">
+                  {% for s, si in subjects.items() %}
+                  <button class="pro-pill pro-sel-btn" data-group="lv-subj" data-val="{{ s }}"
+                          onclick="proSelect('lv-subj','{{ s }}',this);proUpdateLink('lv')"
+                          style="--pp:{{ si.color }}">{{ si.icon }} {{ si.ar }}</button>
+                  {% endfor %}
+                </div>
+                <div class="pro-pick-label" style="margin-top:8px">المستوى:</div>
+                <div class="pro-pills">
+                  {% for d,dlabel in [('easy','سهل 🟢'),('medium','متوسط 🟡'),('hard','صعب 🔴')] %}
+                  <button class="pro-pill pro-sel-btn" data-group="lv-diff" data-val="{{ d }}"
+                          onclick="proSelect('lv-diff','{{ d }}',this);proUpdateLink('lv')"
+                          style="--pp:var(--gold)">{{ dlabel }}</button>
+                  {% endfor %}
+                </div>
+                <div class="pro-pick-label" style="margin-top:8px">عدد الأسئلة:</div>
+                <div class="pro-pills">
+                  {% for c in [10,20,30,50] %}
+                  <button class="pro-pill pro-sel-btn" data-group="lv-count" data-val="{{ c }}"
+                          onclick="proSelect('lv-count','{{ c }}',this);proUpdateLink('lv')"
+                          style="--pp:var(--gold)">{{ c }}</button>
+                  {% endfor %}
+                </div>
+                <a id="lv-go-btn" class="pro-go-btn" href="#" style="display:none">ابدأ الاختبار ←</a>
+              </div>
+            </div>
+
+            {# ═══ الكرت 3: اختبار مادة بصف ═══ #}
+            <div class="pro-card" style="--pcc:#10B981">
+              <div class="pro-card-icon">📚</div>
+              <div class="pro-card-title">اختبار مادة بصف</div>
+              <div class="pro-card-desc">اختر المادة والصف الدراسي لأسئلة مخصصة</div>
+              <div class="pro-card-picks">
+                <div class="pro-pick-label">المادة:</div>
+                <div class="pro-pills">
+                  {% for s, si in subjects.items() %}
+                  <button class="pro-pill pro-sel-btn" data-group="gs-subj" data-val="{{ s }}"
+                          onclick="proSelect('gs-subj','{{ s }}',this);proUpdateLink('gs')"
+                          style="--pp:{{ si.color }}">{{ si.icon }} {{ si.ar }}</button>
+                  {% endfor %}
+                </div>
+                <div class="pro-pick-label" style="margin-top:8px">الصف:</div>
+                <div class="pro-pills">
+                  {% for gk, gv in [('grade_10','أول ثانوي 🔵'),('grade_11','ثاني ثانوي 🟣'),('grade_12','ثالث ثانوي 🟡'),('all_grades','كل الصفوف 🌐')] %}
+                  <button class="pro-pill pro-sel-btn" data-group="gs-grade" data-val="{{ gk }}"
+                          onclick="proSelect('gs-grade','{{ gk }}',this);proUpdateLink('gs')"
+                          style="--pp:#10B981">{{ gv }}</button>
+                  {% endfor %}
+                </div>
+                <div class="pro-pick-label" style="margin-top:8px">عدد الأسئلة:</div>
+                <div class="pro-pills">
+                  {% for c in [10,20,30,50,100] %}
+                  <button class="pro-pill pro-sel-btn" data-group="gs-count" data-val="{{ c }}"
+                          onclick="proSelect('gs-count','{{ c }}',this);proUpdateLink('gs')"
+                          style="--pp:#10B981">{{ c }}</button>
+                  {% endfor %}
+                </div>
+                <a id="gs-go-btn" class="pro-go-btn" href="#" style="display:none">ابدأ الاختبار ←</a>
+              </div>
+            </div>
+
+            {# ═══ الكرت 4: تحدي الأسبوع ═══ #}
+            <div class="pro-card" style="--pcc:#f43f5e">
+              <div class="pro-card-icon">🔥</div>
+              <div class="pro-card-title">تحدي الأسبوع</div>
+              <div class="pro-card-desc">اختبار موحّد لجميع طلاب المنصة هذا الأسبوع — نفس الأسئلة للجميع</div>
+              <div class="pro-card-picks" style="align-items:center;display:flex;flex-direction:column;gap:10px;padding-top:8px">
+                <div style="font-size:0.8rem;color:var(--text-muted);text-align:center">40 سؤال · 50 دقيقة · كل المواد</div>
+                <a href="/student/pro/weekly" class="pro-go-btn" style="display:block;text-align:center">
+                  🔥 ابدأ التحدي الآن
+                </a>
+              </div>
+            </div>
+
+            {# ═══ الكرت 5: جلسة البناء اليومية الذكية ═══ #}
+            <div class="pro-card smart-daily-card" style="--pcc:#8B5CF6;grid-column:1/-1">
+              <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+                <div class="pro-card-icon" style="flex-shrink:0">🧠</div>
+                <div style="flex:1;min-width:200px">
+                  <div class="pro-card-title">جلسة البناء اليومية الذكية</div>
+                  <div class="pro-card-desc" style="margin-top:4px">
+                    النظام يحلّل نتائجك ويبني جلسة مخصصة تماماً لك —
+                    60% من نقاط ضعفك · 30% تثبيت · 10% مراجعة إنجازاتك
+                  </div>
+                </div>
+                <div class="smart-daily-badge">✨ مخصص لك</div>
+              </div>
+
+              {# تحليل الطالب #}
+              <div class="smart-analysis-row">
+
+                {% set subj_icons = {'physics':'⚛️','chemistry':'🧪','biology':'🧬','math':'📐'} %}
+                {% set subj_names = {'physics':'الفيزياء','chemistry':'الكيمياء','biology':'الأحياء','math':'الرياضيات'} %}
+                {% set subj_colors = {'physics':'#00E5FF','chemistry':'#FFB800','biology':'#10B981','math':'#7C3AED'} %}
+
+                {% if not pro_analysis.has_history %}
+                <div class="smart-no-history">
+                  <span>📊</span>
+                  <span>لا يوجد تاريخ اختبارات بعد — ستبدأ بجلسة متوازنة وسيتكيف النظام معك تلقائياً</span>
+                </div>
+                {% else %}
+                  {% if pro_analysis.weak %}
+                  <div class="smart-group">
+                    <div class="smart-group-label" style="color:#f87171">🔴 تحتاج تعزيز</div>
+                    <div class="smart-tags">
+                      {% for s in pro_analysis.weak %}
+                      <span class="smart-tag" style="--tc:#f87171">{{ subj_icons[s] }} {{ subj_names[s] }} — {{ pro_analysis.avgs[s]|round|int }}%</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  {% endif %}
+                  {% if pro_analysis.medium %}
+                  <div class="smart-group">
+                    <div class="smart-group-label" style="color:#fbbf24">🟡 قيد التطوير</div>
+                    <div class="smart-tags">
+                      {% for s in pro_analysis.medium %}
+                      <span class="smart-tag" style="--tc:#fbbf24">{{ subj_icons[s] }} {{ subj_names[s] }} — {{ pro_analysis.avgs[s]|round|int }}%</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  {% endif %}
+                  {% if pro_analysis.strong %}
+                  <div class="smart-group">
+                    <div class="smart-group-label" style="color:#34d399">🟢 تتقنها</div>
+                    <div class="smart-tags">
+                      {% for s in pro_analysis.strong %}
+                      <span class="smart-tag" style="--tc:#34d399">{{ subj_icons[s] }} {{ subj_names[s] }} — {{ pro_analysis.avgs[s]|round|int }}%</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  {% endif %}
+                {% endif %}
+
+              </div>{# end smart-analysis-row #}
+
+              {# اختيار عدد الأسئلة وزر البدء #}
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">
+                <div class="pro-pick-label" style="white-space:nowrap">عدد الأسئلة:</div>
+                <div class="pro-pills">
+                  {% for c in [40,60,80] %}
+                  <a href="/student/pro/smart-daily?count={{ c }}"
+                     class="pro-pill" style="--pp:#8B5CF6">{{ c }} سؤال</a>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+
+          </div>{# end pro-grid #}
+        </div>
+      </div>
+    </div>
+  </div>{# end sec-pro #}
+
+
+  <!-- ══════════════════════════════════════════════════════
+       § 3 — نماذج اختبارات سابقة
+  ══════════════════════════════════════════════════════ -->
+  <div id="sec-prev" class="section-anchor">
+    <div class="acc-card" id="acc-prev">
+      <button class="acc-header" onclick="toggleAcc('acc-prev')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="acc-icon-wrap" style="background:rgba(124,58,237,0.12)">📋</div>
+          <div>
+            <div class="acc-title">نماذج اختبارات سابقة</div>
+            <div class="acc-sub">أسئلة بأسلوب التحصيلي الحقيقي — تدرّب على النمط الفعلي للاختبار</div>
+          </div>
+        </div>
+        <div class="acc-badge-row">
+          <span class="badge badge-purple">موصى به</span>
+          <span class="acc-arrow" id="arrow-acc-prev">▼</span>
+        </div>
+      </button>
+      <div class="acc-body" id="body-acc-prev" style="display:none">
+        <div style="padding:20px">
+          <div class="past-model-grid">
+            {% set past_subjects = [
+              ('physics',   '⚛️', 'الفيزياء',    'var(--cyan)',    'الحركة، الكهرباء، الموجات، المغناطيسية', 83),
+              ('chemistry', '🧪', 'الكيمياء',    'var(--gold)',    'الروابط، المحاليل، الأحماض، الغازات',    63),
+              ('math',      '📐', 'الرياضيات',   'var(--purple)',  'الجبر، التفاضل، المثلثات، الاحتمالات',   101),
+            ] %}
+            {% for subj, icon, ar, color, topics, q_count in past_subjects %}
+            <div class="past-model-card" style="border-color:{{ color }}33">
+              <div class="past-model-header">
+                <span style="font-size:2rem">{{ icon }}</span>
+                <div>
+                  <div style="font-weight:800;font-size:1rem;color:{{ color }}">{{ ar }}</div>
+                  <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px">{{ topics }}</div>
+                </div>
+              </div>
+              <div class="past-model-stats">
+                <span style="font-size:0.78rem;color:var(--text-secondary)">
+                  🎯 <strong style="color:{{ color }}">{{ q_count }}+</strong> سؤال بصياغة التحصيلي الفعلية
+                </span>
+              </div>
+              <a href="{{ url_for('student.exam', subject=subj, exam_type='past_model') }}"
+                 class="exam-btn" style="--ec:{{ color }};width:100%;justify-content:center;margin-top:12px">
+                📋 ابدأ النموذج
+              </a>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="acc-footer-banner" style="background:rgba(124,58,237,0.06);border-color:rgba(124,58,237,0.2)">
+          <span>💡</span>
+          <div style="font-size:0.82rem;color:var(--text-muted)">النماذج مبنية على أسلوب اختبارات التحصيلي الرسمية بسياقات واقعية ووحدات دولية</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       § 4 — اختبارات شهيرة
+  ══════════════════════════════════════════════════════ -->
+  <div id="sec-famous" class="section-anchor">
+    <div class="acc-card" id="acc-famous">
+      <button class="acc-header" onclick="toggleAcc('acc-famous')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="acc-icon-wrap" style="background:rgba(16,185,129,0.12)">⭐</div>
+          <div>
+            <div class="acc-title">اختبارات شهيرة</div>
+            <div class="acc-sub">أكثر الاختبارات حلّاً وتقييماً من طلاب المنصة</div>
+          </div>
+        </div>
+        <div class="acc-badge-row">
+          <span class="badge badge-green">الأكثر شعبية</span>
+          <span class="acc-arrow" id="arrow-acc-famous">▼</span>
+        </div>
+      </button>
+      <div class="acc-body" id="body-acc-famous" style="display:none">
+        <div style="padding:20px">
+          <div class="famous-grid">
+            {% set famous = [
+              ('🔬','اختبار الفيزياء الشامل','حُلّ 4,800+ مرة','physics','final_test','var(--cyan)','98%'),
+              ('⚗️','تقييم الكيمياء الجزيئية','حُلّ 3,200+ مرة','chemistry','level_test','var(--gold)','91%'),
+              ('🧫','أحياء الخلية والوراثة','حُلّ 2,900+ مرة','biology','chapter_1','var(--emerald)','87%'),
+              ('📐','رياضيات الحساب والجبر','حُلّ 2,600+ مرة','math','chapter_2','var(--purple)','93%'),
+              ('⚡','الفيزياء السريعة ١٠ أسئلة','حُلّ 5,100+ مرة','physics','quick_test','var(--cyan)','95%'),
+              ('🧮','التفاضل والتكامل المكثف','حُلّ 1,800+ مرة','math','final_test','var(--purple)','82%')
+            ] %}
+            {% for icon, title, subtitle, subj, etype, color, rate in famous %}
+            <a href="{{ url_for('student.exam', subject=subj, exam_type=etype) }}" class="famous-card" style="--fc:{{ color }}">
+              <div class="famous-rank">{{ loop.index }}</div>
+              <div class="famous-icon">{{ icon }}</div>
+              <div class="famous-info">
+                <div class="famous-title">{{ title }}</div>
+                <div class="famous-sub">{{ subtitle }}</div>
+              </div>
+              <div class="famous-rate" style="color:{{ color }}">{{ rate }}<br><span style="font-size:0.65rem;color:var(--text-muted)">نجاح</span></div>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       § 5 — اختبارات متوقعة
+  ══════════════════════════════════════════════════════ -->
+  <div id="sec-expected" class="section-anchor">
+    <div class="acc-card" id="acc-expected">
+      <button class="acc-header" onclick="toggleAcc('acc-expected')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="acc-icon-wrap" style="background:rgba(239,68,68,0.1)">🔮</div>
+          <div>
+            <div class="acc-title">الاختبارات المتوقعة</div>
+            <div class="acc-sub">توقعات خبرائنا للمواضيع المقررة في التحصيلي القادم</div>
+          </div>
+        </div>
+        <div class="acc-badge-row">
+          <span class="badge badge-red">حصري</span>
+          <span class="acc-arrow" id="arrow-acc-expected">▼</span>
+        </div>
+      </button>
+      <div class="acc-body" id="body-acc-expected" style="display:none">
+        <div style="padding:20px">
+          <div style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);border-radius:10px;
+                      padding:11px 15px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+            <span>🔔</span>
+            <span style="font-size:0.82rem;color:var(--text-secondary)">مبنية على تحليل أنماط التحصيلي للسنوات السابقة وآراء المعلمين</span>
+          </div>
+          <div class="expected-grid">
+            {% set expected = [
+              ('⚛️','الفيزياء','physics','الحركة والقوى، الكهرباء والمغناطيسية، الموجات',92,'var(--cyan)'),
+              ('🧪','الكيمياء','chemistry','التفاعلات الكيميائية، الروابط الجزيئية، المحاليل',87,'var(--gold)'),
+              ('📐','الرياضيات','math','حساب المثلثات، التفاضل والتكامل، المعادلات',84,'var(--purple)')
+            ] %}
+            {% for icon, subj_ar, subj, topics, prob, color in expected %}
+            <div class="expected-card" style="--xc:{{ color }}">
+              <div class="expected-header">
+                <span style="font-size:1.5rem">{{ icon }}</span>
+                <div>
+                  <div style="font-weight:800;font-size:0.92rem">{{ subj_ar }}</div>
+                  <div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:4px">احتمالية الظهور</div>
+                  <div class="expected-prob-bar"><div class="expected-prob-fill" style="width:{{ prob }}%;background:{{ color }}"></div></div>
+                  <div style="font-size:0.7rem;font-weight:700;color:{{ color }}">{{ prob }}%</div>
+                </div>
+              </div>
+              <div class="expected-topics">{{ topics }}</div>
+              <a href="{{ url_for('student.exam', subject=subj, exam_type='expected_model') }}"
+                 class="exam-btn" style="--ec:{{ color }};margin-top:8px">🎯 تدرّب على هذا المحور</a>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="acc-footer-banner" style="background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.15)">
+          <span>🤖</span>
+          <div>
+            <div style="font-weight:700;font-size:0.88rem">تريد تحليلاً شخصياً بالذكاء الاصطناعي؟</div>
+            <div style="font-size:0.77rem;color:var(--text-muted)">اختبار مخصص بناءً على نقاط ضعفك</div>
+          </div>
+          <a href="{{ url_for('student.assessment') }}" class="btn btn-sm" style="background:#f87171;color:#fff">ابدأ التقييم</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       § 5b — ساحة التنافس
+  ══════════════════════════════════════════════════════ -->
+  {# منطق البوابة #}
+  {% set arena_open = current_user.average_score >= 50 and current_user.exams_taken > 0 %}
+  {% set user_gender = current_user.gender %}
+
+  <div id="sec-arena" class="section-anchor">
+    <div class="acc-card" id="acc-arena"
+         style="border-color:rgba(255,184,0,0.25);background:linear-gradient(135deg,rgba(255,184,0,0.03),rgba(8,11,20,0))">
+      <button class="acc-header" onclick="toggleAcc('acc-arena')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="acc-icon-wrap" style="background:rgba(255,184,0,0.15);font-size:1.3rem">⚔️</div>
+          <div>
+            <div class="acc-title" style="color:var(--gold)">ساحة التنافس — اختبر نفسك بين الرواد</div>
+            <div class="acc-sub">
+              {% if arena_open %}تنافس مع طلاب مستواك — ٣ ساحات تنتظرك
+              {% else %}🔒 مقفل — يلزم معدّل 50% فأعلى للدخول{% endif %}
+            </div>
+          </div>
+        </div>
+        <div class="acc-badge-row">
+          {% if arena_open %}
+            <span class="badge badge-gold">مفتوح ✅</span>
+          {% else %}
+            <span class="badge" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3)">🔒 مقفل</span>
+          {% endif %}
+          <span class="acc-arrow open" id="arrow-acc-arena">▼</span>
+        </div>
+      </button>
+
+      <div class="acc-body" id="body-acc-arena" style="display:block">
+
+        {# ══ بوابة مغلقة ══ #}
+        {% if not arena_open %}
+        <div style="padding:32px 24px;text-align:center">
+          <div style="font-size:3rem;margin-bottom:12px">🔒</div>
+          <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:8px;color:var(--gold)">ساحة التنافس مقفلة</h3>
+          {% if current_user.exams_taken == 0 %}
+            <p style="color:var(--text-muted);font-size:0.87rem;margin-bottom:20px">
+              أنت لم تُجرِ أي اختبار بعد.<br>أكمل اختباراً واحداً على الأقل لفتح هذا القسم.
+            </p>
+          {% else %}
+            <p style="color:var(--text-muted);font-size:0.87rem;margin-bottom:20px">
+              معدّلك الحالي <strong style="color:#f87171">{{ current_user.average_score }}%</strong><br>
+              يجب أن يكون المعدّل التقييمي <strong style="color:var(--gold)">50% فأعلى</strong> لفتح ساحة التنافس.
+            </p>
+          {% endif %}
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <a href="{{ url_for('student.assessment') }}" class="btn btn-sm btn-primary">🎯 ابدأ تقييم المستوى</a>
+            <button onclick="scrollToSection('sec-grades')" class="btn btn-sm btn-secondary">📚 تدرّب وحسّن معدّلك</button>
+          </div>
+
+          {# عرض الساحات مع قفل #}
+          <div class="arena-cards-locked">
+            {% set arenas_preview = [
+              ('🌸','مختبر الرواد','للطالبات فقط','female','var(--emerald)'),
+              ('🚀','منصة الإطلاق','للطلاب فقط','male','var(--cyan)'),
+              ('⚡','ساحة التحدي الكبرى','ذكور وإناث','mixed','var(--gold)')
+            ] %}
+            {% for icon, name, desc, gtype, color in arenas_preview %}
+            <div class="arena-card-prev" style="--ac:{{ color }}">
+              <span style="font-size:1.8rem">{{ icon }}</span>
+              <div style="font-weight:700;font-size:0.85rem;color:{{ color }}">{{ name }}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted)">{{ desc }}</div>
+              <div style="margin-top:6px;font-size:1rem">🔒</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        {# ══ بوابة مفتوحة ══ #}
+        {% else %}
+        <div style="padding:20px">
+
+          {# رأس ترحيبي #}
+          <div style="background:linear-gradient(135deg,rgba(255,184,0,0.1),rgba(0,229,255,0.05));
+                      border:1px solid rgba(255,184,0,0.2);border-radius:12px;padding:16px 20px;
+                      margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+            <div style="font-size:2rem">🏆</div>
+            <div style="flex:1">
+              <div style="font-weight:800;font-size:0.95rem;color:var(--gold)">أهلاً في ساحة التنافس!</div>
+              <div style="font-size:0.8rem;color:var(--text-muted)">
+                معدّلك <strong style="color:var(--emerald)">{{ current_user.average_score }}%</strong> —
+                {% if user_gender == 'female' %}يمكنك دخول مختبر الرواد وساحة التحدي الكبرى
+                {% elif user_gender == 'male' %}يمكنك دخول منصة الإطلاق وساحة التحدي الكبرى
+                {% else %}يمكنك دخول ساحة التحدي الكبرى{% endif %}
+              </div>
+            </div>
+            <span class="badge badge-gold">{{ current_user.average_score }}% ✅</span>
+          </div>
+
+          {# الساحات الثلاث #}
+          <div class="arenas-grid">
+
+            {# ── 🌸 مختبر الرواد (إناث) ── #}
+            {% set lab_locked = user_gender == 'male' %}
+            <div class="arena-card {% if lab_locked %}arena-locked{% endif %}" style="--ac:var(--emerald)">
+              <div class="arena-card-top">
+                <span class="arena-icon">🌸</span>
+                <div class="arena-labels">
+                  <div class="arena-name" style="color:var(--emerald)">مختبر الرواد</div>
+                  <div class="arena-for">
+                    <span class="badge" style="background:rgba(16,185,129,0.15);color:var(--emerald);border:1px solid rgba(16,185,129,0.3);font-size:0.68rem">👩‍🎓 للطالبات فقط</span>
+                  </div>
+                </div>
+                {% if lab_locked %}<span class="arena-lock-icon">🔒</span>{% endif %}
+              </div>
+              <p class="arena-desc">ساحة تنافس علمي حصرية بين الطالبات — أسئلة متدرجة الصعوبة في جميع المواد</p>
+              <div class="arena-stages">
+                <span class="arena-stage-pill" style="--sp:rgba(16,185,129,0.3)">🧬 مختبر الناشئات</span>
+                <span class="arena-stage-pill" style="--sp:rgba(16,185,129,0.3)">⚗️ معمل المتقدمات</span>
+                <span class="arena-stage-pill" style="--sp:rgba(16,185,129,0.3)">🏆 قمة الأبطال</span>
+              </div>
+              {% if lab_locked %}
+              <div class="arena-locked-msg">
+                🔒 هذه الساحة مخصصة للطالبات فقط
+              </div>
+              {% else %}
+              <a href="{{ url_for('competition.index') }}" class="arena-enter-btn" style="--ab:var(--emerald)">
+                دخول المختبر ←
+              </a>
+              {% endif %}
+            </div>
+
+            {# ── 🚀 منصة الإطلاق (ذكور) ── #}
+            {% set launch_locked = user_gender == 'female' %}
+            <div class="arena-card {% if launch_locked %}arena-locked{% endif %}" style="--ac:var(--cyan)">
+              <div class="arena-card-top">
+                <span class="arena-icon">🚀</span>
+                <div class="arena-labels">
+                  <div class="arena-name" style="color:var(--cyan)">منصة الإطلاق</div>
+                  <div class="arena-for">
+                    <span class="badge" style="background:rgba(0,229,255,0.12);color:var(--cyan);border:1px solid rgba(0,229,255,0.3);font-size:0.68rem">👨‍🎓 للطلاب فقط</span>
+                  </div>
+                </div>
+                {% if launch_locked %}<span class="arena-lock-icon">🔒</span>{% endif %}
+              </div>
+              <p class="arena-desc">ساحة تنافس علمي حصرية بين الطلاب — انطلق نحو القمة في خمس مراحل متصاعدة</p>
+              <div class="arena-stages">
+                <span class="arena-stage-pill" style="--sp:rgba(0,229,255,0.3)">🚀 منصة الإطلاق</span>
+                <span class="arena-stage-pill" style="--sp:rgba(0,229,255,0.3)">🌌 مدار المعرفة</span>
+                <span class="arena-stage-pill" style="--sp:rgba(0,229,255,0.3)">🏆 نجم التحصيل</span>
+              </div>
+              {% if launch_locked %}
+              <div class="arena-locked-msg">
+                🔒 هذه الساحة مخصصة للطلاب فقط
+              </div>
+              {% else %}
+              <a href="{{ url_for('competition.index') }}" class="arena-enter-btn" style="--ab:var(--cyan)">
+                انطلق الآن ←
+              </a>
+              {% endif %}
+            </div>
+
+            {# ── ⚡ ساحة التحدي الكبرى (مختلط) ── #}
+            <div class="arena-card" style="--ac:var(--gold)">
+              <div class="arena-card-top">
+                <span class="arena-icon">⚡</span>
+                <div class="arena-labels">
+                  <div class="arena-name" style="color:var(--gold)">ساحة التحدي الكبرى</div>
+                  <div class="arena-for">
+                    <span class="badge badge-gold" style="font-size:0.68rem">👨‍🎓👩‍🎓 الجميع</span>
+                  </div>
+                </div>
+              </div>
+              <p class="arena-desc">تنافس مفتوح بين جميع الرواد — الذكور والإناث في اختبار الحقيقة الواحد</p>
+              <div class="arena-stages">
+                <span class="arena-stage-pill" style="--sp:rgba(255,184,0,0.3)">⚡ ساحة الرواد</span>
+                <span class="arena-stage-pill" style="--sp:rgba(255,184,0,0.3)">🔥 حلبة المتقدمين</span>
+                <span class="arena-stage-pill" style="--sp:rgba(255,184,0,0.3)">👑 تاج الأساطير</span>
+              </div>
+              <a href="{{ url_for('competition.index') }}" class="arena-enter-btn" style="--ab:var(--gold)">
+                ادخل الساحة ←
+              </a>
+            </div>
+
+          </div>{# end arenas-grid #}
+        </div>
+        {% endif %}
+
+      </div>{# end acc-body #}
+    </div>{# end acc-card #}
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       § 6 — آخر النتائج
+  ══════════════════════════════════════════════════════ -->
+  {% if recent %}
+  <div id="sec-recent" class="section-anchor">
+    <div class="acc-card" id="acc-recent">
+      <button class="acc-header" onclick="toggleAcc('acc-recent')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="acc-icon-wrap" style="background:rgba(255,255,255,0.05)">📋</div>
+          <div>
+            <div class="acc-title">آخر نتائجك</div>
+            <div class="acc-sub">{{ recent|length }} اختبار حديث</div>
+          </div>
+        </div>
+        <div class="acc-badge-row">
+          <span class="acc-arrow open" id="arrow-acc-recent">▼</span>
+        </div>
+      </button>
+      <div class="acc-body" id="body-acc-recent" style="display:block">
+        <div class="table-wrapper">
+          <table>
+            <thead><tr>
+              <th>المادة</th><th>نوع الاختبار</th><th>النتيجة</th><th>التاريخ</th><th></th>
+            </tr></thead>
+            <tbody>
+            {% for ev in recent %}
+            <tr>
+              <td>
+                {% if ev.subject == 'physics' %}⚛️ الفيزياء
+                {% elif ev.subject == 'chemistry' %}🧪 الكيمياء
+                {% elif ev.subject == 'biology' %}🧬 الأحياء
+                {% elif ev.subject == 'math' %}📐 الرياضيات{% endif %}
+              </td>
+              <td>{{ exam_types.get(ev.exam_type, ev.exam_type) }}</td>
+              <td><span class="badge badge-{{ 'green' if ev.score_pct >= 75 else 'gold' if ev.score_pct >= 50 else 'red' }}">{{ ev.score_pct }}%</span></td>
+              <td style="color:var(--text-muted);font-size:0.82rem">{{ ev.created_at.strftime('%Y/%m/%d') }}</td>
+              <td><a href="{{ url_for('student.results', eval_id=ev.id) }}" class="btn btn-sm btn-secondary">عرض</a></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ══════════════════════════════════════════════════════
+       § 7 — مجتمع المحترفين (preview)
+  ══════════════════════════════════════════════════════ -->
+  <div id="sec-community" class="section-anchor">
+    <div class="acc-card" id="acc-community"
+         style="border-color:rgba(16,185,129,0.25);background:linear-gradient(135deg,rgba(16,185,129,0.03),rgba(8,11,20,0))">
+      <button class="acc-header" onclick="toggleAcc('acc-community')">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="acc-icon-wrap" style="background:rgba(16,185,129,0.15);font-size:1.25rem">👥</div>
+          <div>
+            <div class="acc-title" style="color:#10b981">مجتمع المحترفين</div>
+            <div class="acc-sub">تواصل مع زملائك — اسأل، ناقش، وشارك إنجازاتك</div>
+          </div>
+        </div>
+        <div class="acc-badge-row">
+          <span class="badge" style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3)">جديد ✨</span>
+          <span class="acc-arrow open" id="arrow-acc-community">▼</span>
+        </div>
+      </button>
+
+      <div class="acc-body" id="body-acc-community" style="display:block">
+        <div style="padding:16px 20px">
+
+          {# صندوق الكتابة السريع #}
+          <form action="{{ url_for('community.post') }}" method="POST" style="margin-bottom:16px">
+            <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap">
+              <div style="flex:1;min-width:200px">
+                <select name="post_type"
+                  style="width:100%;padding:6px 10px;border-radius:8px;margin-bottom:6px;
+                         background:var(--bg-elevated);border:1px solid var(--border);
+                         color:var(--text-primary);font-size:0.8rem">
+                  <option value="general">💬 نقاش عام</option>
+                  <option value="question">❓ سؤال</option>
+                  <option value="achievement">🏆 إنجاز</option>
+                </select>
+                <textarea name="body" rows="2" placeholder="اكتب شيئاً للمجتمع…"
+                  style="width:100%;padding:10px 12px;border-radius:10px;resize:vertical;
+                         background:var(--bg-elevated);border:1px solid var(--border);
+                         color:var(--text-primary);font-size:0.88rem;font-family:inherit;
+                         box-sizing:border-box" maxlength="1000" required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary" style="height:40px;white-space:nowrap">
+                إرسال →
+              </button>
+            </div>
+          </form>
+
+          {# عرض آخر المنشورات #}
+          <div id="community-preview-list">
+            <div style="text-align:center;color:var(--text-muted);padding:20px;font-size:0.85rem">
+              جارٍ التحميل…
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-top:14px">
+            <a href="{{ url_for('community.index') }}" class="btn btn-secondary"
+               style="font-weight:800">
+              👥 فتح المجتمع كاملاً ←
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+</div>
+
+<script>
+(function loadCommunityPreview(){
+  fetch('/community/api/recent')
+    .then(r => r.json())
+    .then(posts => {
+      const el = document.getElementById('community-preview-list');
+      if(!el) return;
+      if(!posts.length){
+        el.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:16px;font-size:0.84rem">لا توجد منشورات بعد — كن أول من يكتب!</div>';
+        return;
+      }
+      el.innerHTML = posts.map(p => `
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+          <div style="width:34px;height:34px;border-radius:50%;
+                      background:${p.is_admin ? 'linear-gradient(135deg,#fbbf24,#f59e0b)' : 'rgba(16,185,129,0.2)'};
+                      display:flex;align-items:center;justify-content:center;
+                      font-weight:800;font-size:0.9rem;flex-shrink:0;color:${p.is_admin ? '#000' : '#10b981'}">
+            ${p.initial}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;flex-wrap:wrap">
+              <span style="font-size:0.8rem;font-weight:800;color:var(--text-primary)">${p.name}</span>
+              ${p.is_admin ? '<span style="font-size:0.65rem;background:#fbbf2422;color:#fbbf24;padding:1px 6px;border-radius:6px;border:1px solid #fbbf2444">إدارة</span>' : ''}
+              ${p.pinned ? '<span style="font-size:0.65rem;background:rgba(16,185,129,0.15);color:#10b981;padding:1px 6px;border-radius:6px">📌 مثبّت</span>' : ''}
+              <span style="font-size:0.7rem;color:var(--text-muted);margin-right:auto">${p.time}</span>
+            </div>
+            <div style="font-size:0.84rem;color:var(--text-secondary);line-height:1.5;word-break:break-word">${p.body}</div>
+            <div style="margin-top:4px;font-size:0.72rem;color:var(--text-muted)">
+              👍 ${p.likes} · 💬 ${p.replies}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    })
+    .catch(() => {});
+})();
+</script>
+
+<!-- ═════ Modal تغيير الصف ═════ -->
+<div class="modal-overlay" id="gradeModal">
+  <div class="modal-box" style="max-width:440px;text-align:center">
+    <h3 style="font-size:1.15rem;font-weight:800;margin-bottom:6px">🏫 اختر الصف الدراسي</h3>
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:18px">
+      اختبارات التحصيل تشمل منهج الصفوف الثلاثة — اختر ما يناسبك
+    </p>
+    <div style="display:grid;gap:9px">
+
+      {# الصفوف الثلاثة #}
+      {% for g, ginfo in GRADES.items() if g != 'all_grades' %}
+      <form method="POST" action="{{ url_for('student.set_grade') }}"
+            onsubmit="document.getElementById('gradeModal').classList.remove('active')">
+        <input type="hidden" name="grade" value="{{ g }}">
+        <button type="submit" class="modal-grade-btn" style="--gc:{{ ginfo.color }}">
+          <span class="modal-grade-icon">{{ ginfo.icon }}</span>
+          <div class="modal-grade-text">
+            <div>{{ ginfo.ar }}</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);font-weight:400">اختبارات مخصصة لهذا الصف</div>
+          </div>
+          {% if current_user.grade == g %}
+          <span class="modal-grade-check">✅</span>
+          {% endif %}
+        </button>
+      </form>
+      {% endfor %}
+
+      <div style="height:1px;background:var(--border);margin:4px 0"></div>
+
+      {# خيار كل الصفوف — حقيقي ويُحفظ في قاعدة البيانات #}
+      <form method="POST" action="{{ url_for('student.set_grade') }}"
+            onsubmit="document.getElementById('gradeModal').classList.remove('active')">
+        <input type="hidden" name="grade" value="all_grades">
+        <button type="submit" class="modal-grade-btn" style="--gc:var(--gold)">
+          <span class="modal-grade-icon">🌐</span>
+          <div class="modal-grade-text">
+            <div>كل الصفوف</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);font-weight:400">الاختبارات الشاملة للصفوف الثلاثة مجتمعةً</div>
+          </div>
+          {% if current_user.grade == 'all_grades' %}
+          <span class="modal-grade-check">✅</span>
+          {% else %}
+          <span style="font-size:0.7rem;color:var(--gold);margin-right:auto">موصى به</span>
+          {% endif %}
+        </button>
+      </form>
+
+    </div>
+    <button onclick="document.getElementById('gradeModal').classList.remove('active')"
+            class="btn btn-secondary" style="margin-top:14px;width:100%">إلغاء</button>
+  </div>
+</div>
+
+
+<!-- ═════════════════════ STYLES ═════════════════════ -->
+<style>
+
+/* ── TOC ── */
+.toc-box{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:18px;margin-bottom:24px;box-shadow:0 4px 24px rgba(0,0,0,0.18);overflow:hidden;
+}
+.toc-title{display:flex;align-items:center;gap:8px;font-weight:800;font-size:0.95rem;
+  margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.toc-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}
+.toc-item{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  padding:11px 5px;border-radius:10px;border:1px solid var(--border);background:var(--bg-elevated);
+  color:var(--text-secondary);font-size:0.74rem;font-weight:600;transition:all 0.2s ease;
+  cursor:pointer;font-family:'Tajawal',sans-serif;text-align:center;
+}
+.toc-item:hover{background:var(--bg-card);border-color:var(--border-gold);color:var(--text-primary);transform:translateY(-2px)}
+.toc-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.95rem}
+.toc-label{line-height:1.3;word-break:break-word}
+
+/* ── Accordion ── */
+.section-anchor{margin-bottom:14px;scroll-margin-top:80px}
+.acc-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.acc-header{
+  width:100%;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;
+  padding:16px 20px;background:none;border:none;cursor:pointer;font-family:'Tajawal',sans-serif;
+  color:var(--text-primary);text-align:right;transition:background 0.2s;
+}
+.acc-header:hover{background:rgba(255,255,255,0.025)}
+.acc-icon-wrap{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+.acc-title{font-weight:800;font-size:0.95rem;margin-bottom:2px}
+.acc-sub{font-size:0.77rem;color:var(--text-muted)}
+.acc-badge-row{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.acc-arrow{font-size:0.78rem;color:var(--text-muted);transition:transform 0.3s ease;display:inline-block}
+.acc-arrow.open{transform:rotate(180deg)}
+.acc-body{border-top:1px solid var(--border)}
+.acc-footer-banner{margin:0 20px 20px;padding:13px 16px;border-radius:10px;border:1px solid;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+
+/* ── تبويبات الصفوف ── */
+.grade-tabs{display:flex;gap:7px;flex-wrap:wrap}
+.grade-tab{
+  padding:7px 13px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg-elevated);
+  color:var(--text-muted);font-family:'Tajawal',sans-serif;font-size:0.81rem;font-weight:600;
+  cursor:pointer;transition:all 0.2s ease;white-space:nowrap;
+}
+.grade-tab:hover{border-color:var(--g-color);color:var(--g-color)}
+.grade-tab.active{border-color:var(--g-color);background:rgba(255,255,255,0.07);color:var(--g-color)}
+
+/* ── رأس لوح الصف ── */
+.grade-panel-header{display:flex;align-items:center;gap:14px;background:var(--bg-elevated);border:1px solid;border-radius:var(--radius);padding:14px 18px;margin-bottom:16px}
+.grade-panel-icon{width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── شبكة المواد ── */
+.subject-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;margin-bottom:14px;align-items:start}
+.subject-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:16px;overflow:visible;cursor:default;text-align:right;transform:none!important}
+.subject-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.progress-bar{background:var(--bg-card);border-radius:4px;height:4px;overflow:hidden;margin-bottom:10px}
+.progress-fill{height:100%;border-radius:4px}
+.exam-btn-list{display:flex;flex-direction:column;gap:5px}
+.exam-btn{display:block;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:var(--bg-card);color:var(--text-secondary);font-size:0.83rem;font-weight:500;transition:all 0.2s;text-decoration:none}
+.exam-btn:hover{border-color:var(--ec,var(--gold));color:var(--ec,var(--text-primary));transform:translateX(-3px)}
+
+/* ── مسابقات ── */
+.competition-banner{background:rgba(124,58,237,0.07);border:1px solid rgba(124,58,237,0.18);border-radius:var(--radius);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+/* ── اختيار الصف ── */
+.grade-pick-box{background:linear-gradient(135deg,rgba(255,184,0,0.07),rgba(0,229,255,0.04));border:1px solid var(--border-gold);border-radius:var(--radius-lg);padding:28px;text-align:center}
+.grade-select-btn{width:100%;padding:16px 12px;border-radius:12px;border:2px solid var(--g-color,var(--border));background:var(--bg-elevated);color:var(--text-primary);font-family:'Tajawal',sans-serif;cursor:pointer;transition:all 0.2s;text-align:center}
+.grade-select-btn:hover{background:var(--bg-card);transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.25)}
+.empty-panel-msg{text-align:center;padding:24px;color:var(--text-muted);background:var(--bg-elevated);border-radius:var(--radius);border:1px dashed var(--border)}
+
+/* ── Modal grade buttons ── */
+.modal-grade-btn{
+  width:100%;display:flex;align-items:center;gap:12px;padding:13px 16px;
+  border-radius:10px;border:1.5px solid rgba(255,255,255,0.08);background:var(--bg-elevated);
+  color:var(--text-primary);font-family:'Tajawal',sans-serif;cursor:pointer;
+  transition:all 0.2s;text-align:right;
+}
+.modal-grade-btn:hover{border-color:var(--gc,var(--border));background:var(--bg-card)}
+.modal-grade-icon{font-size:1.5rem;flex-shrink:0}
+.modal-grade-text{flex:1;min-width:0;font-weight:700;font-size:0.92rem}
+.modal-grade-check{font-size:1rem;flex-shrink:0;margin-right:auto}
+
+/* ── نماذج سابقة ── */
+.year-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.year-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:16px}
+.past-model-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.past-model-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:14px;padding:20px;transition:box-shadow 0.2s}
+.past-model-card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+.past-model-header{display:flex;align-items:center;gap:14px;margin-bottom:12px}
+.past-model-stats{padding:8px 12px;background:var(--bg-card);border-radius:8px;margin-bottom:4px}
+
+/* ── شهيرة ── */
+.famous-grid{display:flex;flex-direction:column;gap:7px}
+.famous-card{display:flex;align-items:center;gap:12px;padding:13px 15px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text-primary);transition:all 0.2s}
+.famous-card:hover{border-color:var(--fc,var(--gold));transform:translateX(-3px)}
+.famous-rank{width:26px;height:26px;border-radius:50%;background:var(--bg-card);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;color:var(--text-muted);flex-shrink:0}
+.famous-icon{font-size:1.3rem;flex-shrink:0}
+.famous-info{flex:1;min-width:0}
+.famous-title{font-weight:700;font-size:0.87rem;margin-bottom:1px}
+.famous-sub{font-size:0.73rem;color:var(--text-muted)}
+.famous-rate{font-weight:800;font-size:0.95rem;text-align:center;flex-shrink:0}
+
+/* ── متوقعة ── */
+.expected-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.expected-card{background:var(--bg-elevated);border:1.5px solid var(--xc,var(--border));border-radius:12px;padding:16px}
+.expected-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.expected-prob-bar{height:5px;background:var(--bg-card);border-radius:3px;overflow:hidden;margin-bottom:3px}
+.expected-prob-fill{height:100%;border-radius:3px}
+.expected-topics{font-size:0.78rem;color:var(--text-muted);line-height:1.5}
+
+/* ── TOC Arena Strip ── */
+.toc-arena-strip {
+  width:100%;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  margin-top:10px;padding:13px 16px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(255,184,0,0.1),rgba(0,229,255,0.04));
+  border:1.5px solid rgba(255,184,0,0.3);
+  cursor:pointer;font-family:'Tajawal',sans-serif;color:var(--text-primary);
+  transition:all 0.25s ease;text-align:right;
+}
+.toc-arena-strip:hover{background:linear-gradient(135deg,rgba(255,184,0,0.16),rgba(0,229,255,0.07));transform:translateY(-1px)}
+.toc-arena-right{display:flex;align-items:center;gap:12px}
+.toc-arena-sword{font-size:1.5rem}
+.toc-arena-title{font-weight:800;font-size:0.88rem;color:var(--gold);margin-bottom:2px}
+.toc-arena-sub{font-size:0.74rem;color:var(--text-muted)}
+.toc-arena-stages{display:flex;gap:6px;flex-wrap:wrap}
+.toc-arena-stage{
+  padding:4px 9px;border-radius:20px;font-size:0.72rem;font-weight:600;
+  background:rgba(255,255,255,0.05);border:1px solid var(--sc,rgba(255,255,255,0.1));
+  color:var(--text-secondary);white-space:nowrap;
+}
+
+/* ── Arena Section ── */
+.arenas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.arena-card{
+  background:var(--bg-elevated);border:1.5px solid rgba(255,255,255,0.07);
+  border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px;
+  transition:all 0.25s ease;position:relative;overflow:hidden;
+}
+.arena-card::before{
+  content:'';position:absolute;inset:0;border-radius:14px;
+  background:linear-gradient(135deg,var(--ac,rgba(255,184,0,0.04)),transparent);
+  pointer-events:none;
+}
+.arena-card:not(.arena-locked):hover{transform:translateY(-3px);border-color:var(--ac,var(--gold));box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.arena-locked{opacity:0.55;filter:saturate(0.4)}
+.arena-card-top{display:flex;align-items:flex-start;gap:10px}
+.arena-icon{font-size:2rem;flex-shrink:0}
+.arena-labels{flex:1;min-width:0}
+.arena-name{font-weight:800;font-size:0.95rem;margin-bottom:4px}
+.arena-lock-icon{font-size:1.2rem;flex-shrink:0;margin-right:auto}
+.arena-desc{font-size:0.78rem;color:var(--text-muted);line-height:1.5;margin:0}
+.arena-stages{display:flex;flex-wrap:wrap;gap:5px}
+.arena-stage-pill{
+  padding:3px 8px;border-radius:20px;font-size:0.68rem;font-weight:600;
+  background:var(--sp,rgba(255,255,255,0.06));color:var(--text-secondary);
+}
+.arena-locked-msg{
+  text-align:center;padding:8px 12px;border-radius:8px;font-size:0.8rem;
+  background:rgba(239,68,68,0.07);color:#f87171;border:1px solid rgba(239,68,68,0.2);
+}
+.arena-enter-btn{
+  display:block;text-align:center;padding:10px;border-radius:10px;font-weight:700;
+  font-size:0.88rem;background:var(--ab,var(--gold));color:#000;text-decoration:none;
+  transition:all 0.2s;margin-top:auto;
+}
+.arena-enter-btn:hover{filter:brightness(1.15);transform:translateY(-1px)}
+
+/* ── بطاقات المعاينة (مقفل) ── */
+.arena-cards-locked{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px;text-align:center}
+.arena-card-prev{
+  padding:14px 8px;border-radius:12px;background:var(--bg-elevated);
+  border:1.5px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;
+  align-items:center;gap:5px;opacity:0.6;
+}
+
+/* ── badges ── */
+.badge-red{background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3)}
+.badge-purple{background:rgba(124,58,237,0.15);color:#a78bfa;border:1px solid rgba(124,58,237,0.3)}
+
+/* ── modal ── */
+#gradeModal{cursor:pointer}
+#gradeModal .modal-box{cursor:default}
+
+/* ── responsive ── */
+@media(max-width:900px){.toc-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:768px){
+  .toc-grid{grid-template-columns:repeat(3,1fr)}
+  .grade-tabs{justify-content:center}
+  .grade-tab{font-size:0.76rem;padding:6px 10px}
+}
+@media(max-width:500px){.toc-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+
+
+<!-- ═════════════════════ SCRIPT ═════════════════════ -->
+<script>
+const USER_GRADE = "{{ current_user.grade }}";
+
+/* ── التبديل بين الصفوف ── */
+function switchGrade(g) {
+  document.querySelectorAll('.grade-panel').forEach(p => p.style.display='none');
+  document.querySelectorAll('.grade-tab').forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById('panel-' + g);
+  if (panel) panel.style.display = 'block';
+  document.querySelectorAll(`.grade-tab[data-grade="${g}"]`).forEach(t => t.classList.add('active'));
+  /* تأكد أن الأكورديون مفتوح */
+  const body  = document.getElementById('body-acc-grades');
+  const arrow = document.getElementById('arrow-acc-grades');
+  if (body && body.style.display==='none') { body.style.display='block'; if(arrow) arrow.classList.add('open'); }
+}
+
+/* ── Accordion ── */
+function toggleAcc(id) {
+  const body  = document.getElementById('body-' + id);
+  const arrow = document.getElementById('arrow-' + id);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display  = open ? 'none' : 'block';
+  if (arrow) arrow.classList.toggle('open', !open);
+}
+
+/* ── تمرير لقسم ── */
+function scrollToSection(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({behavior:'smooth', block:'start'});
+  /* افتح الأكورديون المقابل */
+  const accId = 'acc-' + id.replace('sec-','');
+  const body  = document.getElementById('body-' + accId);
+  const arrow = document.getElementById('arrow-' + accId);
+  if (body && body.style.display==='none') {
+    body.style.display='block';
+    if (arrow) arrow.classList.add('open');
+  }
+}
+
+/* ── تحميل الصفحة ── */
+document.addEventListener('DOMContentLoaded', () => {
+  /* إظهار لوح الصف الصحيح */
+  const grade = USER_GRADE !== 'unknown' ? USER_GRADE : null;
+  if (grade) switchGrade(grade);
+
+  /* أنيميشن شريط التقدم */
+  setTimeout(() => {
+    document.querySelectorAll('.progress-fill').forEach(el => {
+      const w = el.style.width;
+      el.style.width = '0';
+      setTimeout(() => { el.style.transition='width 1.2s ease'; el.style.width=w; }, 50);
+    });
+  }, 300);
+});
+
+/* ── روابط الشريط الجانبي ── */
+document.querySelectorAll('.sidebar-link[href^="#"]').forEach(link => {
+  link.addEventListener('click', e => {
+    e.preventDefault();
+    scrollToSection(link.getAttribute('href').slice(1));
+  });
+});
+
+/* ── نوافذ اختيار العدد ── */
+const SUBJECT_NAMES = {
+  physics:'الفيزياء', chemistry:'الكيمياء', biology:'الأحياء', math:'الرياضيات'
+};
+const LEVEL_COUNTS = {{ level_counts | tojson }};
+const DAILY_COUNTS = {{ daily_counts | tojson }};
+
+/* ══════════════════════════════════════
+   تدريبات المحترفين — JS
+══════════════════════════════════════ */
+var _proSel = {};   /* { group: value } */
+
+function proSelect(group, val, el) {
+  _proSel[group] = val;
+  /* تحديث الأزرار المحددة */
+  document.querySelectorAll('[data-group="' + group + '"]').forEach(function(b) {
+    b.classList.toggle('selected', b.dataset.val === val);
+  });
+}
+
+function proUpdateLink(prefix) {
+  var subj  = _proSel[prefix + '-subj']  || '';
+  var extra = _proSel[prefix + '-diff']  || _proSel[prefix + '-grade'] || '';
+  var count = _proSel[prefix + '-count'] || '20';
+  var btn   = document.getElementById(prefix + '-go-btn');
+  if (!btn) return;
+
+  if (!subj || !extra || !count) {
+    btn.style.display = 'none';
+    return;
+  }
+
+  var url = '';
+  if (prefix === 'lv') {
+    url = '/student/exam/' + subj + '/level_test?count=' + count + '&difficulty=' + extra;
+  } else if (prefix === 'gs') {
+    url = '/student/exam/' + subj + '/level_test?count=' + count + '&grade_filter=' + extra;
+  }
+  btn.href = url;
+  btn.style.display = 'block';
+}
+
+/* ── فتح/إغلاق الخيارات المضمّنة ── */
+function togglePick(id) {
+  var panel = document.getElementById(id);
+  if (!panel) return;
+  var isOpen = panel.style.display !== 'none';
+  /* أغلق جميع الألواح المفتوحة */
+  document.querySelectorAll('.count-pills').forEach(function(p) {
+    p.style.display = 'none';
+  });
+  /* افتح أو أغلق الهذا اللوح */
+  if (!isOpen) {
+    panel.style.display = 'flex';
+  }
+}
+</script>
+
+<style>
+/* ══════════════════════════════════════
+   تدريبات المحترفين
+══════════════════════════════════════ */
+.pro-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px;
+}
+.pro-card{
+  background:var(--bg-card);
+  border:1px solid color-mix(in srgb,var(--pcc,#fff) 20%,transparent);
+  border-radius:16px;
+  padding:20px;
+  display:flex;flex-direction:column;gap:10px;
+  transition:box-shadow 0.2s,border-color 0.2s;
+}
+.pro-card:hover{
+  border-color:color-mix(in srgb,var(--pcc,#fff) 40%,transparent);
+  box-shadow:0 0 24px color-mix(in srgb,var(--pcc,#fff) 10%,transparent);
+}
+.pro-card-icon{
+  font-size:2rem;
+  width:52px;height:52px;
+  border-radius:12px;
+  background:color-mix(in srgb,var(--pcc,#fff) 12%,transparent);
+  display:flex;align-items:center;justify-content:center;
+}
+.pro-card-title{
+  font-weight:800;font-size:1rem;
+  color:var(--pcc,var(--text-primary));
+}
+.pro-card-desc{
+  font-size:0.8rem;color:var(--text-muted);line-height:1.5;
+}
+.pro-card-picks{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.pro-pick-label{font-size:0.75rem;color:var(--text-muted);font-weight:600}
+.pro-pills{display:flex;flex-wrap:wrap;gap:6px}
+.pro-pill{
+  padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:700;
+  background:var(--bg-elevated);
+  border:1.5px solid rgba(255,255,255,0.08);
+  color:var(--text-secondary);text-decoration:none;cursor:pointer;
+  font-family:'Tajawal',sans-serif;
+  transition:all 0.18s;
+}
+.pro-pill:hover,.pro-pill.selected{
+  border-color:var(--pp,var(--gold));
+  color:var(--pp,var(--gold));
+  background:color-mix(in srgb,var(--pp,#fff) 8%,transparent);
+}
+.pro-go-btn{
+  margin-top:10px;padding:10px 18px;
+  border-radius:10px;font-weight:800;font-size:0.88rem;
+  background:color-mix(in srgb,var(--pcc,#f43f5e) 15%,transparent);
+  border:1.5px solid color-mix(in srgb,var(--pcc,#f43f5e) 40%,transparent);
+  color:var(--pcc,#f43f5e);text-decoration:none;
+  transition:all 0.2s;cursor:pointer;font-family:'Tajawal',sans-serif;
+  text-align:center;
+}
+.pro-go-btn:hover{
+  background:color-mix(in srgb,var(--pcc,#f43f5e) 25%,transparent);
+  transform:translateY(-2px);
+}
+
+/* ═══════════════════════════════════════
+   الكرت الخامس — جلسة البناء الذكية
+═══════════════════════════════════════ */
+.smart-daily-card{
+  border-color:rgba(139,92,246,0.3);
+  background:linear-gradient(135deg,var(--bg-card) 0%,rgba(139,92,246,0.05) 100%);
+}
+.smart-daily-badge{
+  padding:6px 14px;border-radius:20px;font-size:0.75rem;font-weight:800;
+  background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);
+  color:#a78bfa;white-space:nowrap;
+}
+.smart-analysis-row{
+  display:flex;flex-wrap:wrap;gap:14px;
+  padding:14px;border-radius:12px;
+  background:rgba(139,92,246,0.06);
+  border:1px solid rgba(139,92,246,0.12);
+  margin:4px 0;
+}
+.smart-group{display:flex;flex-direction:column;gap:6px;flex:1;min-width:140px}
+.smart-group-label{font-size:0.72rem;font-weight:800;letter-spacing:0.03em}
+.smart-tags{display:flex;flex-wrap:wrap;gap:5px}
+.smart-tag{
+  padding:4px 10px;border-radius:6px;font-size:0.74rem;font-weight:600;
+  background:color-mix(in srgb,var(--tc,#fff) 10%,transparent);
+  border:1px solid color-mix(in srgb,var(--tc,#fff) 25%,transparent);
+  color:var(--tc,var(--text-secondary));
+}
+.smart-no-history{
+  display:flex;align-items:center;gap:8px;
+  color:var(--text-muted);font-size:0.82rem;font-style:italic;
+}
+
+/* ── خيارات العدد المضمّنة ── */
+.count-pills{
+  display:flex;flex-wrap:wrap;gap:5px;
+  padding:8px 4px 4px;margin-bottom:2px;
+}
+.cpill{
+  flex:1;min-width:42px;text-align:center;
+  padding:7px 4px;border-radius:8px;
+  border:1.5px solid rgba(255,255,255,0.09);
+  background:var(--bg-card);color:var(--text-secondary);
+  font-size:0.8rem;font-weight:700;text-decoration:none;
+  transition:all 0.18s;font-family:'Tajawal',sans-serif;
+}
+.cpill:hover{
+  border-color:var(--cp,var(--gold));
+  color:var(--cp,var(--gold));
+  background:rgba(255,255,255,0.04);
+  transform:translateY(-2px);
+}
+.cpill::after{content:' س';}
+
+/* ══ شريط الحالات ══ */
+#storiesBar::-webkit-scrollbar{display:none}
+.story-avatar-ring{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;font-weight:700;
+  background:linear-gradient(135deg,var(--gold),#ff8c00);
+  border:2px solid transparent;
+  background-clip:padding-box;
+  box-shadow:0 0 0 2px var(--gold);
+  cursor:pointer;transition:transform .2s;flex-shrink:0;
+}
+.story-avatar-ring:hover{transform:scale(1.1)}
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ══ نوافذ حسابي ══ */
+function openAccountMenu(){
+  document.getElementById('accountMenuOverlay').style.display = 'block';
+  document.getElementById('accountMenuPanel').style.display = 'block';
+}
+function closeAccountMenu(){
+  document.getElementById('accountMenuOverlay').style.display = 'none';
+  document.getElementById('accountMenuPanel').style.display = 'none';
+}
+function openDeleteConfirm(){
+  closeAccountMenu();
+  document.getElementById('deleteConfirmOverlay').style.display = 'block';
+  document.getElementById('deleteConfirmPanel').style.display = 'block';
+}
+function closeDeleteConfirm(){
+  document.getElementById('deleteConfirmOverlay').style.display = 'none';
+  document.getElementById('deleteConfirmPanel').style.display = 'none';
+}
+
+/* ══ نافذة البيو ══ */
+function openBioEdit(){
+  document.getElementById('bioEditOverlay').style.display = 'block';
+  document.getElementById('bioEditPanel').style.display = 'block';
+}
+function closeBioEdit(){
+  document.getElementById('bioEditOverlay').style.display = 'none';
+  document.getElementById('bioEditPanel').style.display = 'none';
+}
+document.getElementById('bioTextarea').addEventListener('input', function(){
+  document.getElementById('bioCharCount').textContent = this.value.length;
+});
+function saveBio(){
+  const bio = document.getElementById('bioTextarea').value;
+  const fd  = new FormData();
+  fd.append('bio', bio);
+  fetch('/student/update-bio', {method:'POST', body: fd})
+    .then(r => r.json()).then(d => {
+      if (d.success){
+        document.getElementById('bioDisplay').textContent = d.bio || 'أضف نبذة عنك...';
+        closeBioEdit();
+      }
+    });
+}
+
+/* ══ شريط الحالات ══ */
+function loadStoriesBar(){
+  fetch('/stories/active-users')
+    .then(r => r.json()).then(data => {
+      const bar = document.getElementById('storiesBar');
+      const myAvatar = document.getElementById('myStoryAvatar');
+
+      if (data.my_stories > 0){
+        myAvatar.style.border = '2px solid var(--gold)';
+        myAvatar.style.boxShadow = '0 0 0 2px var(--gold)';
+      }
+
+      const others = document.getElementById('othersStories');
+      others.innerHTML = '';
+      if (data.users && data.users.length > 0){
+        data.users.forEach(u => {
+          const div = document.createElement('div');
+          div.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;min-width:60px';
+          div.innerHTML = `
+            <div class="story-avatar-ring" onclick="window.location.href='/stories/user/${u.id}'">${u.initial}</div>
+            <div style="font-size:0.68rem;color:#94a3b8;white-space:nowrap;max-width:60px;
+                        overflow:hidden;text-overflow:ellipsis">${u.name.split(' ')[0]}</div>`;
+          others.appendChild(div);
+        });
+        bar.style.display = 'block';
+      } else if (data.my_stories > 0){
+        bar.style.display = 'block';
+      }
+    }).catch(() => {});
+}
+
+function goToMyStory(){
+  const myAvatar = document.getElementById('myStoryAvatar');
+  if (myAvatar.style.boxShadow){
+    window.location.href = '/stories/user/{{ current_user.id }}';
+  } else {
+    window.location.href = '/stories/create';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadStoriesBar);
+</script>
+{% endblock %}
