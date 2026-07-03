@@ -1,3 +1,5 @@
+// backend/src/index.ts
+
 import Fastify from 'fastify'
 import cors from 'fastify-cors'
 import dotenv from 'dotenv'
@@ -87,6 +89,10 @@ fastify.post('/api/file', async (request, reply)=>{
     reply.code(500).send({error:e.message||'write failed'})
   }
 })
+
+// register AI routes (providers, chat)
+import aiRoutes from './routes/ai'
+fastify.register(aiRoutes)
 
 const start = async ()=>{
   try{ await fastify.listen({port:4000,host:'0.0.0.0'}) }catch(e){
