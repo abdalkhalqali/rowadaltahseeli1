@@ -24,6 +24,31 @@ fastify.get('/api/repos', async (request, reply)=>{
   }
 })
 
+// Get tree (list files/directories) for a path
+fastify.get('/api/tree', async (request, reply)=>{
+  const query = request.query as any
+  const {owner, repo, path} = query
+  try{
+    const resp = await octokit.rest.repos.getContent({owner, repo, path: path || ''})
+    // @ts-ignore
+    if(!Array.isArray(resp.data)){
+      // single file
+      return reply.code(400).send({error:'path is a file'})
+    }
+    // @ts-ignore
+    const items = resp.data.map((item:any)=>({
+      name: item.name,
+      path: item.path,
+      type: item.type, // file or dir
+      size: item.size || 0,
+    }))
+    return {items}
+  }catch(e:any){
+    request.log.error(e)
+    reply.code(404).send({error:e.message||'not found'})
+  }
+})
+
 // Get file content
 fastify.get('/api/file', async (request, reply)=>{
   const query = request.query as any
@@ -36,31 +61,25 @@ fastify.get('/api/file', async (request, reply)=>{
     if(Array.isArray(resp.data)) return reply.code(400).send({error:'path is a directory'})
     // @ts-ignore
     const content = Buffer.from(resp.data.content,'base64').toString('utf8')
-    return {content}
-  }catch(e){
+    // @ts-ignore
+    return {content, sha: resp.data.sha, encoding: resp.data.encoding}
+  }catch(e:any){
     request.log.error(e)
-    reply.code(404).send({error:'not found'})
+    reply.code(404).send({error:e.message||'not found'})
   }
 })
 
 // Update file (single-file commit via GitHub Contents API)
 fastify.post('/api/file', async (request, reply)=>{
   const body = request.body as any
-  const {owner, repo, path, content, message, branch} = body
+  const {owner, repo, path, content, message, branch, sha} = body
   try{
-    // get current file sha if exists
-    let sha: string | undefined
-    try{
-      const cur = await octokit.rest.repos.getContent({owner, repo, path})
-      // @ts-ignore
-      sha = cur.data.sha
-    }catch(_e){ }
     const resp = await octokit.rest.repos.createOrUpdateFileContents({
       owner, repo, path,
       message: message || 'update via ai-assistant',
       content: Buffer.from(content,'utf8').toString('base64'),
       branch: branch || undefined,
-      sha: sha
+      sha: sha || undefined
     })
     return {ok:true,commit:resp.data.commit}
   }catch(e:any){
