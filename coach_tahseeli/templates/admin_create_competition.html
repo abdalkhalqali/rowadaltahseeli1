@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}إنشاء مسابقة{% endblock %}
+{% block content %}
+<div style="max-width:640px;margin:40px auto;padding:0 24px">
+  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary btn-sm" style="margin-bottom:20px">← رجوع</a>
+  <div class="card card-gold">
+    <h2 style="font-weight:900;margin-bottom:24px">🏆 إنشاء مسابقة جديدة</h2>
+    <div id="compForm">
+      <div class="form-group">
+        <label class="form-label">اسم المسابقة</label>
+        <input class="form-control" id="c_name" placeholder="مثال: بطولة الفيزياء الأسبوعية">
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label class="form-label">المادة</label>
+          <select class="form-control" id="c_subj">
+            <option value="physics">⚛️ الفيزياء</option>
+            <option value="chemistry">🧪 الكيمياء</option>
+            <option value="biology">🧬 الأحياء</option>
+            <option value="math">📐 الرياضيات</option>
+            <option value="mixed">🎯 مختلطة</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الصعوبة</label>
+          <select class="form-control" id="c_diff">
+            <option value="easy">سهل</option>
+            <option value="medium" selected>متوسط</option>
+            <option value="hard">صعب</option>
+            <option value="mixed">مختلط</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">عدد الأسئلة</label>
+          <input type="number" class="form-control" id="c_total" value="20" min="5" max="50">
+        </div>
+        <div class="form-group">
+          <label class="form-label">المدة (دقيقة)</label>
+          <input type="number" class="form-control" id="c_dur" value="30" min="5" max="120">
+        </div>
+        <div class="form-group">
+          <label class="form-label">الحالة</label>
+          <select class="form-control" id="c_status">
+            <option value="upcoming">قريباً</option>
+            <option value="active">نشطة الآن</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">الحد الأقصى للمشاركين</label>
+          <input type="number" class="form-control" id="c_max" value="100">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">الجائزة (اختياري)</label>
+        <input class="form-control" id="c_prize" placeholder="مثال: شهادة تقدير + ميدالية ذهبية">
+      </div>
+      <div class="form-group">
+        <label class="form-label">الوصف (اختياري)</label>
+        <textarea class="form-control" id="c_desc" rows="2" placeholder="وصف المسابقة..."></textarea>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="createComp()">🚀 إنشاء المسابقة</button>
+    </div>
+  </div>
+</div>
+
+<script>
+async function createComp() {
+  const data = {
+    name: document.getElementById('c_name').value,
+    subject: document.getElementById('c_subj').value,
+    difficulty: document.getElementById('c_diff').value,
+    total_q: parseInt(document.getElementById('c_total').value),
+    duration_min: parseInt(document.getElementById('c_dur').value),
+    status: document.getElementById('c_status').value,
+    max_participants: parseInt(document.getElementById('c_max').value),
+    prize: document.getElementById('c_prize').value,
+    description: document.getElementById('c_desc').value,
+  };
+  if(!data.name.trim()){alert('أدخل اسم المسابقة');return}
+  const r = await fetch('/admin/competitions/create', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  const res = await r.json();
+  if(res.success){ window.location.href = '/competition/'; }
+}
+</script>
+{% endblock %}

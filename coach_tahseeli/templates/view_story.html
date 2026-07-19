@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}حالة {{ story.author.name }}{% endblock %}
+{% block extra_css %}
+<style>
+.story-viewer{max-width:480px;margin:30px auto;padding:0 16px}
+.story-card{background:#141824;border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.story-header{padding:16px 20px;display:flex;align-items:center;gap:12px;
+  border-bottom:1px solid var(--border)}
+.story-img{width:100%;max-height:420px;object-fit:contain;background:#0d1628}
+.story-text{padding:20px;font-size:1.05rem;color:#e2e8f0;line-height:1.7;
+  white-space:pre-line;direction:rtl}
+.viewers-section{padding:0 20px 20px}
+.viewer-item{display:flex;align-items:center;gap:10px;padding:8px 0;
+  border-bottom:1px solid rgba(255,255,255,0.05)}
+.viewer-item:last-child{border-bottom:none}
+</style>
+{% endblock %}
+{% block content %}
+<div class="story-viewer">
+  <!-- رأس الصفحة -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">
+    <a href="{{ url_for('student.dashboard') }}"
+       style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;
+              padding:8px 14px;color:#94a3b8;text-decoration:none;font-size:0.9rem">
+      ← رجوع
+    </a>
+    <h1 style="font-size:1.2rem;font-weight:900">👁 مشاهدة الحالة</h1>
+  </div>
+
+  <div class="story-card">
+    <!-- معلومات الكاتب -->
+    <div class="story-header">
+      <div class="avatar" style="width:42px;height:42px;font-size:1.1rem;flex-shrink:0">
+        {{ story.author.name[0] }}
+      </div>
+      <div style="flex:1">
+        <div style="font-weight:700;color:#e2e8f0">{{ story.author.name }}</div>
+        <div style="color:#475569;font-size:0.8rem">
+          {{ story.created_at.strftime('%H:%M · %Y/%m/%d') }}
+        </div>
+      </div>
+      <div style="color:#94a3b8;font-size:0.85rem">
+        ⏰ تنتهي {{ story.expires_at.strftime('%H:%M') }}
+      </div>
+    </div>
+
+    <!-- الصورة -->
+    {% if story.image_path %}
+    <img src="{{ story.image_path }}" alt="صورة الحالة" class="story-img">
+    {% endif %}
+
+    <!-- النص -->
+    {% if story.text %}
+    <div class="story-text">{{ story.text }}</div>
+    {% endif %}
+
+    <!-- ردود أفعال الإيموجي -->
+    {% if story.user_id != current_user.id and story.is_active %}
+    <div id="reactionsBar" style="padding:14px 20px;border-top:1px solid var(--border);
+         display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+      {% for e in ['🔥','❤️','👏','💡','😮','🎯','💪','⭐'] %}
+      <button class="emoji-btn" data-emoji="{{ e }}"
+        onclick="sendReaction(this)"
+        style="background:#1e2a3b;border:1px solid var(--border);border-radius:20px;
+               padding:5px 10px;font-size:1.1rem;cursor:pointer;transition:all .2s;
+               display:flex;align-items:center;gap:4px">
+        <span>{{ e }}</span><span class="emoji-count" style="font-size:0.75rem;color:#94a3b8;min-width:8px"></span>
+      </button>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- زر الحذف (لصاحب الحالة أو المشرف) -->
+    {% if story.user_id == current_user.id or current_user.is_admin %}
+    <div style="padding:0 20px 16px">
+      <button onclick="deleteStory({{ story.id }})"
+        style="background:#ef4444;color:#fff;border:none;border-radius:10px;
+               padding:10px 20px;cursor:pointer;font-family:inherit;font-size:0.9rem">
+        🗑 حذف الحالة
+      </button>
+    </div>
+    {% endif %}
+
+    <!-- من شاهد الحالة (لصاحبها فقط) -->
+    {% if story.user_id == current_user.id %}
+    <div class="viewers-section">
+      <div style="font-weight:700;color:#94a3b8;font-size:0.85rem;margin-bottom:12px">
+        👁 المشاهدون ({{ story.view_count }})
+      </div>
+      {% if viewers %}
+        {% for sv in viewers %}
+        <div class="viewer-item">
+          <div class="avatar" style="width:32px;height:32px;font-size:0.85rem;flex-shrink:0">
+            {{ sv.viewer.name[0] }}
+          </div>
+          <div style="flex:1;font-weight:600;font-size:0.9rem">{{ sv.viewer.name }}</div>
+          <div style="color:#475569;font-size:0.78rem">{{ sv.viewed_at.strftime('%H:%M') }}</div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="color:#475569;font-size:0.85rem;text-align:center;padding:12px 0">
+          لم يشاهد أحد حالتك بعد
+        </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function deleteStory(sid) {
+  if (!confirm('هل أنت متأكد من حذف الحالة؟')) return;
+  fetch(`/stories/${sid}/delete`, {method:'POST'})
+    .then(r => r.json()).then(d => {
+      if (d.success) window.location.href = "{{ url_for('student.dashboard') }}";
+    });
+}
+
+const SID = {{ story.id }};
+
+function sendReaction(btn) {
+  const emoji = btn.dataset.emoji;
+  fetch(`/stories/${SID}/react`, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({emoji})
+  }).then(r => r.json()).then(d => {
+    if (d.counts) updateCounts(d.counts);
+    if (d.action === 'added') {
+      document.querySelectorAll('.emoji-btn').forEach(b => b.style.background = '#1e2a3b');
+      btn.style.background = '#2d1f6e';
+      btn.style.borderColor = '#6366f1';
+    } else {
+      btn.style.background = '#1e2a3b';
+      btn.style.borderColor = 'var(--border)';
+    }
+  });
+}
+
+function updateCounts(counts) {
+  document.querySelectorAll('.emoji-btn').forEach(btn => {
+    const e = btn.dataset.emoji;
+    const cnt = counts[e] || '';
+    btn.querySelector('.emoji-count').textContent = cnt ? cnt : '';
+  });
+}
+</script>
+{% endblock %}

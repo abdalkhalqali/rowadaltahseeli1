@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}تقدمي{% endblock %}
+{% block content %}
+<div style="max-width:900px;margin:40px auto;padding:0 24px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <h1 style="font-size:1.6rem;font-weight:900">📈 تقدمي الدراسي</h1>
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary btn-sm">← رجوع</a>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="stats-grid" style="margin-bottom:28px">
+    <div class="stat-card">
+      <div class="stat-num text-gold">{{ evals|length }}</div>
+      <div class="stat-label">إجمالي الاختبارات</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--cyan)">
+        {% if evals %}{{ (evals|sum(attribute='score_pct') / evals|length)|round(1) }}{% else %}0{% endif %}%
+      </div>
+      <div class="stat-label">متوسط الدرجات</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--emerald)">
+        {{ evals|selectattr('score_pct', 'ge', 75)|list|length }}
+      </div>
+      <div class="stat-label">اختبارات ممتازة (≥75%)</div>
+    </div>
+  </div>
+
+  <!-- Per-subject -->
+  {% for subj, icon, color in [('physics','⚛️','#00E5FF'),('chemistry','🧪','#FFB800'),('biology','🧬','#10B981'),('math','📐','#7C3AED')] %}
+  {% set subj_evals = evals|selectattr('subject','eq',subj)|list %}
+  {% if subj_evals %}
+  <div class="card" style="margin-bottom:16px;border-color:{{ color }}30">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-weight:800;font-size:1.05rem">{{ icon }}
+        {% if subj == 'physics' %}الفيزياء{% elif subj == 'chemistry' %}الكيمياء{% elif subj == 'biology' %}الأحياء{% else %}الرياضيات{% endif %}
+      </div>
+      <div style="font-size:0.85rem;color:var(--text-muted)">{{ subj_evals|length }} اختبار</div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      {% for ev in subj_evals[-12:] %}
+      <a href="{{ url_for('student.results', eval_id=ev.id) }}"
+         style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+                font-size:0.75rem;font-weight:700;text-decoration:none;
+                background:{{ 'rgba(16,185,129,0.2)' if ev.score_pct >= 75 else 'rgba(255,184,0,0.15)' if ev.score_pct >= 50 else 'rgba(239,68,68,0.15)' }};
+                color:{{ '#10B981' if ev.score_pct >= 75 else '#FFB800' if ev.score_pct >= 50 else '#EF4444' }};
+                border:1px solid {{ 'rgba(16,185,129,0.3)' if ev.score_pct >= 75 else 'rgba(255,184,0,0.2)' if ev.score_pct >= 50 else 'rgba(239,68,68,0.2)' }}"
+         title="{{ ev.score_pct }}% — {{ ev.created_at.strftime('%Y/%m/%d') }}">
+        {{ ev.score_pct|int }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+
+  {% if not evals %}
+  <div style="text-align:center;padding:60px">
+    <div style="font-size:4rem;margin-bottom:16px">📊</div>
+    <h2 style="font-weight:800;margin-bottom:8px">لا يوجد سجل بعد</h2>
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary" style="margin-top:16px">ابدأ اختباراً</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

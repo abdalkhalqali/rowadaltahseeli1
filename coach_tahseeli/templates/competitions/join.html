@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}انضم — {{ comp.name }}{% endblock %}
+{% block content %}
+<div style="max-width:600px;margin:60px auto;padding:0 24px;text-align:center">
+  <div class="card card-gold">
+    <div style="font-size:3.5rem;margin-bottom:16px">🏆</div>
+    <h1 style="font-size:1.6rem;font-weight:900;margin-bottom:8px">{{ comp.name }}</h1>
+    <p style="color:var(--text-muted);margin-bottom:24px">{{ comp.description or 'مسابقة تحصيلية مباشرة' }}</p>
+
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:24px">
+      <div class="badge badge-gold">⏱️ {{ comp.duration_min }} دقيقة</div>
+      <div class="badge badge-purple">❓ {{ comp.total_q }} سؤال</div>
+      <div class="badge badge-cyan">📚 {{ comp.subject_ar }}</div>
+      <div class="badge badge-gray">👥 {{ comp.participant_count }} مشارك</div>
+    </div>
+
+    {% if comp.prize %}
+    <div style="background:var(--gold-glow);border:1px solid var(--border-gold);border-radius:10px;
+                padding:12px;margin-bottom:20px">
+      <div style="font-size:0.85rem;color:var(--gold)">🎁 الجائزة: {{ comp.prize }}</div>
+    </div>
+    {% endif %}
+
+    <div style="background:var(--bg-elevated);border-radius:12px;padding:16px;margin-bottom:24px;text-align:right">
+      <p style="font-size:0.88rem;font-weight:600;margin-bottom:8px">📌 قواعد المسابقة:</p>
+      <ul style="font-size:0.85rem;color:var(--text-muted);padding-right:16px;list-style:disc">
+        <li>ستحصل على {{ comp.duration_min }} دقيقة للإجابة على {{ comp.total_q }} سؤال</li>
+        <li>لا يمكن إعادة الدخول بعد البدء</li>
+        <li>يُحسب الوقت في حال التعادل في النتيجة</li>
+        <li>النتائج تظهر فور الانتهاء</li>
+      </ul>
+    </div>
+
+    <form method="POST">
+      <button type="submit" class="btn btn-primary btn-lg btn-full">
+        ⚔️ أنا مستعد — ابدأ المسابقة
+      </button>
+    </form>
+    <a href="{{ url_for('competition.index') }}" class="btn btn-secondary btn-sm" style="margin-top:12px">← رجوع</a>
+  </div>
+</div>
+{% endblock %}

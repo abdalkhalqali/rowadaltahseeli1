@@ -1,0 +1,206 @@
+# ====================================================================
+# مولد الأسئلة مع الرسومات - نسخة متوافقة مع البيئات السحابية
+# ====================================================================
+
+import matplotlib
+matplotlib.use('Agg')  # مهم جداً للبيئات بدون واجهة رسومية
+import matplotlib.pyplot as plt
+import numpy as np
+import base64
+import json
+from io import BytesIO
+import warnings
+warnings.filterwarnings('ignore')  # تجاهل التحذيرات غير الضرورية
+
+class QuestionGenerator:
+    """مولد الأسئلة مع الرسومات لمنصة الاختبارات"""
+    
+    def __init__(self):
+        self.questions = []
+        self.image_counter = 0
+    
+    def _save_to_base64(self, fig):
+        """حفظ الشكل كـ Base64"""
+        buffer = BytesIO()
+        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight', 
+                   facecolor='white', edgecolor='none')
+        buffer.seek(0)
+        image_base64 = base64.b64encode(buffer.read()).decode('utf-8')
+        plt.close(fig)
+        return f"data:image/png;base64,{image_base64}"
+    
+    def create_velocity_time_graph(self, points, title="منحنى السرعة-الزمن"):
+        """إنشاء منحنى السرعة-الزمن"""
+        fig, ax = plt.subplots(figsize=(8, 5))
+        
+        # استخراج النقاط
+        t = [p[0] for p in points]
+        v = [p[1] for p in points]
+        
+        # رسم المنحنى
+        ax.plot(t, v, 'b-', linewidth=2.5, marker='o', markersize=8, markerfacecolor='red')
+        
+        # تنسيق الرسم
+        ax.set_xlabel('الزمن (s)', fontsize=14, fontweight='bold')
+        ax.set_ylabel('السرعة (m/s)', fontsize=14, fontweight='bold')
+        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.grid(True, linestyle='--', alpha=0.7)
+        ax.axhline(y=0, color='black', linewidth=0.5)
+        ax.axvline(x=0, color='black', linewidth=0.5)
+        
+        # إضافة قيم النقاط
+        for i, (ti, vi) in enumerate(points):
+            ax.annotate(f'({ti},{vi})', (ti, vi), textcoords="offset points", 
+                       xytext=(5,5), ha='center', fontsize=10)
+        
+        return self._save_to_base64(fig)
+    
+    def create_position_time_graph(self, points, title="منحنى الموقع-الزمن"):
+        """إنشاء منحنى الموقع-الزمن"""
+        fig, ax = plt.subplots(figsize=(8, 5))
+        
+        t = [p[0] for p in points]
+        x = [p[1] for p in points]
+        
+        ax.plot(t, x, 'g-', linewidth=2.5, marker='s', markersize=8, markerfacecolor='orange')
+        
+        ax.set_xlabel('الزمن (s)', fontsize=14, fontweight='bold')
+        ax.set_ylabel('الموقع (m)', fontsize=14, fontweight='bold')
+        ax.set_title(title, fontsize=16, fontweight='bold')
+        ax.grid(True, linestyle='--', alpha=0.7)
+        
+        return self._save_to_base64(fig)
+    
+    def create_mirror_ray_diagram(self, mirror_type="concave", object_distance=15, focal_length=10):
+        """إنشاء رسم توضيحي للمرآة"""
+        fig, ax = plt.subplots(figsize=(10, 6))
+        
+        # رسم المرآة
+        if mirror_type == "concave":
+            theta = np.linspace(-np.pi/2, np.pi/2, 100)
+            x_mirror = np.cos(theta)
+            y_mirror = np.sin(theta)
+            ax.plot(x_mirror, y_mirror, 'k-', linewidth=2)
+            ax.plot([0, 0], [-1.2, 1.2], 'k--', linewidth=1, alpha=0.5)
+        else:
+            theta = np.linspace(np.pi/2, 3*np.pi/2, 100)
+            x_mirror = np.cos(theta)
+            y_mirror = np.sin(theta)
+            ax.plot(x_mirror, y_mirror, 'k-', linewidth=2)
+        
+        # رسم النقاط الرئيسية
+        ax.plot(0, 0, 'ko', markersize=5)  # القطب
+        ax.plot(-focal_length/10, 0, 'ro', markersize=5)  # البؤرة
+        ax.plot(-2*focal_length/10, 0, 'bo', markersize=5)  # مركز التكور
+        
+        # إضافة تسميات
+        ax.text(0, -0.15, 'القطب', ha='center', fontsize=10)
+        ax.text(-focal_length/10, -0.15, 'F', ha='center', fontsize=10)
+        ax.text(-2*focal_length/10, -0.15, 'C', ha='center', fontsize=10)
+        
+        ax.set_aspect('equal')
+        ax.set_xlim(-1.5, 0.5)
+        ax.set_ylim(-1.2, 1.2)
+        ax.axis('off')
+        
+        return self._save_to_base64(fig)
+    
+    def generate_questions(self):
+        """توليد مجموعة من الأسئلة مع الرسومات"""
+        
+        # سؤال 1: منحنى السرعة-الزمن
+        points = [(0, 2), (2, 6), (4, 6), (5, 2), (6, 2)]
+        graph_img = self.create_velocity_time_graph(points)
+        
+        q1 = {
+            "id": 1,
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "subject": "physics",
+            "chapter": 1,
+            "question_text": "الرسم البياني يمثل منحنى (السرعة، الزمن) لجسم متحرك. احسب التسارع في الفترة من 0 إلى 2 ثانية.",
+            "image": graph_img,
+            "options": ["2 m/s²", "4 m/s²", "1 m/s²", "3 m/s²"],
+            "answer": "A",
+            "explanation": "التسارع = (v₂ - v₁)/(t₂ - t₁) = (6 - 2)/(2 - 0) = 4/2 = 2 m/s²",
+            "has_image": True
+        }
+        
+        # سؤال 2: منحنى الموقع-الزمن
+        points2 = [(0, 0), (1, 5), (2, 10), (3, 15), (4, 20)]
+        graph_img2 = self.create_position_time_graph(points2)
+        
+        q2 = {
+            "id": 2,
+            "type": "multiple_choice",
+            "difficulty": "easy",
+            "subject": "physics",
+            "chapter": 1,
+            "question_text": "الرسم البياني يمثل منحنى (الموقع، الزمن) لجسم متحرك. ما سرعة الجسم؟",
+            "image": graph_img2,
+            "options": ["5 m/s", "10 m/s", "15 m/s", "20 m/s"],
+            "answer": "A",
+            "explanation": "السرعة = ميل المنحنى = (20-0)/(4-0) = 20/4 = 5 m/s",
+            "has_image": True
+        }
+        
+        # سؤال 3: رسم المرآة
+        mirror_img = self.create_mirror_ray_diagram("concave", 15, 10)
+        
+        q3 = {
+            "id": 3,
+            "type": "multiple_choice",
+            "difficulty": "hard",
+            "subject": "physics",
+            "chapter": 2,
+            "question_text": "في الشكل، مرآة مقعرة بعدها البؤري 10 cm. إذا وضع جسم على بعد 15 cm من المرآة، أين تتكون الصورة؟",
+            "image": mirror_img,
+            "options": ["30 cm أمام المرآة", "30 cm خلف المرآة", "6 cm أمام المرآة", "6 cm خلف المرآة"],
+            "answer": "A",
+            "explanation": "باستخدام قانون المرايا: 1/f = 1/do + 1/di ⇒ 1/10 = 1/15 + 1/di ⇒ 1/di = 1/10 - 1/15 = 1/30 ⇒ di = 30 cm، الإشارة موجبة تعني أمام المرآة.",
+            "has_image": True
+        }
+        
+        # سؤال 4: منحنى السرعة-الزمن (تسارع سالب)
+        points4 = [(0, 10), (2, 6), (4, 2), (5, 0)]
+        graph_img4 = self.create_velocity_time_graph(points4, "منحنى السرعة-الزمن (تباطؤ)")
+        
+        q4 = {
+            "id": 4,
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "subject": "physics",
+            "chapter": 1,
+            "question_text": "الرسم البياني يمثل منحنى (السرعة، الزمن) لجسم يتباطأ. احسب التسارع في الفترة من 0 إلى 2 ثانية.",
+            "image": graph_img4,
+            "options": ["-2 m/s²", "2 m/s²", "-4 m/s²", "4 m/s²"],
+            "answer": "A",
+            "explanation": "التسارع = (6 - 10)/(2 - 0) = -4/2 = -2 m/s²",
+            "has_image": True
+        }
+        
+        return [q1, q2, q3, q4]
+
+# ====================================================================
+# تنفيذ الكود
+# ====================================================================
+
+if __name__ == "__main__":
+    print("جاري توليد الأسئلة مع الرسومات...")
+    print("-" * 50)
+    
+    generator = QuestionGenerator()
+    questions = generator.generate_questions()
+    
+    # حفظ في ملف JSON
+    with open('questions_with_images.json', 'w', encoding='utf-8') as f:
+        json.dump(questions, f, ensure_ascii=False, indent=2)
+    
+    print(f"✓ تم إنشاء {len(questions)} سؤال مع رسومات")
+    print("✓ تم حفظ الأسئلة في ملف: questions_with_images.json")
+    
+    # عرض معلومات عن كل سؤال
+    for q in questions:
+        print(f"\nالسؤال {q['id']}: {q['question_text'][:50]}...")
+        print(f"  - الصورة: {'نعم' if q['has_image'] else 'لا'}")
+        print(f"  - نوع الصورة: Base64 PNG")

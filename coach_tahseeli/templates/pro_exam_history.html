@@ -1,0 +1,250 @@
+{% extends "student_dashboard.html" %}
+{% block content %}
+<div class="container py-4" dir="rtl" style="max-width:1000px">
+
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{{ url_for('pro_license.student_index') }}" class="btn btn-outline-secondary btn-sm">← رجوع</a>
+    <div>
+      <h5 class="fw-bold mb-0">📋 سجل نتائج الرخصة المهنية</h5>
+      <small class="text-muted">{{ results|length }} اختبار مسجّل</small>
+    </div>
+  </div>
+
+  {% if results %}
+
+  <!-- ══ إحصائيات سريعة ══ -->
+  {% set avg_pct = (results | map(attribute='score_pct') | list | sum) / results|length %}
+  {% set best = results | map(attribute='score_pct') | list | max %}
+  {% set passed = results | selectattr('score_pct', 'ge', 70) | list | length %}
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:28px">
+    <div style="background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:16px;padding:18px;text-align:center;border:1px solid rgba(99,102,241,0.3)">
+      <div style="font-size:2rem;font-weight:900;color:#a5b4fc">{{ results|length }}</div>
+      <div style="font-size:0.78rem;color:#818cf8;margin-top:4px">إجمالي الاختبارات</div>
+    </div>
+    <div style="background:linear-gradient(135deg,#064e3b,#065f46);border-radius:16px;padding:18px;text-align:center;border:1px solid rgba(16,185,129,0.3)">
+      <div style="font-size:2rem;font-weight:900;color:#6ee7b7">{{ avg_pct|round(1) }}%</div>
+      <div style="font-size:0.78rem;color:#34d399;margin-top:4px">متوسط النتائج</div>
+    </div>
+    <div style="background:linear-gradient(135deg,#78350f,#92400e);border-radius:16px;padding:18px;text-align:center;border:1px solid rgba(245,158,11,0.3)">
+      <div style="font-size:2rem;font-weight:900;color:#fcd34d">{{ best }}%</div>
+      <div style="font-size:0.78rem;color:#fbbf24;margin-top:4px">أعلى نتيجة</div>
+    </div>
+    <div style="background:linear-gradient(135deg,#1e3a5f,#1e3a5f);border-radius:16px;padding:18px;text-align:center;border:1px solid rgba(0,229,255,0.2)">
+      <div style="font-size:2rem;font-weight:900;color:#67e8f9">{{ passed }}</div>
+      <div style="font-size:0.78rem;color:#22d3ee;margin-top:4px">اجتاز (≥70%)</div>
+    </div>
+  </div>
+
+  <!-- ══ كاروسيل البطاقات الأفقي ══ -->
+  <div style="position:relative;margin-bottom:8px">
+    <div style="font-size:0.8rem;color:#64748b;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+      <span>↔</span> مرّر يميناً ويساراً لتصفح النتائج
+    </div>
+
+    <!-- أزرار التنقل -->
+    <button id="scrollLeft"
+      onclick="scrollCarousel(-1)"
+      style="position:absolute;right:-16px;top:50%;transform:translateY(-50%);
+             z-index:10;width:38px;height:38px;border-radius:50%;
+             background:linear-gradient(135deg,#6366f1,#8b5cf6);
+             border:none;color:#fff;font-size:1.1rem;cursor:pointer;
+             box-shadow:0 4px 16px rgba(99,102,241,0.5);display:flex;
+             align-items:center;justify-content:center;
+             transition:.2s;user-select:none">‹</button>
+    <button id="scrollRight"
+      onclick="scrollCarousel(1)"
+      style="position:absolute;left:-16px;top:50%;transform:translateY(-50%);
+             z-index:10;width:38px;height:38px;border-radius:50%;
+             background:linear-gradient(135deg,#6366f1,#8b5cf6);
+             border:none;color:#fff;font-size:1.1rem;cursor:pointer;
+             box-shadow:0 4px 16px rgba(99,102,241,0.5);display:flex;
+             align-items:center;justify-content:center;
+             transition:.2s;user-select:none">›</button>
+
+    <!-- الكاروسيل -->
+    <div id="historyCarousel"
+      style="display:flex;gap:16px;overflow-x:auto;scroll-behavior:smooth;
+             padding:8px 4px 16px;
+             scroll-snap-type:x mandatory;
+             -webkit-overflow-scrolling:touch;
+             scrollbar-width:thin;scrollbar-color:#334155 #0f172a">
+
+      {% for r in results %}
+      {% set pct = r.score_pct %}
+      {% set color = '#10b981' if pct >= 70 else '#f59e0b' if pct >= 50 else '#ef4444' %}
+      {% set bg = 'rgba(16,185,129,0.06)' if pct >= 70 else 'rgba(245,158,11,0.06)' if pct >= 50 else 'rgba(239,68,68,0.06)' %}
+
+      <div class="history-card"
+        style="flex:0 0 270px;scroll-snap-align:start;
+               background:var(--bg-card, #111827);
+               border:1px solid {{ color }}44;
+               border-radius:20px;padding:20px;
+               position:relative;overflow:hidden;
+               transition:transform .25s,box-shadow .25s;
+               cursor:pointer;min-height:220px"
+        onclick="window.location='{{ url_for('pro_license.exam_results', result_id=r.id) }}'">
+
+        <!-- خلفية التوهج -->
+        <div style="position:absolute;top:-30px;right:-30px;width:100px;height:100px;
+                    border-radius:50%;background:{{ color }};opacity:0.06;
+                    pointer-events:none"></div>
+
+        <!-- رقم الاختبار -->
+        <div style="position:absolute;top:14px;left:14px;
+                    font-size:0.7rem;color:#475569;font-weight:700">
+          #{{ loop.index }}
+        </div>
+
+        <!-- نوع الاختبار -->
+        <div style="margin-bottom:12px">
+          <span style="font-size:0.72rem;padding:3px 10px;border-radius:20px;
+                       background:{{ color }}22;color:{{ color }};font-weight:700;border:1px solid {{ color }}44">
+            {% if r.exam_type == 'daily' %}🗓️ تدريب يومي
+            {% elif r.exam_type == 'comprehensive' %}📊 تجميعي شامل
+            {% elif r.exam_type and r.exam_type.startswith('model_') %}📝 نموذج {{ r.exam_type.split('_')[1] }}
+            {% else %}📌 اختبار معيار {{ r.standard_num or '' }}
+            {% endif %}
+          </span>
+        </div>
+
+        <!-- النسبة المئوية الكبيرة -->
+        <div style="font-size:3.2rem;font-weight:900;color:{{ color }};
+                    line-height:1;margin-bottom:4px;
+                    text-shadow:0 0 20px {{ color }}44">
+          {{ pct }}%
+        </div>
+
+        <!-- النتيجة -->
+        <div style="font-size:0.85rem;color:#94a3b8;margin-bottom:14px">
+          {{ r.score }} / {{ r.total }} إجابة صحيحة
+        </div>
+
+        <!-- شريط التقدم -->
+        <div style="background:rgba(255,255,255,0.08);border-radius:6px;
+                    height:6px;overflow:hidden;margin-bottom:12px">
+          <div style="height:100%;border-radius:6px;width:{{ pct }}%;
+                      background:linear-gradient(90deg,{{ color }},{{ color }}cc);
+                      transition:width 1s ease" class="progress-bar-animated"></div>
+        </div>
+
+        <!-- التاريخ + رابط التفاصيل -->
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:0.72rem;color:#475569">
+            🕐 {{ r.created_at.strftime('%Y/%m/%d') }}
+          </span>
+          <span style="font-size:0.72rem;color:#6366f1;font-weight:700">
+            التفاصيل ←
+          </span>
+        </div>
+
+        <!-- شارة النجاح/الفشل -->
+        {% if pct >= 85 %}
+        <div style="position:absolute;bottom:14px;right:16px;
+                    font-size:1.3rem" title="ممتاز">🏆</div>
+        {% elif pct >= 70 %}
+        <div style="position:absolute;bottom:14px;right:16px;
+                    font-size:1.3rem" title="جيد جداً">✅</div>
+        {% elif pct < 50 %}
+        <div style="position:absolute;bottom:14px;right:16px;
+                    font-size:1.3rem" title="تحتاج مراجعة">⚠️</div>
+        {% endif %}
+
+      </div>
+      {% endfor %}
+
+    </div><!-- /carousel -->
+  </div><!-- /relative -->
+
+  <!-- ══ نقاط التنقل (Dots) ══ -->
+  <div id="carouselDots"
+    style="display:flex;justify-content:center;gap:6px;margin-top:8px;flex-wrap:wrap">
+    {% for r in results %}
+    <div class="dot" data-idx="{{ loop.index0 }}"
+      onclick="jumpTo({{ loop.index0 }})"
+      style="width:8px;height:8px;border-radius:50%;cursor:pointer;transition:.2s;
+             background:{{ '#6366f1' if loop.first else '#334155' }}">
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div style="text-align:center;padding:60px 20px;color:#64748b">
+    <div style="font-size:4rem;margin-bottom:12px">📭</div>
+    <h6 style="color:#94a3b8;margin-bottom:16px">لم تُجرِ أي اختبار بعد</h6>
+    <a href="{{ url_for('pro_license.student_index') }}" class="btn btn-primary">
+      ابدأ اختبارك الأول
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<style>
+.history-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 12px 40px rgba(0,0,0,0.4);
+}
+#historyCarousel::-webkit-scrollbar{height:4px}
+#historyCarousel::-webkit-scrollbar-track{background:#0f172a;border-radius:2px}
+#historyCarousel::-webkit-scrollbar-thumb{background:#334155;border-radius:2px}
+</style>
+
+<script>
+const carousel = document.getElementById('historyCarousel');
+const dots     = document.querySelectorAll('.dot');
+const CARD_W   = 286; // 270 + 16 gap
+
+function scrollCarousel(dir) {
+  carousel.scrollBy({ left: dir * CARD_W * 2, behavior: 'smooth' });
+}
+
+function jumpTo(idx) {
+  carousel.scrollTo({ left: idx * CARD_W, behavior: 'smooth' });
+  updateDots(idx);
+}
+
+function updateDots(active) {
+  dots.forEach((d, i) => {
+    d.style.background = i === active ? '#6366f1' : '#334155';
+    d.style.width  = i === active ? '20px' : '8px';
+    d.style.borderRadius = '4px';
+  });
+}
+
+/* تحديث النقاط عند التمرير */
+carousel.addEventListener('scroll', () => {
+  const idx = Math.round(carousel.scrollLeft / CARD_W);
+  updateDots(Math.min(idx, dots.length - 1));
+});
+
+/* دعم السحب بالماوس */
+let isDragging = false, startX = 0, scrollStart = 0;
+carousel.addEventListener('mousedown', e => {
+  isDragging = true; startX = e.pageX; scrollStart = carousel.scrollLeft;
+  carousel.style.cursor = 'grabbing'; carousel.style.userSelect = 'none';
+});
+carousel.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  carousel.scrollLeft = scrollStart - (e.pageX - startX);
+});
+['mouseup','mouseleave'].forEach(ev =>
+  carousel.addEventListener(ev, () => {
+    isDragging = false;
+    carousel.style.cursor = ''; carousel.style.userSelect = '';
+  })
+);
+
+/* تشغيل أنيميشن الأشرطة */
+document.addEventListener('DOMContentLoaded', () => {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        const bar = e.target.querySelector('.progress-bar-animated');
+        if (bar) bar.style.transition = 'width 0.8s ease';
+      }
+    });
+  }, { threshold: 0.3 });
+  document.querySelectorAll('.history-card').forEach(c => observer.observe(c));
+});
+</script>
+{% endblock %}

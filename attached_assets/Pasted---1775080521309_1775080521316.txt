@@ -1,0 +1,282 @@
+# ====================================================================
+# مولد الأسئلة مع الرسومات (بدون matplotlib - باستخدام SVG فقط)
+# يعمل في أي بيئة Python بدون تثبيت مكتبات إضافية
+# ====================================================================
+
+import base64
+import json
+
+class QuestionGenerator:
+    """مولد الأسئلة مع الرسومات - بدون مكتبات خارجية"""
+    
+    def __init__(self):
+        self.questions = []
+    
+    def create_velocity_time_graph_svg(self, points, width=450, height=300):
+        """إنشاء رسم SVG لمنحنى السرعة-الزمن (بدون matplotlib)"""
+        
+        if not points:
+            return ""
+        
+        # إيجاد الحدود القصوى والدنيا
+        t_values = [p[0] for p in points]
+        v_values = [p[1] for p in points]
+        
+        t_min, t_max = min(t_values), max(t_values)
+        v_min, v_max = min(v_values), max(v_values)
+        
+        # إضافة هامش
+        t_range = t_max - t_min if t_max != t_min else 1
+        v_range = v_max - v_min if v_max != v_min else 1
+        
+        margin_left = 60
+        margin_right = 30
+        margin_top = 30
+        margin_bottom = 50
+        
+        plot_width = width - margin_left - margin_right
+        plot_height = height - margin_top - margin_bottom
+        
+        def transform(t, v):
+            x = margin_left + (t - t_min) / t_range * plot_width
+            y = height - margin_bottom - (v - v_min) / v_range * plot_height
+            return x, y
+        
+        # إنشاء نقاط المنحنى
+        points_str = []
+        for t, v in points:
+            x, y = transform(t, v)
+            points_str.append(f"{x:.1f},{y:.1f}")
+        
+        # إنشاء النقاط الفردية
+        circles = []
+        for t, v in points:
+            x, y = transform(t, v)
+            circles.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="4" fill="red" stroke="darkred" stroke-width="1"/>')
+            circles.append(f'<text x="{x+8:.1f}" y="{y-5:.1f}" font-size="10" fill="black">({t},{v})</text>')
+        
+        # إنشاء محاور الرسم
+        svg = f'''<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg" style="font-family: Arial, sans-serif;">
+    <rect width="{width}" height="{height}" fill="white" stroke="none"/>
+    
+    <!-- خطوط الشبكة -->
+    <line x1="{margin_left}" y1="{margin_top}" x2="{margin_left}" y2="{height - margin_bottom}" stroke="#ccc" stroke-width="1" stroke-dasharray="5,5"/>
+    <line x1="{margin_left}" y1="{height - margin_bottom}" x2="{width - margin_right}" y2="{height - margin_bottom}" stroke="#ccc" stroke-width="1" stroke-dasharray="5,5"/>
+    
+    <!-- المحور السيني (الزمن) -->
+    <line x1="{margin_left}" y1="{height - margin_bottom}" x2="{width - margin_right}" y2="{height - margin_bottom}" stroke="black" stroke-width="2"/>
+    <polygon points="{width - margin_right - 5},{height - margin_bottom - 3} {width - margin_right},{height - margin_bottom} {width - margin_right - 5},{height - margin_bottom + 3}" fill="black"/>
+    <text x="{width/2}" y="{height - 15}" text-anchor="middle" font-size="12" fill="black">الزمن (s)</text>
+    
+    <!-- المحور الصادي (السرعة) -->
+    <line x1="{margin_left}" y1="{margin_top}" x2="{margin_left}" y2="{height - margin_bottom}" stroke="black" stroke-width="2"/>
+    <polygon points="{margin_left - 3},{margin_top + 5} {margin_left},{margin_top} {margin_left + 3},{margin_top + 5}" fill="black"/>
+    <text x="{15}" y="{height/2}" text-anchor="middle" font-size="12" fill="black" transform="rotate(-90, 15, {height/2})">السرعة (m/s)</text>
+    
+    <!-- المنحنى -->
+    <polyline points="{' '.join(points_str)}" fill="none" stroke="blue" stroke-width="3"/>
+    
+    <!-- النقاط -->
+    {''.join(circles)}
+    
+    <!-- عنوان الرسم -->
+    <text x="{width/2}" y="{20}" text-anchor="middle" font-size="14" font-weight="bold" fill="black">منحنى السرعة-الزمن</text>
+</svg>'''
+        
+        # تحويل إلى Base64
+        svg_base64 = base64.b64encode(svg.encode('utf-8')).decode('utf-8')
+        return f"data:image/svg+xml;base64,{svg_base64}"
+    
+    def create_position_time_graph_svg(self, points, width=450, height=300):
+        """إنشاء رسم SVG لمنحنى الموقع-الزمن"""
+        
+        if not points:
+            return ""
+        
+        t_values = [p[0] for p in points]
+        x_values = [p[1] for p in points]
+        
+        t_min, t_max = min(t_values), max(t_values)
+        x_min, x_max = min(x_values), max(x_values)
+        
+        t_range = t_max - t_min if t_max != t_min else 1
+        x_range = x_max - x_min if x_max != x_min else 1
+        
+        margin_left = 60
+        margin_right = 30
+        margin_top = 30
+        margin_bottom = 50
+        
+        plot_width = width - margin_left - margin_right
+        plot_height = height - margin_top - margin_bottom
+        
+        def transform(t, x):
+            x_pos = margin_left + (t - t_min) / t_range * plot_width
+            y_pos = height - margin_bottom - (x - x_min) / x_range * plot_height
+            return x_pos, y_pos
+        
+        points_str = []
+        circles = []
+        for t, x in points:
+            x_pos, y_pos = transform(t, x)
+            points_str.append(f"{x_pos:.1f},{y_pos:.1f}")
+            circles.append(f'<circle cx="{x_pos:.1f}" cy="{y_pos:.1f}" r="4" fill="orange" stroke="darkorange" stroke-width="1"/>')
+            circles.append(f'<text x="{x_pos+8:.1f}" y="{y_pos-5:.1f}" font-size="10" fill="black">({t},{x})</text>')
+        
+        svg = f'''<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg" style="font-family: Arial, sans-serif;">
+    <rect width="{width}" height="{height}" fill="white"/>
+    
+    <line x1="{margin_left}" y1="{height - margin_bottom}" x2="{width - margin_right}" y2="{height - margin_bottom}" stroke="black" stroke-width="2"/>
+    <line x1="{margin_left}" y1="{margin_top}" x2="{margin_left}" y2="{height - margin_bottom}" stroke="black" stroke-width="2"/>
+    
+    <polyline points="{' '.join(points_str)}" fill="none" stroke="green" stroke-width="3"/>
+    {''.join(circles)}
+    
+    <text x="{width/2}" y="{height - 15}" text-anchor="middle" font-size="12">الزمن (s)</text>
+    <text x="{15}" y="{height/2}" text-anchor="middle" font-size="12" transform="rotate(-90, 15, {height/2})">الموقع (m)</text>
+    <text x="{width/2}" y="{20}" text-anchor="middle" font-size="14" font-weight="bold">منحنى الموقع-الزمن</text>
+</svg>'''
+        
+        svg_base64 = base64.b64encode(svg.encode('utf-8')).decode('utf-8')
+        return f"data:image/svg+xml;base64,{svg_base64}"
+    
+    def create_simple_mirror_svg(self, mirror_type="concave", focal_length=10):
+        """إنشاء رسم SVG بسيط للمرآة"""
+        width, height = 400, 300
+        
+        if mirror_type == "concave":
+            # رسم مرآة مقعرة
+            arc = f'<path d="M 100,150 Q 200,50 300,150" fill="none" stroke="black" stroke-width="2"/>'
+        else:
+            # رسم مرآة محدبة
+            arc = f'<path d="M 100,150 Q 200,250 300,150" fill="none" stroke="black" stroke-width="2"/>'
+        
+        svg = f'''<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">
+    <rect width="{width}" height="{height}" fill="white"/>
+    
+    {arc}
+    
+    <!-- المحور الرئيسي -->
+    <line x1="50" y1="150" x2="350" y2="150" stroke="black" stroke-width="1" stroke-dasharray="5,5"/>
+    
+    <!-- النقاط الرئيسية -->
+    <circle cx="200" cy="150" r="4" fill="black"/>
+    <text x="205" y="145" font-size="10">القطب</text>
+    
+    <!-- البؤرة (على بعد 100 بكسل) -->
+    <circle cx="100" cy="150" r="4" fill="red"/>
+    <text x="80" y="145" font-size="10">F</text>
+    
+    <!-- مركز التكور -->
+    <circle cx="300" cy="150" r="4" fill="blue"/>
+    <text x="305" y="145" font-size="10">C</text>
+    
+    <text x="200" y="280" text-anchor="middle" font-size="12">مرآة {'مقعرة' if mirror_type == 'concave' else 'محدبة'}</text>
+</svg>'''
+        
+        svg_base64 = base64.b64encode(svg.encode('utf-8')).decode('utf-8')
+        return f"data:image/svg+xml;base64,{svg_base64}"
+    
+    def generate_questions(self):
+        """توليد مجموعة من الأسئلة مع الرسومات"""
+        
+        # سؤال 1: منحنى السرعة-الزمن
+        points1 = [(0, 2), (2, 6), (4, 6), (5, 2), (6, 2)]
+        graph1 = self.create_velocity_time_graph_svg(points1)
+        
+        q1 = {
+            "id": 1,
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "subject": "physics",
+            "chapter": 1,
+            "question_text": "الرسم البياني يمثل منحنى (السرعة، الزمن) لجسم متحرك. احسب التسارع في الفترة من 0 إلى 2 ثانية.",
+            "image": graph1,
+            "options": ["2 m/s²", "4 m/s²", "1 m/s²", "3 m/s²"],
+            "answer": "A",
+            "explanation": "التسارع = (v₂ - v₁)/(t₂ - t₁) = (6 - 2)/(2 - 0) = 4/2 = 2 m/s²",
+            "has_image": True
+        }
+        
+        # سؤال 2: منحنى الموقع-الزمن
+        points2 = [(0, 0), (1, 5), (2, 10), (3, 15), (4, 20)]
+        graph2 = self.create_position_time_graph_svg(points2)
+        
+        q2 = {
+            "id": 2,
+            "type": "multiple_choice",
+            "difficulty": "easy",
+            "subject": "physics",
+            "chapter": 1,
+            "question_text": "الرسم البياني يمثل منحنى (الموقع، الزمن) لجسم متحرك. ما سرعة الجسم؟",
+            "image": graph2,
+            "options": ["5 m/s", "10 m/s", "15 m/s", "20 m/s"],
+            "answer": "A",
+            "explanation": "السرعة = ميل المنحنى = (20-0)/(4-0) = 20/4 = 5 m/s",
+            "has_image": True
+        }
+        
+        # سؤال 3: رسم المرآة
+        mirror_img = self.create_simple_mirror_svg("concave", 10)
+        
+        q3 = {
+            "id": 3,
+            "type": "multiple_choice",
+            "difficulty": "hard",
+            "subject": "physics",
+            "chapter": 2,
+            "question_text": "في الشكل، مرآة مقعرة بعدها البؤري 10 cm. إذا وضع جسم على بعد 15 cm من المرآة، أين تتكون الصورة؟",
+            "image": mirror_img,
+            "options": ["30 cm أمام المرآة", "30 cm خلف المرآة", "6 cm أمام المرآة", "6 cm خلف المرآة"],
+            "answer": "A",
+            "explanation": "باستخدام قانون المرايا: 1/f = 1/do + 1/di ⇒ 1/10 = 1/15 + 1/di ⇒ 1/di = 1/10 - 1/15 = 1/30 ⇒ di = 30 cm، الإشارة موجبة تعني أمام المرآة.",
+            "has_image": True
+        }
+        
+        # سؤال 4: منحنى السرعة-الزمن (تباطؤ)
+        points4 = [(0, 10), (2, 6), (4, 2), (5, 0)]
+        graph4 = self.create_velocity_time_graph_svg(points4)
+        
+        q4 = {
+            "id": 4,
+            "type": "multiple_choice",
+            "difficulty": "medium",
+            "subject": "physics",
+            "chapter": 1,
+            "question_text": "الرسم البياني يمثل منحنى (السرعة، الزمن) لجسم يتباطأ. احسب التسارع في الفترة من 0 إلى 2 ثانية.",
+            "image": graph4,
+            "options": ["-2 m/s²", "2 m/s²", "-4 m/s²", "4 m/s²"],
+            "answer": "A",
+            "explanation": "التسارع = (6 - 10)/(2 - 0) = -4/2 = -2 m/s²",
+            "has_image": True
+        }
+        
+        return [q1, q2, q3, q4]
+
+
+# ====================================================================
+# تنفيذ الكود
+# ====================================================================
+
+if __name__ == "__main__":
+    print("=" * 50)
+    print("مولد الأسئلة مع الرسومات (بدون matplotlib)")
+    print("=" * 50)
+    
+    generator = QuestionGenerator()
+    questions = generator.generate_questions()
+    
+    # حفظ في ملف JSON
+    with open('questions_with_images.json', 'w', encoding='utf-8') as f:
+        json.dump(questions, f, ensure_ascii=False, indent=2)
+    
+    print(f"\n✓ تم إنشاء {len(questions)} سؤال مع رسومات")
+    print("✓ تم حفظ الأسئلة في ملف: questions_with_images.json")
+    print("\nمعلومات عن الأسئلة:")
+    print("-" * 40)
+    
+    for q in questions:
+        print(f"\nالسؤال {q['id']}: {q['question_text'][:60]}...")
+        print(f"  - الصورة: {'نعم' if q['has_image'] else 'لا'}")
+        print(f"  - نوع الصورة: SVG (Base64)")
+        print(f"  - الإجابة: {q['answer']}")

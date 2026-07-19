@@ -1,0 +1,5 @@
+# متغيرات البيئة المطلوبة لبوت رواد التحصيلي
+# أنشئ ملف .env وأضف قيمك الحقيقية
+
+BOT_TOKEN=your_telegram_bot_token_here
+OPENROUTER_KEY=your_openrouter_key_here   # اختياري — يعمل بدونه عبر g4f

@@ -1,0 +1,643 @@
+# ====================================================================
+# الدفعة الرابعة: الأسئلة 151-200 (كيمياء + فيزياء + رياضيات)
+# تم إعادة صياغتها على نمط اختبارات التحصيلي الرسمية
+# جميع الإجابات تم فحصها والتأكد من صحتها
+# ====================================================================
+
+exam_questions_batch_4 = [
+    # ==================== الكيمياء (استمرار) ====================
+    # ==================== المحاليل (استمرار) ====================
+    {
+        "id": 151,
+        "subject": "chemistry",
+        "chapter": 3,
+        "topic": "المحاليل",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "محلول حجمه 0.5 L يحتوي على 0.2 mol من NaCl. ما التركيز المولاري للمحلول؟",
+        "options": ["0.4 M", "0.2 M", "0.1 M", "0.8 M"],
+        "answer": "A",
+        "explanation": "التركيز المولاري = عدد المولات / الحجم باللتر = 0.2 / 0.5 = 0.4 M."
+    },
+    {
+        "id": 152,
+        "subject": "chemistry",
+        "chapter": 3,
+        "topic": "المحاليل",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "ما عدد مولات NaOH اللازمة لتحضير 250 mL من محلول تركيزه 0.2 M؟",
+        "options": ["0.05 mol", "0.1 mol", "0.2 mol", "0.5 mol"],
+        "answer": "A",
+        "explanation": "عدد المولات = التركيز × الحجم باللتر = 0.2 × 0.25 = 0.05 mol."
+    },
+    {
+        "id": 153,
+        "subject": "chemistry",
+        "chapter": 3,
+        "topic": "المحاليل",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من العبارات التالية تصف محلولاً مشبعاً بشكل صحيح؟",
+        "options": ["يحتوي على أقصى كمية من المذاب يمكن إذابتها عند درجة حرارة معينة", "يحتوي على كمية قليلة من المذاب", "يحتوي على كمية كبيرة من المذاب", "لا يمكن إذابة أي مادة فيه أبداً"],
+        "answer": "A",
+        "explanation": "المحلول المشبع هو الذي يحتوي على أقصى كمية من المذاب يمكن إذابتها عند درجة حرارة معينة."
+    },
+    
+    # ==================== الأحماض والقواعد ====================
+    {
+        "id": 154,
+        "subject": "chemistry",
+        "chapter": 4,
+        "topic": "الأحماض والقواعد",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من المواد التالية يعتبر حمضاً قوياً؟",
+        "options": ["HCl", "CH₃COOH", "H₂CO₃", "H₃PO₄"],
+        "answer": "A",
+        "explanation": "HCl (حمض الهيدروكلوريك) من الأحماض القوية، بينما البقية أحماض ضعيفة."
+    },
+    {
+        "id": 155,
+        "subject": "chemistry",
+        "chapter": 4,
+        "topic": "الأحماض والقواعد",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من المواد التالية يعتبر قاعدة قوية؟",
+        "options": ["NaOH", "NH₃", "Ca(OH)₂", "Al(OH)₃"],
+        "answer": "A",
+        "explanation": "NaOH (هيدروكسيد الصوديوم) من القواعد القوية، بينما NH₃ قاعدة ضعيفة."
+    },
+    {
+        "id": 156,
+        "subject": "chemistry",
+        "chapter": 4,
+        "topic": "الأحماض والقواعد",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "محلول قيمته pH = 3.0 يعتبر ...",
+        "options": ["حمضياً", "قاعدياً", "متعادلاً", "غير معروف"],
+        "answer": "A",
+        "explanation": "pH أقل من 7 يعني محلول حمضي، pH = 3 حمض قوي نسبياً."
+    },
+    {
+        "id": 157,
+        "subject": "chemistry",
+        "chapter": 4,
+        "topic": "الأحماض والقواعد",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "محلول قيمته pH = 10.0 يعتبر ...",
+        "options": ["قاعدياً", "حمضياً", "متعادلاً", "غير معروف"],
+        "answer": "A",
+        "explanation": "pH أكبر من 7 يعني محلول قاعدي، pH = 10 قاعدة ضعيفة نسبياً."
+    },
+    {
+        "id": 158,
+        "subject": "chemistry",
+        "chapter": 4,
+        "topic": "الأحماض والقواعد",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "محلول قيمته pH = 7.0 يعتبر ...",
+        "options": ["متعادلاً", "حمضياً", "قاعدياً", "غير معروف"],
+        "answer": "A",
+        "explanation": "pH = 7 يعني محلول متعادل مثل الماء النقي عند 25°C."
+    },
+    {
+        "id": 159,
+        "subject": "chemistry",
+        "chapter": 4,
+        "topic": "الأحماض والقواعد",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "إذا كان تركيز أيونات الهيدروجين [H⁺] في محلول = 1×10⁻⁵ M، فإن pH المحلول يساوي ...",
+        "options": ["5", "7", "9", "10"],
+        "answer": "A",
+        "explanation": "pH = -log[H⁺] = -log(10⁻⁵) = 5."
+    },
+    {
+        "id": 160,
+        "subject": "chemistry",
+        "chapter": 4,
+        "topic": "الأحماض والقواعد",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "تفاعل HCl مع NaOH ينتج ...",
+        "options": ["NaCl + H₂O", "NaCl + H₂", "NaH + Cl₂", "NaOCl + H₂"],
+        "answer": "A",
+        "explanation": "تفاعل التعادل بين حمض قوي وقاعدة قوية: HCl + NaOH → NaCl + H₂O."
+    },
+    {
+        "id": 161,
+        "subject": "chemistry",
+        "chapter": 4,
+        "topic": "الأحماض والقواعد",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "حجم من محلول HCl تركيزه 0.1 M يلزم لمعادلة 25 mL من محلول NaOH تركيزه 0.2 M هو ...",
+        "options": ["50 mL", "25 mL", "12.5 mL", "100 mL"],
+        "answer": "A",
+        "explanation": "n(HCl) = n(NaOH) ⇒ C₁V₁ = C₂V₂ ⇒ 0.1 × V₁ = 0.2 × 25 ⇒ V₁ = 50 mL."
+    },
+    
+    # ==================== الغازات ====================
+    {
+        "id": 162,
+        "subject": "chemistry",
+        "chapter": 3,
+        "topic": "الغازات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "قانون بويل ينص على أن ... (عند ثبوت درجة الحرارة وكمية الغاز)",
+        "options": ["الضغط يتناسب عكسياً مع الحجم", "الضغط يتناسب طردياً مع الحجم", "الحجم يتناسب طردياً مع درجة الحرارة", "الضغط يتناسب طردياً مع درجة الحرارة"],
+        "answer": "A",
+        "explanation": "قانون بويل: P₁V₁ = P₂V₂، أي P ∝ 1/V عند ثبوت T و n."
+    },
+    {
+        "id": 163,
+        "subject": "chemistry",
+        "chapter": 3,
+        "topic": "الغازات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "قانون شارل ينص على أن ... (عند ثبوت الضغط وكمية الغاز)",
+        "options": ["الحجم يتناسب طردياً مع درجة الحرارة المطلقة", "الحجم يتناسب عكسياً مع درجة الحرارة", "الضغط يتناسب طردياً مع درجة الحرارة", "الضغط يتناسب عكسياً مع الحجم"],
+        "answer": "A",
+        "explanation": "قانون شارل: V₁/T₁ = V₂/T₂، أي V ∝ T عند ثبوت P و n."
+    },
+    {
+        "id": 164,
+        "subject": "chemistry",
+        "chapter": 3,
+        "topic": "الغازات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "غاز حجمه 2 L عند ضغط 1 atm، إذا ضغط حتى أصبح حجمه 0.5 L عند ثبوت درجة الحرارة، فإن ضغطه الجديد يساوي ...",
+        "options": ["4 atm", "2 atm", "1 atm", "0.25 atm"],
+        "answer": "A",
+        "explanation": "من قانون بويل: P₁V₁ = P₂V₂ ⇒ 1 × 2 = P₂ × 0.5 ⇒ P₂ = 2/0.5 = 4 atm."
+    },
+    {
+        "id": 165,
+        "subject": "chemistry",
+        "chapter": 3,
+        "topic": "الغازات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "غاز حجمه 3 L عند درجة حرارة 300 K، إذا سخن إلى 600 K عند ثبوت الضغط، فإن حجمه الجديد يساوي ...",
+        "options": ["6 L", "3 L", "1.5 L", "9 L"],
+        "answer": "A",
+        "explanation": "من قانون شارل: V₁/T₁ = V₂/T₂ ⇒ 3/300 = V₂/600 ⇒ V₂ = (3×600)/300 = 6 L."
+    },
+    {
+        "id": 166,
+        "subject": "chemistry",
+        "chapter": 3,
+        "topic": "الغازات",
+        "difficulty": "hard",
+        "exam_style": "تحصيلي",
+        "question": "وعاء حجمه 5 L يحتوي على 0.2 mol من غاز عند درجة حرارة 300 K. ما ضغط الغاز؟ (R = 0.0821 L·atm/mol·K)",
+        "options": ["0.985 atm", "1.23 atm", "2.46 atm", "0.492 atm"],
+        "answer": "A",
+        "explanation": "من قانون الغاز المثالي: PV = nRT ⇒ P = nRT/V = (0.2 × 0.0821 × 300)/5 = (4.926)/5 = 0.9852 atm."
+    },
+    {
+        "id": 167,
+        "subject": "chemistry",
+        "chapter": 3,
+        "topic": "الغازات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "في الظروف المعيارية (STP)، 1 mol من أي غاز يشغل حجماً مقداره ...",
+        "options": ["22.4 L", "24.5 L", "11.2 L", "44.8 L"],
+        "answer": "A",
+        "explanation": "الحجم المولي للغاز في STP (0°C، 1 atm) = 22.4 L/mol."
+    },
+    
+    # ==================== الفيزياء (استمرار) ====================
+    # ==================== الصوت ====================
+    {
+        "id": 168,
+        "subject": "physics",
+        "chapter": 5,
+        "topic": "الصوت",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "سرعة الصوت في الهواء تعتمد على ...",
+        "options": ["درجة الحرارة", "الضغط فقط", "الكثافة فقط", "الرطوبة فقط"],
+        "answer": "A",
+        "explanation": "سرعة الصوت في الهواء تزداد بزيادة درجة الحرارة (v ∝ √T)."
+    },
+    {
+        "id": 169,
+        "subject": "physics",
+        "chapter": 5,
+        "topic": "الصوت",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "وحدة قياس شدة الصوت هي ...",
+        "options": ["ديسيبل (dB)", "هرتز (Hz)", "متر (m)", "ثانية (s)"],
+        "answer": "A",
+        "explanation": "شدة الصوت تقاس بالديسيبل (dB)، بينما التردد يقاس بالهرتز."
+    },
+    {
+        "id": 170,
+        "subject": "physics",
+        "chapter": 5,
+        "topic": "الصوت",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "التردد هو عدد ...",
+        "options": ["الذبذبات الكاملة في الثانية", "الذبذبات الكاملة في الدقيقة", "الموجات في المتر", "الموجات في الكيلومتر"],
+        "answer": "A",
+        "explanation": "التردد = عدد الذبذبات الكاملة في الثانية، وحدته الهرتز (Hz)."
+    },
+    {
+        "id": 171,
+        "subject": "physics",
+        "chapter": 5,
+        "topic": "الصوت",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "موجة صوتية ترددها 440 Hz (نغمة LA)، وسرعتها في الهواء 340 m/s. ما طولها الموجي؟",
+        "options": ["0.773 m", "0.5 m", "1 m", "1.5 m"],
+        "answer": "A",
+        "explanation": "λ = v/f = 340/440 = 0.7727 m."
+    },
+    
+    # ==================== الضوء ====================
+    {
+        "id": 172,
+        "subject": "physics",
+        "chapter": 3,
+        "topic": "الضوء",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "سرعة الضوء في الفراغ تساوي ...",
+        "options": ["3×10⁸ m/s", "3×10⁵ m/s", "3×10⁶ m/s", "3×10⁷ m/s"],
+        "answer": "A",
+        "explanation": "سرعة الضوء في الفراغ ثابتة = 3×10⁸ m/s."
+    },
+    {
+        "id": 173,
+        "subject": "physics",
+        "chapter": 3,
+        "topic": "الضوء",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "معامل انكسار الزجاج = 1.5. ما سرعة الضوء في الزجاج؟ (سرعة الضوء في الفراغ = 3×10⁸ m/s)",
+        "options": ["2×10⁸ m/s", "1.5×10⁸ m/s", "4.5×10⁸ m/s", "3×10⁸ m/s"],
+        "answer": "A",
+        "explanation": "n = c/v ⇒ v = c/n = (3×10⁸)/1.5 = 2×10⁸ m/s."
+    },
+    {
+        "id": 174,
+        "subject": "physics",
+        "chapter": 3,
+        "topic": "الضوء",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "شعاع ضوئي يسقط على سطح ماء بزاوية 30° مع العمودي (معامل انكسار الماء = 1.33). ما زاوية الانكسار؟ (جا30° = 0.5)",
+        "options": ["22.1°", "41.8°", "30°", "19.5°"],
+        "answer": "A",
+        "explanation": "قانون سنيل: n₁ sinθ₁ = n₂ sinθ₂ ⇒ 1 × 0.5 = 1.33 × sinθ₂ ⇒ sinθ₂ = 0.5/1.33 = 0.376 ⇒ θ₂ = 22.1°."
+    },
+    {
+        "id": 175,
+        "subject": "physics",
+        "chapter": 3,
+        "topic": "الضوء",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "اللون الأحمر له طول موجي ... من اللون البنفسجي",
+        "options": ["أكبر", "أصغر", "مساوٍ", "لا توجد علاقة"],
+        "answer": "A",
+        "explanation": "الأحمر له أطول طول موجي (≈ 700 nm)، والبنفسجي أقصر طول موجي (≈ 400 nm)."
+    },
+    
+    # ==================== الكهرباء والتيار ====================
+    {
+        "id": 176,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "التيار الكهربائي",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "شدة التيار الكهربائي هي كمية ...",
+        "options": ["قياسية", "متجهة", "يمكن أن تكون قياسية أو متجهة", "لا قياسية ولا متجهة"],
+        "answer": "A",
+        "explanation": "شدة التيار الكهربائي كمية قياسية (لها مقدار فقط، وليس لها اتجاه محدد في الفضاء)."
+    },
+    {
+        "id": 177,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "التيار الكهربائي",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "إذا مرت شحنة مقدارها 60 C في سلك خلال 30 ثانية، فإن شدة التيار المار تساوي ...",
+        "options": ["2 A", "0.5 A", "3 A", "1.5 A"],
+        "answer": "A",
+        "explanation": "I = Q/t = 60/30 = 2 A."
+    },
+    {
+        "id": 178,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "التيار الكهربائي",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "بطارية قوتها الدافعة الكهربائية 12 V ومقاومتها الداخلية 0.5 Ω، وُصلت بمقاومة خارجية 2.5 Ω. ما شدة التيار المار في الدائرة؟",
+        "options": ["4 A", "6 A", "3 A", "2 A"],
+        "answer": "A",
+        "explanation": "I = EMF / (R + r) = 12 / (2.5 + 0.5) = 12/3 = 4 A."
+    },
+    {
+        "id": 179,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "التيار الكهربائي",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "ثلاث مقاومات 2 Ω، 4 Ω، 6 Ω وُصلت على التوالي مع بطارية 12 V. ما القدرة المستهلكة في المقاومة 4 Ω؟",
+        "options": ["4 W", "2 W", "8 W", "16 W"],
+        "answer": "A",
+        "explanation": "R_total = 2+4+6 = 12 Ω، I = V/R = 12/12 = 1 A، P₄ = I²R = 1² × 4 = 4 W."
+    },
+    
+    # ==================== الرياضيات (استمرار) ====================
+    # ==================== التفاضل ====================
+    {
+        "id": 180,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "التفاضل",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "مشتقة الدالة f(x) = 3x² - 2x + 5 هي ...",
+        "options": ["6x - 2", "3x - 2", "6x + 2", "3x² - 2"],
+        "answer": "A",
+        "explanation": "f'(x) = 2×3x - 2 = 6x - 2."
+    },
+    {
+        "id": 181,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "التفاضل",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "مشتقة الدالة f(x) = x⁵ هي ...",
+        "options": ["5x⁴", "x⁴", "5x⁵", "x⁵/5"],
+        "answer": "A",
+        "explanation": "d/dx (xⁿ) = n xⁿ⁻¹ ⇒ d/dx (x⁵) = 5x⁴."
+    },
+    {
+        "id": 182,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "التفاضل",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "مشتقة الدالة f(x) = 1/x هي ...",
+        "options": ["-1/x²", "1/x²", "ln x", "x"],
+        "answer": "A",
+        "explanation": "f(x) = x⁻¹ ⇒ f'(x) = -x⁻² = -1/x²."
+    },
+    {
+        "id": 183,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "التفاضل",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "مشتقة الدالة f(x) = (x² + 1)⁴ هي ...",
+        "options": ["8x(x²+1)³", "4(x²+1)³", "8x(x²+1)⁴", "4x(x²+1)³"],
+        "answer": "A",
+        "explanation": "قاعدة السلسلة: f'(x) = 4(x²+1)³ × 2x = 8x(x²+1)³."
+    },
+    {
+        "id": 184,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "التفاضل",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "مشتقة الدالة f(x) = sin(2x) هي ...",
+        "options": ["2 cos(2x)", "cos(2x)", "-2 cos(2x)", "2 sin(2x)"],
+        "answer": "A",
+        "explanation": "قاعدة السلسلة: f'(x) = cos(2x) × 2 = 2 cos(2x)."
+    },
+    {
+        "id": 185,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "التفاضل",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "مشتقة الدالة الثابتة f(x) = 7 هي ...",
+        "options": ["0", "7", "1", "غير معرفة"],
+        "answer": "A",
+        "explanation": "مشتقة أي دالة ثابتة تساوي صفراً."
+    },
+    
+    # ==================== التكامل ====================
+    {
+        "id": 186,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "التكامل",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "∫ 2x dx = ...",
+        "options": ["x² + C", "2x² + C", "x²", "2x + C"],
+        "answer": "A",
+        "explanation": "∫ 2x dx = 2 × (x²/2) + C = x² + C."
+    },
+    {
+        "id": 187,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "التكامل",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "∫ x³ dx = ...",
+        "options": ["x⁴/4 + C", "3x² + C", "x⁴ + C", "x²/2 + C"],
+        "answer": "A",
+        "explanation": "∫ xⁿ dx = xⁿ⁺¹/(n+1) + C ⇒ ∫ x³ dx = x⁴/4 + C."
+    },
+    {
+        "id": 188,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "التكامل",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "∫ (3x² - 4x + 1) dx = ...",
+        "options": ["x³ - 2x² + x + C", "x³ - 4x² + x + C", "3x³ - 2x² + x + C", "x³ - 2x² + 1 + C"],
+        "answer": "A",
+        "explanation": "∫ 3x² dx = x³، ∫ -4x dx = -2x²، ∫ 1 dx = x، إذن x³ - 2x² + x + C."
+    },
+    {
+        "id": 189,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "التكامل المحدد",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "∫₀¹ x² dx = ...",
+        "options": ["1/3", "1", "0", "2/3"],
+        "answer": "A",
+        "explanation": "∫₀¹ x² dx = [x³/3]₀¹ = (1/3) - (0) = 1/3."
+    },
+    {
+        "id": 190,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "التكامل المحدد",
+        "difficulty": "hard",
+        "exam_style": "تحصيلي",
+        "question": "∫₀² (2x + 1) dx = ...",
+        "options": ["6", "4", "8", "2"],
+        "answer": "A",
+        "explanation": "∫ (2x+1) dx = x² + x، من 0 إلى 2: (4+2) - (0+0) = 6."
+    },
+    
+    # ==================== الهندسة الفراغية ====================
+    {
+        "id": 191,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "الهندسة الفراغية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "مكعب طول حرفه 5 cm. ما حجمه؟",
+        "options": ["125 cm³", "25 cm³", "150 cm³", "100 cm³"],
+        "answer": "A",
+        "explanation": "حجم المكعب = (طول الحرف)³ = 5³ = 125 cm³."
+    },
+    {
+        "id": 192,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "الهندسة الفراغية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "كرة نصف قطرها 3 cm. ما حجمها؟ (π = 3.14)",
+        "options": ["113.04 cm³", "37.68 cm³", "84.78 cm³", "150.72 cm³"],
+        "answer": "A",
+        "explanation": "V = (4/3)πr³ = (4/3) × 3.14 × 27 = 4.1867 × 27 = 113.04 cm³."
+    },
+    {
+        "id": 193,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "الهندسة الفراغية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أسطوانة ارتفاعها 10 cm ونصف قطر قاعدتها 4 cm. ما حجمها؟ (π = 3.14)",
+        "options": ["502.4 cm³", "125.6 cm³", "251.2 cm³", "628 cm³"],
+        "answer": "A",
+        "explanation": "V = πr²h = 3.14 × 16 × 10 = 502.4 cm³."
+    },
+    {
+        "id": 194,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "الهندسة الفراغية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "مخروط نصف قطر قاعدته 3 cm وارتفاعه 4 cm. ما حجمه؟ (π = 3.14)",
+        "options": ["37.68 cm³", "113.04 cm³", "75.36 cm³", "25.12 cm³"],
+        "answer": "A",
+        "explanation": "V = (1/3)πr²h = (1/3) × 3.14 × 9 × 4 = 37.68 cm³."
+    },
+    {
+        "id": 195,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "الهندسة الفراغية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "مكعب مساحة وجهه 36 cm². ما حجمه؟",
+        "options": ["216 cm³", "36 cm³", "72 cm³", "108 cm³"],
+        "answer": "A",
+        "explanation": "مساحة الوجه = a² = 36 ⇒ a = 6 cm، الحجم = a³ = 216 cm³."
+    },
+    
+    # ==================== الكيمياء (ختام الدفعة) ====================
+    {
+        "id": 196,
+        "subject": "chemistry",
+        "chapter": 4,
+        "topic": "الأملاح",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ملح الطعام NaCl هو ناتج تفاعل ...",
+        "options": ["حمض HCl وقاعدة NaOH", "حمض H₂SO₄ وقاعدة NaOH", "حمض HCl وقاعدة KOH", "حمض HNO₃ وقاعدة NaOH"],
+        "answer": "A",
+        "explanation": "NaCl ينتج من تفاعل حمض الهيدروكلوريك HCl مع هيدروكسيد الصوديوم NaOH."
+    },
+    {
+        "id": 197,
+        "subject": "chemistry",
+        "chapter": 4,
+        "topic": "الأملاح",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من الأملاح التالية يعتبر غير قابل للذوبان في الماء؟",
+        "options": ["AgCl", "NaCl", "KNO₃", "NH₄Cl"],
+        "answer": "A",
+        "explanation": "كلوريد الفضة AgCl شبه غير قابل للذوبان في الماء، بينما البقية قابلة للذوبان."
+    },
+    {
+        "id": 198,
+        "subject": "chemistry",
+        "chapter": 2,
+        "topic": "الروابط الكيميائية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من المركبات التالية له أعلى درجة انصهار؟",
+        "options": ["NaCl", "H₂O", "CH₄", "CO₂"],
+        "answer": "A",
+        "explanation": "NaCl رابطة أيونية قوية، درجات انصهار المركبات الأيونية عالية مقارنة بالمركبات التساهمية."
+    },
+    {
+        "id": 199,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "التفاعلات الكيميائية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "في المعادلة الكيميائية: 2Mg + O₂ → 2MgO، عدد ذرات الأكسجين في المتفاعلات هو ...",
+        "options": ["2", "1", "4", "3"],
+        "answer": "A",
+        "explanation": "في المتفاعلات، O₂ تعني ذرتي أكسجين (عددها 2)."
+    },
+    {
+        "id": 200,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "التفاعلات الكيميائية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "في المعادلة الكيميائية: N₂ + 3H₂ → 2NH₃، عدد مولات H₂ اللازمة لإنتاج 4 mol من NH₃ هي ...",
+        "options": ["6 mol", "4 mol", "2 mol", "8 mol"],
+        "answer": "A",
+        "explanation": "النسبة: 3 mol H₂ → 2 mol NH₃، إذن 4 mol NH₃ تحتاج إلى (3×4)/2 = 6 mol H₂."
+    }
+]
+
+print(f"✓ تم إعادة صياغة {len(exam_questions_batch_4)} سؤالاً (الدفعة الرابعة: الأسئلة 151-200)")
+print("=" * 60)
+print("تم فحص جميع الإجابات والتأكد من صحتها")
+print("-" * 60)
+print("نموذج لسؤال تم التحقق منه (رقم 178 - قانون أوم):")
+print(exam_questions_batch_4[27]["question"])
+print(f"الخيارات: {exam_questions_batch_4[27]['options']}")
+print(f"الإجابة: {exam_questions_batch_4[27]['answer']}")
+print(f"الشرح: {exam_questions_batch_4[27]['explanation']}")
+print("=" * 60)
+print(f"المجموع التراكمي: 200 سؤالاً")
+print(f"المتبقي: 180 سؤالاً")

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}حالات {{ user.name }}{% endblock %}
+{% block extra_css %}
+<style>
+.stories-list{max-width:520px;margin:30px auto;padding:0 16px}
+.story-thumb{background:#141824;border:1px solid var(--border);border-radius:16px;
+  overflow:hidden;margin-bottom:16px;cursor:pointer;transition:transform .2s}
+.story-thumb:hover{transform:translateY(-2px)}
+.story-thumb-header{padding:14px 16px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border)}
+.story-thumb-img{width:100%;max-height:220px;object-fit:cover}
+.story-thumb-text{padding:14px 16px;color:#e2e8f0;font-size:0.95rem;line-height:1.6;
+  white-space:pre-line;direction:rtl}
+</style>
+{% endblock %}
+{% block content %}
+<div class="stories-list">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+    <a href="{{ url_for('student.dashboard') }}"
+       style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;
+              padding:8px 14px;color:#94a3b8;text-decoration:none">← رجوع</a>
+    <h1 style="font-size:1.2rem;font-weight:900">
+      حالات {{ user.name }} ({{ stories|length }})
+    </h1>
+  </div>
+
+  {% for story in stories %}
+  <div class="story-thumb" onclick="window.location.href='{{ url_for('stories.view', sid=story.id) }}'">
+    <div class="story-thumb-header">
+      <div class="avatar" style="width:36px;height:36px;font-size:0.9rem">{{ user.name[0] }}</div>
+      <div>
+        <div style="font-weight:600;font-size:0.9rem">{{ user.name }}</div>
+        <div style="color:#475569;font-size:0.78rem">{{ story.created_at.strftime('%H:%M · %Y/%m/%d') }}</div>
+      </div>
+      <div style="margin-right:auto;color:#94a3b8;font-size:0.8rem">{{ story.view_count }} 👁</div>
+    </div>
+    {% if story.image_path %}
+    <img src="{{ story.image_path }}" alt="حالة" class="story-thumb-img">
+    {% endif %}
+    {% if story.text %}
+    <div class="story-thumb-text">{{ story.text[:150] }}{% if story.text|length > 150 %}...{% endif %}</div>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

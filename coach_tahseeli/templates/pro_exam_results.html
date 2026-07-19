@@ -1,0 +1,213 @@
+{% extends "student_dashboard.html" %}
+{% block content %}
+<div class="container py-4" dir="rtl" style="max-width:860px">
+
+  <!-- بطاقة النتيجة الإجمالية -->
+  {% set pct = result.score_pct %}
+  {% set color_main = '#10b981' if pct >= 70 else '#f59e0b' if pct >= 50 else '#ef4444' %}
+
+  <div class="card border-0 shadow mb-4"
+       style="background:linear-gradient(135deg,
+         {{ '#064e3b' if pct >= 70 else '#78350f' if pct >= 50 else '#450a0a' }},
+         {{ '#065f46' if pct >= 70 else '#92400e' if pct >= 50 else '#7f1d1d' }});
+         color:#fff;border-radius:22px;overflow:hidden;position:relative">
+
+    <!-- توهج خلفي -->
+    <div style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);
+                width:200px;height:200px;border-radius:50%;
+                background:{{ color_main }};opacity:0.12;pointer-events:none"></div>
+
+    <div class="card-body text-center py-5" style="position:relative">
+      <!-- النسبة الكبيرة -->
+      <div style="font-size:4.5rem;font-weight:900;line-height:1;
+                  color:#fff;text-shadow:0 0 30px {{ color_main }}88">
+        {{ pct }}%
+      </div>
+
+      <!-- نوع الاختبار والمعيار -->
+      <h5 class="mb-1 mt-2" style="opacity:0.9;font-size:1rem">
+        {% if result.exam_type == 'daily' %}🗓️ التدريب اليومي
+        {% elif result.exam_type == 'comprehensive' %}📊 الاختبار التجميعي الشامل
+        {% elif result.exam_type and result.exam_type.startswith('model_') %}
+          📝 نموذج اختبار رقم {{ result.exam_type.split('_')[1] }}
+        {% elif std_info and std_info.name %}
+          🏅 {{ std_info.name }}
+        {% else %}📌 اختبار الرخصة المهنية{% endif %}
+      </h5>
+
+      {% if result.standard_num %}
+      <p class="mb-1 opacity-75" style="font-size:0.85rem">معيار {{ result.standard_num }}</p>
+      {% endif %}
+
+      <div class="mt-2">
+        <span class="badge bg-white text-dark fs-6" style="border-radius:12px">
+          {{ result.score }} / {{ result.total }} إجابة صحيحة
+        </span>
+      </div>
+
+      <div class="mt-3">
+        {% if result.total == 0 %}
+          <span class="badge bg-light text-secondary fs-6">📭 لا توجد إجابات مسجّلة</span>
+        {% elif pct >= 85 %}
+          <span class="badge bg-warning text-dark fs-6">🏆 ممتاز! أداء رائع</span>
+        {% elif pct >= 70 %}
+          <span class="badge bg-light text-success fs-6">✅ جيد جداً — استمر</span>
+        {% elif pct >= 50 %}
+          <span class="badge bg-light text-warning fs-6">⚠️ مقبول — راجع الأخطاء</span>
+        {% else %}
+          <span class="badge bg-light text-danger fs-6">❌ تحتاج مراجعة شاملة</span>
+        {% endif %}
+      </div>
+
+      <!-- شريط التقدم المرئي -->
+      <div class="mt-4 mx-auto" style="max-width:300px">
+        <div style="background:rgba(255,255,255,0.15);border-radius:8px;height:10px;overflow:hidden">
+          <div style="height:100%;border-radius:8px;width:{{ pct }}%;
+                      background:{{ color_main }};transition:width 1s ease"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- توصيات المراجعة -->
+  {% if weak_info %}
+  <div class="card border-0 shadow-sm mb-4" style="border-radius:16px;overflow:hidden">
+    <div class="card-header fw-semibold"
+         style="background:rgba(239,68,68,0.15);border-bottom:1px solid rgba(239,68,68,0.2);
+                color:#f87171">
+      📌 معايير تحتاج مراجعة
+    </div>
+    <div class="card-body" style="background:#0f172a">
+      <p class="small mb-3" style="color:#94a3b8">أخطأت في أسئلة من هذه المعايير — نوصيك بمراجعتها:</p>
+      <div class="row g-2">
+        {% for s_num, s_inf in weak_info.items() %}
+        <div class="col-md-6">
+          <div class="d-flex align-items-center gap-2 p-2 rounded"
+               style="background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.15)">
+            <span class="badge {{ 'bg-primary' if s_inf.type=='educational' else 'bg-warning text-dark' }}">
+              معيار {{ s_num }}
+            </span>
+            <span class="small fw-semibold" style="color:#cbd5e1">{{ s_inf.name }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="mt-3">
+        <a href="{{ url_for('pro_license.student_index') }}" class="btn btn-sm btn-outline-danger">
+          🔄 تدرّب على هذه المعايير مجدداً
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- تفاصيل الأسئلة -->
+  {% if details %}
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h6 class="fw-bold mb-0" style="color:#e2e8f0">تفاصيل إجاباتك</h6>
+    <div class="d-flex gap-2">
+      <span class="badge bg-success">✅ صحيح: {{ details | selectattr('correct') | list | length }}</span>
+      <span class="badge bg-danger">❌ خطأ: {{ details | rejectattr('correct') | list | length }}</span>
+    </div>
+  </div>
+
+  {% for item in details %}
+  {% if item.user_ans %}
+  <div class="card border-0 shadow-sm mb-3"
+       style="border-right:4px solid {{ '#10b981' if item.correct else '#ef4444' }};
+              border-radius:14px;overflow:hidden;background:#111827">
+    <div class="card-body">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <span class="badge {{ 'bg-success' if item.correct else 'bg-danger' }}">
+          {{ '✅ صحيح' if item.correct else '❌ خطأ' }}
+        </span>
+        <span class="badge {{ 'bg-success' if item.question.difficulty=='easy' else 'bg-warning text-dark' if item.question.difficulty=='medium' else 'bg-danger' }}">
+          {{ 'سهل' if item.question.difficulty=='easy' else 'متوسط' if item.question.difficulty=='medium' else 'صعب' }}
+        </span>
+      </div>
+
+      <p class="fw-semibold mb-3" style="color:#e2e8f0">{{ item.question.text }}</p>
+
+      {% if item.question.image_data %}
+      <div class="mb-2 text-center">
+        <img src="{{ item.question.image_data }}" alt="رسم السؤال"
+             style="max-height:150px;border:1px solid #334155;border-radius:6px">
+      </div>
+      {% endif %}
+
+      {% for letter, text in [
+        ('A', item.question.option_a),
+        ('B', item.question.option_b),
+        ('C', item.question.option_c),
+        ('D', item.question.option_d)
+      ] %}
+      <div class="d-flex align-items-center gap-2 mb-1 p-2 rounded"
+           style="background:{{ 'rgba(16,185,129,0.12)' if letter == item.question.answer
+                                else 'rgba(239,68,68,0.10)' if letter == item.user_ans and not item.correct
+                                else 'rgba(255,255,255,0.03)' }};
+                  border:1px solid {{ 'rgba(16,185,129,0.35)' if letter == item.question.answer
+                                      else 'rgba(239,68,68,0.3)' if letter == item.user_ans and not item.correct
+                                      else 'rgba(255,255,255,0.06)' }}">
+        <span class="badge {{ 'bg-success' if letter == item.question.answer else 'bg-danger' if letter == item.user_ans and not item.correct else 'bg-secondary' }}">
+          {{ letter }}
+        </span>
+        <span class="small" style="color:#cbd5e1">{{ text }}</span>
+        {% if letter == item.question.answer %}
+          <span class="ms-auto badge bg-success">✅ الصحيحة</span>
+        {% elif letter == item.user_ans and not item.correct %}
+          <span class="ms-auto badge bg-danger">إجابتك</span>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      {% if item.question.explanation %}
+      <div class="mt-3 p-2 rounded small"
+           style="background:rgba(0,229,255,0.05);border-right:3px solid #00e5ff;color:#94a3b8">
+        <strong style="color:#00e5ff">💡 الشرح:</strong> {{ item.question.explanation }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% endfor %}
+
+  <!-- الأسئلة التي لم يُجب عليها -->
+  {% set unanswered = details | rejectattr('user_ans') | list %}
+  {% if unanswered %}
+  <div class="card border-0 shadow-sm mb-3"
+       style="border-right:4px solid #64748b;border-radius:14px;background:#111827">
+    <div class="card-body">
+      <p class="fw-semibold mb-0" style="color:#64748b">
+        📭 {{ unanswered|length }} سؤال لم تُجب عليه
+      </p>
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="text-center py-4" style="color:#64748b">
+    <div style="font-size:2.5rem;margin-bottom:8px">📭</div>
+    <p>لم يتم تسليم أي إجابة في هذا الاختبار</p>
+  </div>
+  {% endif %}
+
+  <!-- أزرار التنقل -->
+  <div class="d-flex justify-content-center gap-3 mt-4 mb-5 flex-wrap">
+    {% if result.exam_type == 'daily' %}
+      <a href="{{ url_for('pro_license.daily_start') }}" class="btn btn-primary">🔄 تدريب يومي جديد</a>
+    {% elif result.exam_type == 'comprehensive' %}
+      <a href="{{ url_for('pro_license.comprehensive_exam') }}" class="btn btn-primary">🔄 اختبار شامل جديد</a>
+    {% elif result.exam_type and result.exam_type.startswith('model_') %}
+      {% set mn = result.exam_type.split('_')[1] %}
+      <a href="{{ url_for('pro_license.model_exam', model_num=mn) }}" class="btn btn-primary">🔄 أعد هذا النموذج</a>
+    {% elif result.standard_num %}
+      <a href="{{ url_for('pro_license.start_exam', standard=result.standard_num) }}" class="btn btn-primary">🔄 أعد الاختبار</a>
+    {% else %}
+      <a href="{{ url_for('pro_license.student_index') }}" class="btn btn-primary">🔄 اختبار جديد</a>
+    {% endif %}
+    <a href="{{ url_for('pro_license.student_index') }}" class="btn btn-outline-secondary">← كل المعايير</a>
+    <a href="{{ url_for('pro_license.history') }}" class="btn btn-outline-info">📋 سجل النتائج</a>
+  </div>
+
+</div>
+{% endblock %}

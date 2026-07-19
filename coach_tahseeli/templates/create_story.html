@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}إنشاء حالة{% endblock %}
+{% block extra_css %}
+<style>
+.story-creator{max-width:520px;margin:40px auto;padding:0 16px}
+.preview-box{background:#1e293b;border-radius:16px;min-height:240px;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;margin-bottom:20px;border:2px dashed var(--border)}
+.preview-box img{width:100%;height:100%;object-fit:cover;border-radius:14px}
+.preview-placeholder{color:#475569;text-align:center;padding:24px}
+.story-textarea{width:100%;background:var(--bg-elevated);border:1px solid var(--border);
+  border-radius:12px;color:#e2e8f0;padding:14px;font-size:1rem;resize:vertical;
+  min-height:100px;font-family:inherit;direction:rtl}
+.story-textarea:focus{outline:none;border-color:var(--gold)}
+.upload-btn{display:flex;align-items:center;gap:8px;background:var(--bg-elevated);
+  border:1px solid var(--border);border-radius:10px;padding:10px 16px;
+  cursor:pointer;color:#94a3b8;font-size:0.9rem;transition:all .2s}
+.upload-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="story-creator">
+  <h1 style="font-size:1.4rem;font-weight:900;margin-bottom:20px;text-align:center">
+    📸 إنشاء حالة جديدة
+  </h1>
+  <p style="color:#94a3b8;text-align:center;margin-bottom:24px;font-size:0.9rem">
+    تختفي الحالة تلقائياً بعد <strong style="color:var(--gold)">24 ساعة</strong>
+  </p>
+
+  <form method="POST" enctype="multipart/form-data">
+    <!-- معاينة الصورة -->
+    <div class="preview-box" id="previewBox">
+      <div class="preview-placeholder" id="previewPlaceholder">
+        <div style="font-size:3rem;margin-bottom:8px">📷</div>
+        <div>اختر صورة (اختياري)</div>
+      </div>
+      <img id="previewImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:14px">
+    </div>
+
+    <!-- زر رفع الصورة -->
+    <label class="upload-btn" style="margin-bottom:16px;display:inline-flex;width:100%;justify-content:center">
+      <input type="file" name="image" id="imageInput" accept="image/*"
+             style="display:none" onchange="previewImage(event)">
+      📎 اختر صورة
+    </label>
+
+    <!-- النص -->
+    <div style="margin-bottom:20px">
+      <label style="color:#94a3b8;font-size:0.85rem;margin-bottom:8px;display:block">النص (اختياري)</label>
+      <textarea name="text" class="story-textarea"
+                placeholder="اكتب شيئاً مثيراً... فكرة، تحفيز، سؤال 📝"
+                maxlength="500"></textarea>
+      <div style="color:#475569;font-size:0.78rem;text-align:left;margin-top:4px">
+        <span id="charCount">0</span>/500
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px">
+      <a href="{{ url_for('student.dashboard') }}"
+        style="flex:1;background:var(--bg-elevated);border:1px solid var(--border);
+               border-radius:12px;padding:14px;text-align:center;color:#94a3b8;
+               text-decoration:none;font-weight:600">
+        إلغاء
+      </a>
+      <button type="submit"
+        style="flex:2;background:linear-gradient(135deg,var(--gold),#ff8c00);
+               border:none;border-radius:12px;padding:14px;color:#080b14;
+               font-weight:900;font-size:1rem;cursor:pointer;font-family:inherit">
+        🚀 نشر الحالة
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+function previewImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('previewImg').src = ev.target.result;
+    document.getElementById('previewImg').style.display = 'block';
+    document.getElementById('previewPlaceholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+document.querySelector('.story-textarea').addEventListener('input', function() {
+  document.getElementById('charCount').textContent = this.value.length;
+});
+</script>
+{% endblock %}

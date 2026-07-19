@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}اختر طريقتك{% endblock %}
+{% block content %}
+<div class="choice-wrapper">
+  <div style="width:100%;max-width:900px">
+    <div style="text-align:center;margin-bottom:40px">
+      <h1 style="font-size:2.2rem;font-weight:900;margin-bottom:8px">
+        أهلاً <span class="text-gold">{{ current_user.name.split()[0] }}</span> 👋
+      </h1>
+      <p style="color:var(--text-muted);font-size:1.05rem">كيف تريد أن تبدأ؟</p>
+    </div>
+
+    <div class="choice-grid">
+      <!-- تقييم المستوى -->
+      <a href="{{ url_for('student.assessment') }}" class="choice-card primary-choice" style="text-decoration:none">
+        <span class="choice-icon">🎯</span>
+        <h2 class="choice-title">ابدأ بتقييم مستواك</h2>
+        <p class="choice-desc">
+          نبدأ معك بـ 40 سؤال في المواد الأربعة (فيزياء، كيمياء، أحياء، رياضيات)
+          لنحدد مستواك بدقة ونبني لك خطة دراسية شخصية.
+        </p>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:24px">
+          <span class="badge badge-gold">⏱️ 30 دقيقة</span>
+          <span class="badge badge-cyan">40 سؤال</span>
+          <span class="badge badge-green">خطة شخصية</span>
+        </div>
+        <div class="btn btn-primary btn-full">
+          🚀 ابدأ التقييم الآن
+        </div>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-top:10px">موصى به للمبتدئين</p>
+      </a>
+
+      <!-- الدخول المباشر -->
+      <a href="{{ url_for('student.dashboard') }}" class="choice-card secondary-choice" style="text-decoration:none">
+        <span class="choice-icon">⚡</span>
+        <h2 class="choice-title">الدخول المباشر</h2>
+        <p class="choice-desc">
+          انتقل مباشرة للوحة التحكم وابدأ التدريب على المادة التي تريدها.
+          يمكنك إجراء التقييم لاحقاً في أي وقت.
+        </p>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:24px">
+          <span class="badge badge-cyan">فوري</span>
+          <span class="badge badge-purple">4 مواد</span>
+          <span class="badge badge-gray">مسابقات</span>
+        </div>
+        <div class="btn btn-outline-gold btn-full">
+          ⚡ ادخل مباشرة
+        </div>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-top:10px">للطلاب الذين يعرفون مستواهم</p>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

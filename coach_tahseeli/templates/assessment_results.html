@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}نتيجة تقييم المستوى{% endblock %}
+{% block content %}
+<div style="max-width:720px;margin:40px auto;padding:0 24px">
+
+  <div style="text-align:center;margin-bottom:32px">
+    <div style="font-size:4rem;margin-bottom:12px">
+      {% if level == 'advanced' %}🔥{% elif level == 'intermediate' %}⚡{% else %}🌱{% endif %}
+    </div>
+    <h1 style="font-size:2rem;font-weight:900;margin-bottom:8px">نتيجة تقييمك الأولي</h1>
+    <div class="badge badge-{{ 'green' if level == 'advanced' else 'cyan' if level == 'intermediate' else 'gold' }}"
+         style="font-size:1rem;padding:10px 24px">
+      {% if level == 'advanced' %}متقدم
+      {% elif level == 'intermediate' %}متوسط
+      {% else %}مبتدئ{% endif %}
+    </div>
+  </div>
+
+  <!-- Subjects Breakdown -->
+  <div class="card card-gold" style="margin-bottom:20px">
+    <h3 style="font-weight:800;margin-bottom:20px">📊 أداؤك في كل مادة</h3>
+    {% for subj, info in subjects.items() %}
+    <div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+        <span style="font-weight:600">{{ info.icon }} {{ info.ar }}</span>
+        <span class="badge badge-{{ 'green' if subj not in weak else 'red' }}">
+          {{ '✅ جيد' if subj not in weak else '⚠️ يحتاج مراجعة' }}
+        </span>
+      </div>
+      <div style="height:8px;background:var(--bg-elevated);border-radius:4px;overflow:hidden">
+        <div style="height:100%;border-radius:4px;background:{{ 'var(--emerald)' if subj not in weak else 'var(--danger)' }};
+                    width:{{ '75' if subj not in weak else '40' }}%"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Weak Points -->
+  {% if weak %}
+  <div class="card" style="border-color:rgba(239,68,68,0.3);margin-bottom:20px">
+    <h3 style="font-weight:800;margin-bottom:16px;color:var(--danger)">⚠️ نقاط تحتاج تركيزاً</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      {% for w in weak %}
+      <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);
+                  border-radius:12px;padding:12px 20px;text-align:center">
+        <div style="font-size:1.5rem">
+          {% if w == 'physics' %}⚛️{% elif w == 'chemistry' %}🧪{% elif w == 'biology' %}🧬{% else %}📐{% endif %}
+        </div>
+        <div style="font-weight:700;margin-top:4px">
+          {% if w == 'physics' %}الفيزياء{% elif w == 'chemistry' %}الكيمياء{% elif w == 'biology' %}الأحياء{% else %}الرياضيات{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="alert alert-success">🎉 أداؤك ممتاز في جميع المواد!</div>
+  {% endif %}
+
+  <!-- Next Steps -->
+  <div class="card card-cyan" style="margin-bottom:24px">
+    <h3 style="font-weight:800;margin-bottom:16px">🗺️ خطتك الدراسية القادمة</h3>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      {% if weak %}
+      {% for w in weak %}
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-elevated);border-radius:10px">
+        <span style="font-size:1.2rem">📚</span>
+        <div>
+          <div style="font-weight:600;font-size:0.9rem">راجع مادة
+            {% if w == 'physics' %}الفيزياء{% elif w == 'chemistry' %}الكيمياء{% elif w == 'biology' %}الأحياء{% else %}الرياضيات{% endif %}
+          </div>
+          <div style="font-size:0.8rem;color:var(--text-muted)">ابدأ بالفصل الأول والأساسيات</div>
+        </div>
+        <a href="{{ url_for('student.exam', subject=w, exam_type='chapter_1') }}"
+           class="btn btn-sm btn-primary" style="margin-right:auto">ابدأ</a>
+      </div>
+      {% endfor %}
+      {% endif %}
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--bg-elevated);border-radius:10px">
+        <span style="font-size:1.2rem">🏆</span>
+        <div>
+          <div style="font-weight:600;font-size:0.9rem">انضم لمسابقة أسبوعية</div>
+          <div style="font-size:0.8rem;color:var(--text-muted)">تحدّ زملاءك وقس مستواك</div>
+        </div>
+        <a href="{{ url_for('competition.index') }}" class="btn btn-sm btn-secondary" style="margin-right:auto">المسابقات</a>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px">
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary">🏠 لوحة التحكم</a>
+    {% if weak %}
+    <a href="{{ url_for('student.exam', subject=weak[0], exam_type='daily_train') }}" class="btn btn-secondary">ابدأ التدريب الآن</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,488 @@
+{% extends 'base.html' %}
+{% block title %}إدارة المشرفين{% endblock %}
+{% block content %}
+<div class="dashboard-wrapper">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div style="padding:16px;border-bottom:1px solid var(--border);margin-bottom:16px">
+      <div class="badge badge-gold">👑 مشرف النظام</div>
+      <div style="font-weight:700;font-size:0.9rem;margin-top:8px">{{ current_user.name }}</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">الإدارة</div>
+      <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link"><span class="icon">📊</span> لوحة التحكم</a>
+      <a href="{{ url_for('admin.users') }}" class="sidebar-link"><span class="icon">👥</span> المستخدمون</a>
+      <a href="{{ url_for('admin.supervisors') }}" class="sidebar-link active" style="background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.35)"><span class="icon">🛡️</span> إدارة المشرفين</a>
+      <a href="{{ url_for('admin.questions') }}" class="sidebar-link"><span class="icon">❓</span> الأسئلة</a>
+      <a href="{{ url_for('lectures.admin_lectures', branch='tahseeli') }}" class="sidebar-link"><span class="icon">🎬</span> محاضرات التحصيلي</a>
+      <a href="{{ url_for('notifications.admin_send') }}" class="sidebar-link"><span class="icon">📢</span> إرسال إشعار</a>
+      <a href="{{ url_for('messages.admin_inbox') }}" class="sidebar-link"><span class="icon">✉️</span> صندوق الرسائل</a>
+    </div>
+    <div class="sidebar-section" style="margin-top:8px">
+      <a href="{{ url_for('auth.logout') }}" class="sidebar-link"><span class="icon">🚪</span> خروج</a>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:28px">
+      <div>
+        <h1 style="font-size:1.5rem;font-weight:800;color:#e2e8f0;margin:0">🛡️ إدارة المشرفين والإداريين</h1>
+        <p style="color:#64748b;font-size:0.82rem;margin:4px 0 0">إضافة مشرفين جدد وتعديل صلاحياتهم</p>
+      </div>
+      <button onclick="document.getElementById('addModal').style.display='flex'"
+        style="background:linear-gradient(135deg,#FFB800,#f59e0b);color:#000;border:none;
+               border-radius:12px;padding:10px 20px;font-weight:700;cursor:pointer;
+               font-family:inherit;font-size:0.88rem">
+        ➕ إضافة مشرف جديد
+      </button>
+    </div>
+
+    <!-- Stats strip -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px">
+      <div style="background:#111827;border:1px solid rgba(251,191,36,0.2);border-radius:12px;
+                  padding:14px 20px;flex:1;min-width:140px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:800;color:#FFB800">{{ admins|length }}</div>
+        <div style="font-size:0.72rem;color:#64748b;margin-top:2px">إجمالي المشرفين</div>
+      </div>
+      <div style="background:#111827;border:1px solid rgba(16,185,129,0.2);border-radius:12px;
+                  padding:14px 20px;flex:1;min-width:140px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:800;color:#10b981">
+          {{ admins|selectattr('perm_questions')|list|length }}
+        </div>
+        <div style="font-size:0.72rem;color:#64748b;margin-top:2px">لديهم صلاحية الأسئلة</div>
+      </div>
+      <div style="background:#111827;border:1px solid rgba(99,102,241,0.2);border-radius:12px;
+                  padding:14px 20px;flex:1;min-width:140px;text-align:center">
+        <div style="font-size:1.6rem;font-weight:800;color:#818cf8">
+          {{ admins|selectattr('perm_users')|list|length }}
+        </div>
+        <div style="font-size:0.72rem;color:#64748b;margin-top:2px">لديهم صلاحية المستخدمين</div>
+      </div>
+    </div>
+
+    <!-- Supervisors List -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="padding:16px 20px;border-bottom:1px solid var(--border);
+                  display:flex;align-items:center;gap:10px">
+        <span style="font-size:1rem">🛡️</span>
+        <span style="font-weight:700;color:#e2e8f0">قائمة المشرفين الحاليين</span>
+      </div>
+
+      {% if not admins %}
+      <div style="padding:40px;text-align:center;color:#475569">لا يوجد مشرفون بعد</div>
+      {% endif %}
+
+      {% for admin in admins %}
+      {% set is_owner = admin.email.lower() == 'abdualkhaliqali7@gmail.com' %}
+      <div id="row-{{ admin.id }}"
+           style="padding:18px 20px;border-bottom:1px solid var(--border);
+                  {% if is_owner %}background:rgba(251,191,36,0.04);{% endif %}
+                  transition:.2s">
+
+        <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+
+          <!-- Avatar -->
+          <div style="width:44px;height:44px;border-radius:12px;flex-shrink:0;
+                      background:linear-gradient(135deg,
+                      {% if is_owner %}#FFB800,#f59e0b{% else %}#7C3AED,#6366f1{% endif %});
+                      display:flex;align-items:center;justify-content:center;font-size:1.2rem">
+            {{ '👑' if is_owner else '🛡️' }}
+          </div>
+
+          <!-- Info -->
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-weight:700;color:#e2e8f0">{{ admin.name }}</span>
+              {% if is_owner %}
+              <span style="background:rgba(251,191,36,0.15);color:#FFB800;font-size:0.65rem;
+                           padding:2px 8px;border-radius:6px;border:1px solid rgba(251,191,36,0.3)">
+                👑 المشرف العام
+              </span>
+              {% else %}
+              <span style="background:rgba(99,102,241,0.12);color:#a5b4fc;font-size:0.65rem;
+                           padding:2px 8px;border-radius:6px;border:1px solid rgba(99,102,241,0.25)">
+                🛡️ {{ admin.admin_role or 'مشرف' }}
+              </span>
+              {% endif %}
+            </div>
+            <div style="font-size:0.75rem;color:#64748b;margin-top:2px">{{ admin.email }}</div>
+
+            <!-- Permissions badges -->
+            <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">
+              {% if admin.perm_questions %}
+              <span class="perm-badge perm-on">❓ الأسئلة</span>
+              {% else %}
+              <span class="perm-badge perm-off">❓ الأسئلة</span>
+              {% endif %}
+
+              {% if admin.perm_users %}
+              <span class="perm-badge perm-on">👥 المستخدمون</span>
+              {% else %}
+              <span class="perm-badge perm-off">👥 المستخدمون</span>
+              {% endif %}
+
+              {% if admin.perm_community %}
+              <span class="perm-badge perm-on">💬 المجتمع</span>
+              {% else %}
+              <span class="perm-badge perm-off">💬 المجتمع</span>
+              {% endif %}
+
+              {% if admin.perm_analytics %}
+              <span class="perm-badge perm-on">📊 الإحصائيات</span>
+              {% else %}
+              <span class="perm-badge perm-off">📊 الإحصائيات</span>
+              {% endif %}
+
+              {% if admin.perm_notifications %}
+              <span class="perm-badge perm-on">📢 الإشعارات</span>
+              {% else %}
+              <span class="perm-badge perm-off">📢 الإشعارات</span>
+              {% endif %}
+
+              {% if admin.perm_lectures %}
+              <span class="perm-badge perm-on">🎬 المحاضرات</span>
+              {% else %}
+              <span class="perm-badge perm-off">🎬 المحاضرات</span>
+              {% endif %}
+
+              {% if admin.receive_lecture_notifs %}
+              <span class="perm-badge" style="background:rgba(99,102,241,0.12);color:#818cf8;border-color:rgba(99,102,241,0.3)">🔔 فتح المحاضرات</span>
+              {% else %}
+              <span class="perm-badge perm-off">🔕 فتح المحاضرات</span>
+              {% endif %}
+
+              {% if admin.receive_exam_notifs %}
+              <span class="perm-badge" style="background:rgba(16,185,129,0.12);color:#34d399;border-color:rgba(16,185,129,0.3)">🔔 نتائج الاختبارات</span>
+              {% else %}
+              <span class="perm-badge perm-off">🔕 نتائج الاختبارات</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Actions -->
+          {% if not is_owner %}
+          <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+            <button onclick="openEditModal({{ admin.id }}, '{{ admin.name }}', '{{ admin.admin_role or 'مشرف' }}',
+                    {{ 'true' if admin.perm_questions else 'false' }},
+                    {{ 'true' if admin.perm_users else 'false' }},
+                    {{ 'true' if admin.perm_community else 'false' }},
+                    {{ 'true' if admin.perm_analytics else 'false' }},
+                    {{ 'true' if admin.perm_notifications else 'false' }},
+                    {{ 'true' if admin.perm_lectures else 'false' }},
+                    {{ 'true' if admin.receive_lecture_notifs else 'false' }},
+                    {{ 'true' if admin.receive_exam_notifs else 'false' }})"
+              style="background:rgba(99,102,241,0.12);color:#818cf8;border:1px solid rgba(99,102,241,0.25);
+                     border-radius:8px;padding:5px 12px;cursor:pointer;font-size:0.75rem;font-family:inherit">
+              ✏️ تعديل
+            </button>
+            <button onclick="demoteAdmin({{ admin.id }}, '{{ admin.name }}')"
+              style="background:rgba(239,68,68,0.08);color:#f87171;border:1px solid rgba(239,68,68,0.2);
+                     border-radius:8px;padding:5px 12px;cursor:pointer;font-size:0.75rem;font-family:inherit">
+              🔽 إلغاء صلاحية
+            </button>
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+  </main>
+</div>
+
+<!-- ══ Modal إضافة مشرف جديد ══ -->
+<div id="addModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);
+     z-index:999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#111827;border:1px solid rgba(99,102,241,0.3);border-radius:20px;
+              padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2 style="font-size:1.1rem;font-weight:800;color:#e2e8f0;margin:0">➕ إضافة مشرف جديد</h2>
+      <button onclick="closeAddModal()" style="background:none;border:none;color:#64748b;font-size:1.4rem;cursor:pointer">✕</button>
+    </div>
+
+    <!-- Search -->
+    <div style="margin-bottom:16px">
+      <label style="font-size:0.78rem;color:#94a3b8;display:block;margin-bottom:6px">ابحث عن مستخدم (بالاسم أو البريد)</label>
+      <input id="searchInput" type="text" placeholder="اكتب اسم المستخدم..." oninput="searchUsers(this.value)"
+        style="width:100%;background:#0d1628;border:1px solid rgba(99,102,241,0.25);border-radius:10px;
+               padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.85rem;box-sizing:border-box;outline:none">
+      <div id="searchResults" style="margin-top:6px;max-height:180px;overflow-y:auto"></div>
+    </div>
+
+    <!-- Selected user display -->
+    <div id="selectedUser" style="display:none;background:rgba(99,102,241,0.08);border:1px solid rgba(99,102,241,0.2);
+         border-radius:10px;padding:12px 14px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#7C3AED,#6366f1);
+                    display:flex;align-items:center;justify-content:center;font-size:1rem">👤</div>
+        <div>
+          <div id="selectedName" style="font-weight:700;font-size:0.88rem;color:#e2e8f0"></div>
+          <div id="selectedEmail" style="font-size:0.72rem;color:#64748b"></div>
+        </div>
+        <button onclick="clearSelection()" style="margin-right:auto;background:none;border:none;color:#64748b;cursor:pointer;font-size:1rem">✕</button>
+      </div>
+    </div>
+
+    <input type="hidden" id="addUserId" value="">
+
+    <!-- Role -->
+    <div style="margin-bottom:14px">
+      <label style="font-size:0.78rem;color:#94a3b8;display:block;margin-bottom:6px">اللقب / الدور</label>
+      <input id="addRole" type="text" value="مشرف"
+        style="width:100%;background:#0d1628;border:1px solid rgba(255,255,255,0.1);border-radius:10px;
+               padding:9px 14px;color:#e2e8f0;font-family:inherit;font-size:0.85rem;box-sizing:border-box;outline:none">
+    </div>
+
+    <!-- Permissions -->
+    <div style="margin-bottom:20px">
+      <label style="font-size:0.78rem;color:#94a3b8;display:block;margin-bottom:10px">الصلاحيات</label>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label class="perm-row"><input type="checkbox" id="add_pq"> <span>❓ إدارة الأسئلة</span></label>
+        <label class="perm-row"><input type="checkbox" id="add_pu"> <span>👥 إدارة المستخدمين</span></label>
+        <label class="perm-row"><input type="checkbox" id="add_pc"> <span>💬 إشراف المجتمع</span></label>
+        <label class="perm-row"><input type="checkbox" id="add_pa"> <span>📊 عرض الإحصائيات</span></label>
+        <label class="perm-row"><input type="checkbox" id="add_pn"> <span>📢 إرسال الإشعارات</span></label>
+        <label class="perm-row"><input type="checkbox" id="add_pl"> <span>🎬 إدارة المحاضرات</span></label>
+        <label class="perm-row">
+          <input type="checkbox" id="add_all" onchange="toggleAllPerms(this.checked)">
+          <span style="color:#FFB800;font-weight:700">⭐ كل الصلاحيات</span>
+        </label>
+      </div>
+      <div style="margin-top:10px">
+        <label style="font-size:0.78rem;color:#94a3b8;display:block;margin-bottom:8px">إشعارات تصل لهذا المشرف</label>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label class="perm-row"><input type="checkbox" id="add_rln" checked> <span>🔔 عندما يفتح طالب محاضرة</span></label>
+          <label class="perm-row"><input type="checkbox" id="add_ren" checked> <span>🔔 عندما يُتم طالب اختباراً</span></label>
+        </div>
+      </div>
+    </div>
+
+    <button onclick="addSupervisor()"
+      style="width:100%;background:linear-gradient(135deg,#7C3AED,#6366f1);color:#fff;border:none;
+             border-radius:12px;padding:12px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.9rem">
+      ✅ تعيين مشرفاً
+    </button>
+  </div>
+</div>
+
+<!-- ══ Modal تعديل صلاحيات مشرف ══ -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);
+     z-index:999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#111827;border:1px solid rgba(251,191,36,0.25);border-radius:20px;
+              padding:28px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2 style="font-size:1.1rem;font-weight:800;color:#e2e8f0;margin:0">✏️ تعديل صلاحيات: <span id="editName"></span></h2>
+      <button onclick="document.getElementById('editModal').style.display='none'"
+              style="background:none;border:none;color:#64748b;font-size:1.4rem;cursor:pointer">✕</button>
+    </div>
+
+    <input type="hidden" id="editUserId">
+
+    <!-- Role -->
+    <div style="margin-bottom:14px">
+      <label style="font-size:0.78rem;color:#94a3b8;display:block;margin-bottom:6px">اللقب / الدور</label>
+      <input id="editRole" type="text"
+        style="width:100%;background:#0d1628;border:1px solid rgba(255,255,255,0.1);border-radius:10px;
+               padding:9px 14px;color:#e2e8f0;font-family:inherit;font-size:0.85rem;box-sizing:border-box;outline:none">
+    </div>
+
+    <!-- Permissions -->
+    <div style="margin-bottom:20px">
+      <label style="font-size:0.78rem;color:#94a3b8;display:block;margin-bottom:10px">الصلاحيات</label>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label class="perm-row"><input type="checkbox" id="edit_pq"> <span>❓ إدارة الأسئلة</span></label>
+        <label class="perm-row"><input type="checkbox" id="edit_pu"> <span>👥 إدارة المستخدمين</span></label>
+        <label class="perm-row"><input type="checkbox" id="edit_pc"> <span>💬 إشراف المجتمع</span></label>
+        <label class="perm-row"><input type="checkbox" id="edit_pa"> <span>📊 عرض الإحصائيات</span></label>
+        <label class="perm-row"><input type="checkbox" id="edit_pn"> <span>📢 إرسال الإشعارات</span></label>
+        <label class="perm-row"><input type="checkbox" id="edit_pl"> <span>🎬 إدارة المحاضرات</span></label>
+        <label class="perm-row">
+          <input type="checkbox" id="edit_all" onchange="toggleAllEditPerms(this.checked)">
+          <span style="color:#FFB800;font-weight:700">⭐ كل الصلاحيات</span>
+        </label>
+      </div>
+      <div style="margin-top:10px">
+        <label style="font-size:0.78rem;color:#94a3b8;display:block;margin-bottom:8px">إشعارات تصل لهذا المشرف</label>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <label class="perm-row"><input type="checkbox" id="edit_rln"> <span>🔔 عندما يفتح طالب محاضرة</span></label>
+          <label class="perm-row"><input type="checkbox" id="edit_ren"> <span>🔔 عندما يُتم طالب اختباراً</span></label>
+        </div>
+      </div>
+    </div>
+
+    <button onclick="saveEdit()"
+      style="width:100%;background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;
+             border-radius:12px;padding:12px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.9rem">
+      💾 حفظ التعديلات
+    </button>
+  </div>
+</div>
+
+<style>
+.perm-badge { font-size:0.68rem; padding:3px 8px; border-radius:6px; border:1px solid; }
+.perm-on  { background:rgba(16,185,129,0.12); color:#34d399; border-color:rgba(16,185,129,0.3); }
+.perm-off { background:rgba(100,116,139,0.08); color:#475569; border-color:rgba(100,116,139,0.15); }
+.perm-row {
+  display:flex; align-items:center; gap:10px; padding:9px 14px;
+  background:rgba(255,255,255,0.03); border-radius:9px; border:1px solid rgba(255,255,255,0.06);
+  cursor:pointer; color:#cbd5e1; font-size:0.83rem; transition:.15s;
+}
+.perm-row:hover { background:rgba(99,102,241,0.08); border-color:rgba(99,102,241,0.2); }
+.perm-row input[type="checkbox"] { width:16px; height:16px; accent-color:#7C3AED; flex-shrink:0; }
+</style>
+
+<script>
+var _searchTimer = null;
+
+function searchUsers(q) {
+  if (_searchTimer) clearTimeout(_searchTimer);
+  if (q.length < 2) { document.getElementById('searchResults').innerHTML = ''; return; }
+  _searchTimer = setTimeout(async function() {
+    const r = await fetch('/admin/supervisors/search?q=' + encodeURIComponent(q));
+    const data = await r.json();
+    const box = document.getElementById('searchResults');
+    if (!data.length) {
+      box.innerHTML = '<div style="padding:10px;color:#64748b;font-size:0.8rem;text-align:center">لا توجد نتائج</div>';
+      return;
+    }
+    box.innerHTML = data.map(u => `
+      <div onclick="selectUser(${u.id},'${u.name.replace(/'/g,"\\'")}','${u.email}')"
+           style="padding:10px 14px;cursor:pointer;border-radius:8px;margin-bottom:4px;
+                  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+                  display:flex;align-items:center;gap:10px;transition:.15s"
+           onmouseover="this.style.background='rgba(99,102,241,0.12)'"
+           onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+        <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#7C3AED,#6366f1);
+                    display:flex;align-items:center;justify-content:center;font-size:0.9rem;flex-shrink:0">👤</div>
+        <div>
+          <div style="font-weight:600;color:#e2e8f0;font-size:0.85rem">${u.name}</div>
+          <div style="color:#64748b;font-size:0.72rem">${u.email}</div>
+        </div>
+      </div>`).join('');
+  }, 300);
+}
+
+function selectUser(id, name, email) {
+  document.getElementById('addUserId').value = id;
+  document.getElementById('selectedName').textContent = name;
+  document.getElementById('selectedEmail').textContent = email;
+  document.getElementById('selectedUser').style.display = 'block';
+  document.getElementById('searchResults').innerHTML = '';
+  document.getElementById('searchInput').value = '';
+}
+
+function clearSelection() {
+  document.getElementById('addUserId').value = '';
+  document.getElementById('selectedUser').style.display = 'none';
+}
+
+function closeAddModal() {
+  document.getElementById('addModal').style.display = 'none';
+  clearSelection();
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+}
+
+function toggleAllPerms(on) {
+  ['add_pq','add_pu','add_pc','add_pa','add_pn','add_pl'].forEach(id => {
+    document.getElementById(id).checked = on;
+  });
+}
+
+function toggleAllEditPerms(on) {
+  ['edit_pq','edit_pu','edit_pc','edit_pa','edit_pn','edit_pl'].forEach(id => {
+    document.getElementById(id).checked = on;
+  });
+}
+
+async function addSupervisor() {
+  const uid = document.getElementById('addUserId').value;
+  if (!uid) { alert('اختر مستخدماً أولاً من نتائج البحث'); return; }
+  const role = document.getElementById('addRole').value.trim() || 'مشرف';
+  const payload = {
+    action: 'promote', role,
+    perm_questions:          document.getElementById('add_pq').checked,
+    perm_users:              document.getElementById('add_pu').checked,
+    perm_community:          document.getElementById('add_pc').checked,
+    perm_analytics:          document.getElementById('add_pa').checked,
+    perm_notifications:      document.getElementById('add_pn').checked,
+    perm_lectures:           document.getElementById('add_pl').checked,
+    receive_lecture_notifs:  document.getElementById('add_rln').checked,
+    receive_exam_notifs:     document.getElementById('add_ren').checked,
+  };
+  const r = await fetch('/admin/supervisors/' + uid + '/update', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const d = await r.json();
+  if (d.success) { location.reload(); }
+  else { alert('حدث خطأ: ' + (d.error || '')); }
+}
+
+function openEditModal(uid, name, role, pq, pu, pc, pa, pn, pl, rln, ren) {
+  document.getElementById('editUserId').value = uid;
+  document.getElementById('editName').textContent = name;
+  document.getElementById('editRole').value = role;
+  document.getElementById('edit_pq').checked = pq;
+  document.getElementById('edit_pu').checked = pu;
+  document.getElementById('edit_pc').checked = pc;
+  document.getElementById('edit_pa').checked = pa;
+  document.getElementById('edit_pn').checked = pn;
+  document.getElementById('edit_pl').checked = pl;
+  document.getElementById('edit_rln').checked = rln !== false;
+  document.getElementById('edit_ren').checked = ren !== false;
+  const allOn = pq && pu && pc && pa && pn && pl;
+  document.getElementById('edit_all').checked = allOn;
+  document.getElementById('editModal').style.display = 'flex';
+}
+
+async function saveEdit() {
+  const uid = document.getElementById('editUserId').value;
+  const role = document.getElementById('editRole').value.trim() || 'مشرف';
+  const payload = {
+    action: 'promote', role,
+    perm_questions:          document.getElementById('edit_pq').checked,
+    perm_users:              document.getElementById('edit_pu').checked,
+    perm_community:          document.getElementById('edit_pc').checked,
+    perm_analytics:          document.getElementById('edit_pa').checked,
+    perm_notifications:      document.getElementById('edit_pn').checked,
+    perm_lectures:           document.getElementById('edit_pl').checked,
+    receive_lecture_notifs:  document.getElementById('edit_rln').checked,
+    receive_exam_notifs:     document.getElementById('edit_ren').checked,
+  };
+  const r = await fetch('/admin/supervisors/' + uid + '/update', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const d = await r.json();
+  if (d.success) { location.reload(); }
+  else { alert('حدث خطأ: ' + (d.error || '')); }
+}
+
+async function demoteAdmin(uid, name) {
+  if (!confirm('هل تريد إلغاء صلاحيات "' + name + '"؟\nسيصبح مستخدماً عادياً.')) return;
+  const r = await fetch('/admin/supervisors/' + uid + '/update', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({action: 'demote'})
+  });
+  const d = await r.json();
+  if (d.success) { location.reload(); }
+  else { alert('حدث خطأ: ' + (d.error || '')); }
+}
+
+/* إغلاق الـ Modal بالنقر خارجه */
+['addModal','editModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+  });
+});
+</script>
+{% endblock %}

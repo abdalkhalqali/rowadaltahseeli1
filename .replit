@@ -1,0 +1,103 @@
+modules = ["python-3.12", "web", "nodejs-20", "bash"]
+[agent]
+expertMode = true
+stack = "BEST_EFFORT_FALLBACK"
+
+[nix]
+channel = "stable-25_05"
+packages = ["freetype", "gettext", "gumbo", "harfbuzz", "jbig2dec", "lcms2", "libimagequant", "libjpeg", "libjpeg_turbo", "libtiff", "libwebp", "libxcrypt", "mupdf", "openjpeg", "swig", "tcl", "tk", "xcbuild", "zlib"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Bot Status"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Start application"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "GitHub Auto Sync"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Lecture Notebook"
+
+[[workflows.workflow]]
+name = "Bot Status"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python status.py"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "Start application"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python run_platform.py"
+waitForPort = 5000
+
+[[workflows.workflow]]
+name = "GitHub Auto Sync"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python auto_sync.py"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow]]
+name = "Lecture Notebook"
+author = "agent"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd lecture-notebook && npx expo start --port 8080 --web"
+waitForPort = 8080
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[[ports]]
+localPort = 8081
+externalPort = 8081
+
+[deployment]
+run = ["python3", "run_all.py"]
+deploymentTarget = "vm"
+healthCheckPath = "/"  # <-- أضف هذا
+
+[userenv]
+
+[userenv.shared]
+MAIL_SERVER = "smtp.gmail.com"
+MAIL_PORT = "587"
+MAIL_USERNAME = "abdualkhaliqali115@gmail.com"
+MAIL_USE_TLS = "true"

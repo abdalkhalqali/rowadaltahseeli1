@@ -1,0 +1,1114 @@
+{% extends 'base.html' %}
+{% block title %}{{ lec.title }}{% endblock %}
+{% block content %}
+<div class="dashboard-wrapper">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div style="padding:16px 16px 8px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);margin-bottom:16px">
+      <div class="avatar" style="width:44px;height:44px;font-size:1.2rem">{{ current_user.name[0] }}</div>
+      <div style="font-weight:700;font-size:0.95rem">{{ current_user.name }}</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">التنقل</div>
+      <a href="{{ url_for('student.dashboard') }}" class="sidebar-link"><span class="icon">🏠</span> لوحتي</a>
+      <a href="{{ url_for('lectures.student_lectures', branch=lec.branch) }}" class="sidebar-link active"><span class="icon">🎬</span> العودة للمحاضرات</a>
+    </div>
+    {% if related %}
+    <div class="sidebar-section" style="margin-top:8px">
+      <div class="sidebar-label">محاضرات ذات صلة</div>
+      {% for r in related %}
+      <a href="{{ url_for('lectures.watch_lecture', lid=r.id) }}"
+        class="sidebar-link" style="font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+        <span class="icon">▶️</span> {{ r.title[:30] }}{% if r.title|length > 30 %}...{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </aside>
+
+  <main class="main-content">
+
+    <!-- Breadcrumb -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:0.85rem;color:#94a3b8;flex-wrap:wrap">
+      <a href="{{ url_for('lectures.student_lectures', branch=lec.branch) }}"
+        style="color:#6366f1;text-decoration:none">
+        {% if lec.branch == 'tahseeli' %}🎬 محاضرات التحصيلي{% else %}🏅 الرخصة المهنية{% endif %}
+      </a>
+      <span>›</span>
+      <span style="color:#e2e8f0">{{ lec.title }}</span>
+    </div>
+
+    <!-- ═══ مشغل الفيديو الموحّد ═══ -->
+    <div id="videoContainer" style="position:relative;background:linear-gradient(135deg,#050810,#0a0d1a);
+         border-radius:20px;overflow:hidden;margin-bottom:24px;
+         box-shadow:0 0 0 1px rgba(99,102,241,0.25),0 24px 70px rgba(0,0,0,0.8)">
+
+      <!-- شريط العنوان العلوي -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;
+                  background:rgba(0,0,0,0.5);border-bottom:1px solid rgba(99,102,241,0.12)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:9px;height:9px;border-radius:50%;background:#ef4444"></div>
+          <div style="width:9px;height:9px;border-radius:50%;background:#f59e0b"></div>
+          <div style="width:9px;height:9px;border-radius:50%;background:#10b981"></div>
+          <span style="color:#94a3b8;font-size:0.8rem;margin-right:6px">▶ {{ lec.title[:55] }}{% if lec.title|length > 55 %}...{% endif %}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          {% if lec.total_views > 0 %}
+          <span style="color:#64748b;font-size:0.75rem">👁 {{ lec.total_views }}</span>
+          {% endif %}
+          {# زر PiP فقط للفيديو المباشر (ليس iframe) #}
+          {% if not lec.is_youtube() and not lec.is_gdrive() %}
+          <button id="btnPiP" onclick="requestNativePiP()"
+            style="background:rgba(99,102,241,0.12);color:#818cf8;border:1px solid rgba(99,102,241,0.25);
+                   border-radius:7px;padding:4px 10px;cursor:pointer;font-size:0.74rem;font-family:inherit">
+            ⧉ نافذة عائمة
+          </button>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- حاوية الفيديو — نسبة 16:9 ثابتة -->
+      <div id="videoRatioWrap" style="position:relative;padding-top:56.25%;background:#000">
+
+        {% if lec.is_youtube() %}
+        {# ── YouTube: iframe API مع تحكم كامل ── #}
+        <div id="ytPlayerDiv" style="position:absolute;top:0;left:0;width:100%;height:100%"></div>
+        {# طبقة شفافة تحجب كل علامات YouTube وتستقبل النقر بدلاً من الـ iframe #}
+        <div id="ytOverlay" onclick="vTogglePlay()"
+          style="position:absolute;top:0;left:0;width:100%;height:100%;
+                 background:transparent;cursor:pointer;z-index:10;
+                 -webkit-tap-highlight-color:transparent">
+        </div>
+
+        {% elif lec.is_gdrive() %}
+        {# ── Google Drive: iframe نظيف ── #}
+        <iframe id="driveFrame"
+          src="{{ lec.embed_url() }}"
+          style="position:absolute;top:0;left:0;width:100%;height:100%;border:none"
+          allow="autoplay;encrypted-media;fullscreen"
+          allowfullscreen
+          referrerpolicy="no-referrer">
+        </iframe>
+
+        {% elif lec.is_telegram() %}
+        {# ── Telegram: تضمين رسالة القناة العامة ── #}
+        <iframe id="tgFrame"
+          src="{{ lec.embed_url() }}"
+          style="position:absolute;top:0;left:0;width:100%;height:100%;border:none"
+          allow="autoplay;encrypted-media;fullscreen"
+          allowfullscreen
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms">
+        </iframe>
+
+        {% else %}
+        {# ── رابط مباشر mp4/webm: عنصر video أصيل ── #}
+        <video id="nativeVideo"
+          src="{{ lec.video_src() }}"
+          style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000"
+          preload="metadata"
+          playsinline>
+        </video>
+        {% endif %}
+
+      </div>
+
+      {# ══ شريط التحكم ══
+         • YouTube  → شريط كامل (skip / play / progress / volume / speed / quality / fullscreen)
+         • GDrive   → شريط مبسّط (fullscreen فقط — المشغل المدمج يتولى الباقي)
+         • مباشر   → شريط كامل مثل YouTube لكن عبر HTML5 API
+      #}
+
+      {% if lec.is_iframe_only() %}
+      {# لا شيء — المشغل المدمج يحتوي على كل أدوات التحكم #}
+
+      {% else %}
+      {# شريط التحكم الكامل — YouTube وروابط مباشرة #}
+      <div id="playerControls" style="background:linear-gradient(0deg,rgba(0,0,0,0.95),rgba(0,0,0,0.75));
+           padding:10px 16px 12px;border-top:1px solid rgba(99,102,241,0.1)">
+
+        <!-- شريط التقدم -->
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span id="vCurrent" style="color:#94a3b8;font-size:0.72rem;min-width:36px;text-align:center">0:00</span>
+          <div id="vProgressTrack" onclick="vSeek(event)" title="اضغط للتخطي"
+               style="flex:1;height:6px;background:rgba(255,255,255,0.15);border-radius:99px;
+                      cursor:pointer;position:relative;overflow:visible">
+            <div id="vProgressBar" style="height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);
+                 border-radius:99px;width:0%;transition:width 0.25s linear;position:relative;pointer-events:none">
+              <div style="position:absolute;right:-5px;top:-3.5px;width:12px;height:12px;
+                          background:#a5b4fc;border-radius:50%;box-shadow:0 0 6px rgba(99,102,241,0.8)"></div>
+            </div>
+          </div>
+          <span id="vDuration" style="color:#94a3b8;font-size:0.72rem;min-width:36px;text-align:center">0:00</span>
+        </div>
+
+        <!-- أزرار التحكم -->
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <button onclick="vSkip(-10)" title="تراجع 10 ثوانٍ"
+            style="background:rgba(255,255,255,0.08);color:#e2e8f0;border:none;border-radius:8px;
+                   padding:7px 12px;cursor:pointer;font-size:0.82rem;font-family:inherit">⏮ 10ث</button>
+
+          <button id="vPlayBtn" onclick="vTogglePlay()"
+            style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;
+                   border-radius:10px;padding:8px 20px;cursor:pointer;font-size:1rem;font-family:inherit;
+                   min-width:52px;box-shadow:0 4px 14px rgba(99,102,241,0.4)">▶</button>
+
+          <button onclick="vSkip(10)" title="تقدم 10 ثوانٍ"
+            style="background:rgba(255,255,255,0.08);color:#e2e8f0;border:none;border-radius:8px;
+                   padding:7px 12px;cursor:pointer;font-size:0.82rem;font-family:inherit">10ث ⏭</button>
+
+          <div style="display:flex;align-items:center;gap:6px">
+            <button id="vMuteBtn" onclick="vToggleMute()" title="كتم/تشغيل الصوت"
+              style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:1rem;padding:2px 4px">🔊</button>
+            <input id="vVolSlider" type="range" min="0" max="100" value="100"
+              oninput="vSetVolume(this.value)"
+              style="width:70px;accent-color:#6366f1;cursor:pointer">
+          </div>
+
+          <select id="vSpeedSelect" onchange="vSetSpeed(this.value)"
+            style="background:rgba(255,255,255,0.08);color:#e2e8f0;border:1px solid rgba(255,255,255,0.15);
+                   border-radius:8px;padding:5px 8px;font-size:0.78rem;cursor:pointer;font-family:inherit">
+            <option value="0.5">0.5×</option>
+            <option value="0.75">0.75×</option>
+            <option value="1" selected>1× (عادي)</option>
+            <option value="1.25">1.25×</option>
+            <option value="1.5">1.5×</option>
+            <option value="2">2×</option>
+          </select>
+
+          {% if lec.is_youtube() %}
+          <select id="ytQualitySelect" onchange="ytSetQuality(this.value)"
+            style="background:rgba(255,255,255,0.08);color:#e2e8f0;border:1px solid rgba(255,255,255,0.15);
+                   border-radius:8px;padding:5px 8px;font-size:0.78rem;cursor:pointer;font-family:inherit">
+            <option value="auto" selected>🎬 جودة تلقائية</option>
+            <option value="hd1080">🔥 1080p HD</option>
+            <option value="hd720">⭐ 720p</option>
+            <option value="large">▶ 480p</option>
+            <option value="medium">📱 360p</option>
+            <option value="small">💾 240p</option>
+          </select>
+          {% endif %}
+
+          <button id="fsBtn" onclick="toggleFullscreen()" title="ملء الشاشة"
+            style="margin-right:auto;background:rgba(255,255,255,0.08);color:#e2e8f0;border:none;
+                   border-radius:8px;padding:7px 14px;cursor:pointer;font-size:0.84rem;font-family:inherit">⛶ ملء الشاشة</button>
+        </div>
+      </div>
+      {% endif %}
+
+    </div><!-- /videoContainer -->
+
+    <!-- ══ سكريبت المشغل ══ -->
+    <script>
+    /* ══ ملء الشاشة — يعمل على الموبايل وDesktop ══ */
+    function toggleFullscreen(){
+      var c    = document.getElementById('videoContainer');
+      var inFS = document.fullscreenElement || document.webkitFullscreenElement ||
+                 document.mozFullScreenElement || document.msFullscreenElement;
+      if(!inFS){
+        if(c.requestFullscreen)             c.requestFullscreen();
+        else if(c.webkitRequestFullscreen)  c.webkitRequestFullscreen();
+        else if(c.mozRequestFullScreen)     c.mozRequestFullScreen();
+        else if(c.msRequestFullscreen)      c.msRequestFullscreen();
+        else {
+          /* iOS Safari fallback: native video fullscreen */
+          var vid = document.getElementById('nativeVideo');
+          if(vid && vid.webkitEnterFullscreen){ vid.webkitEnterFullscreen(); return; }
+          /* iOS YouTube iframe fallback */
+          var fr = document.querySelector('#ytPlayerDiv iframe, #driveFrame, #tgFrame');
+          if(fr && fr.webkitRequestFullscreen) fr.webkitRequestFullscreen();
+        }
+      } else {
+        if(document.exitFullscreen)             document.exitFullscreen();
+        else if(document.webkitExitFullscreen)  document.webkitExitFullscreen();
+        else if(document.mozCancelFullScreen)   document.mozCancelFullScreen();
+        else if(document.msExitFullscreen)      document.msExitFullscreen();
+      }
+    }
+
+    /* ── إعادة رسم الحاوية عند الدخول/الخروج من ملء الشاشة ── */
+    function _onFSChange(){
+      var btn  = document.getElementById('fsBtn');
+      var wrap = document.getElementById('videoRatioWrap');
+      var inFS = document.fullscreenElement || document.webkitFullscreenElement ||
+                 document.mozFullScreenElement || document.msFullscreenElement;
+      if(btn) btn.textContent = inFS ? '✕ خروج' : '⛶ ملء الشاشة';
+      if(wrap){
+        if(inFS){
+          /* داخل الـ fullscreen: الـ wrap يملأ المساحة المتبقية */
+          wrap.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;padding-top:0;background:#000;';
+        } else {
+          /* خارج الـ fullscreen: نسبة 16:9 العادية */
+          wrap.style.cssText = 'position:relative;padding-top:56.25%;background:#000;';
+        }
+      }
+    }
+    ['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange']
+      .forEach(function(ev){ document.addEventListener(ev, _onFSChange); });
+
+    function fmtTime(s){ s=Math.floor(s||0); return Math.floor(s/60)+':'+(s%60<10?'0':'')+s%60; }
+    </script>
+
+    {% if lec.is_youtube() %}
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script>
+    var ytPlayer, ytReady=false, ytTimer=null;
+    var YT_VIDEO_ID=(function(){ var m='{{ lec.embed_url() }}'.match(/\/embed\/([^?&]+)/); return m?m[1]:''; })();
+
+    function onYouTubeIframeAPIReady(){
+      ytPlayer=new YT.Player('ytPlayerDiv',{
+        videoId:YT_VIDEO_ID,
+        playerVars:{rel:0,modestbranding:1,controls:0,enablejsapi:1,origin:window.location.origin},
+        events:{
+          onReady:function(){ ytReady=true; startYtTimer(); },
+          onStateChange:function(e){
+            var b=document.getElementById('vPlayBtn'); if(!b) return;
+            b.textContent=(e.data===YT.PlayerState.PLAYING)?'⏸':'▶';
+          }
+        }
+      });
+    }
+    function startYtTimer(){
+      if(ytTimer) clearInterval(ytTimer);
+      ytTimer=setInterval(function(){
+        if(!ytReady||typeof ytPlayer.getCurrentTime!=='function') return;
+        var cur=ytPlayer.getCurrentTime()||0, dur=ytPlayer.getDuration()||0;
+        document.getElementById('vCurrent').textContent=fmtTime(cur);
+        document.getElementById('vDuration').textContent=fmtTime(dur);
+        document.getElementById('vProgressBar').style.width=(dur>0?cur/dur*100:0)+'%';
+      },500);
+    }
+    function vTogglePlay(){ if(!ytReady) return; ytPlayer.getPlayerState()===YT.PlayerState.PLAYING?ytPlayer.pauseVideo():ytPlayer.playVideo(); }
+    function vSkip(s){ if(!ytReady) return; ytPlayer.seekTo(ytPlayer.getCurrentTime()+s,true); }
+    function vSeek(e){ if(!ytReady) return; var t=document.getElementById('vProgressTrack'),r=t.getBoundingClientRect(); ytPlayer.seekTo((e.clientX-r.left)/r.width*ytPlayer.getDuration(),true); }
+    function vSetVolume(v){ if(!ytReady) return; ytPlayer.setVolume(parseInt(v)); document.getElementById('vMuteBtn').textContent=v==0?'🔇':'🔊'; }
+    function vToggleMute(){ if(!ytReady) return; if(ytPlayer.isMuted()){ytPlayer.unMute();document.getElementById('vMuteBtn').textContent='🔊';document.getElementById('vVolSlider').value=ytPlayer.getVolume();}else{ytPlayer.mute();document.getElementById('vMuteBtn').textContent='🔇';document.getElementById('vVolSlider').value=0;} }
+    function vSetSpeed(v){ if(!ytReady) return; ytPlayer.setPlaybackRate(parseFloat(v)); }
+    function ytSetQuality(v){ if(!ytReady) return; if(v==='auto'){ytPlayer.setPlaybackQualityRange('small','hd1080');return;} ytPlayer.setPlaybackQuality(v); }
+    document.addEventListener('keydown',function(e){ if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return; if(e.code==='Space'){e.preventDefault();vTogglePlay();} if(e.code==='ArrowRight'){e.preventDefault();vSkip(10);} if(e.code==='ArrowLeft'){e.preventDefault();vSkip(-10);} if(e.code==='KeyF') toggleFullscreen(); });
+    </script>
+
+    {% elif not lec.is_gdrive() %}
+    {# ── رابط مباشر (mp4 / webm / ...) ── #}
+    <script>
+    var vid=document.getElementById('nativeVideo'), vTimer=null;
+    function startNativeTimer(){ if(vTimer) clearInterval(vTimer); vTimer=setInterval(function(){ if(!vid||isNaN(vid.duration)) return; document.getElementById('vCurrent').textContent=fmtTime(vid.currentTime); document.getElementById('vDuration').textContent=fmtTime(vid.duration); document.getElementById('vProgressBar').style.width=(vid.duration>0?vid.currentTime/vid.duration*100:0)+'%'; },500); }
+    vid.addEventListener('loadedmetadata',startNativeTimer);
+    vid.addEventListener('play', function(){ document.getElementById('vPlayBtn').textContent='⏸'; });
+    vid.addEventListener('pause',function(){ document.getElementById('vPlayBtn').textContent='▶'; });
+    vid.addEventListener('ended',function(){ document.getElementById('vPlayBtn').textContent='▶'; });
+    function vTogglePlay(){ vid.paused?vid.play():vid.pause(); }
+    function vSkip(s){ vid.currentTime=Math.max(0,Math.min(vid.duration||0,vid.currentTime+s)); }
+    function vSeek(e){ if(!vid.duration) return; var t=document.getElementById('vProgressTrack'),r=t.getBoundingClientRect(); vid.currentTime=((e.clientX-r.left)/r.width)*vid.duration; }
+    function vSetVolume(v){ vid.volume=parseInt(v)/100; vid.muted=(v==0); document.getElementById('vMuteBtn').textContent=(v==0)?'🔇':'🔊'; }
+    function vToggleMute(){ vid.muted=!vid.muted; document.getElementById('vMuteBtn').textContent=vid.muted?'🔇':'🔊'; document.getElementById('vVolSlider').value=vid.muted?0:Math.round(vid.volume*100); }
+    function vSetSpeed(v){ vid.playbackRate=parseFloat(v); }
+    async function requestNativePiP(){ var b=document.getElementById('btnPiP'); try{ if(document.pictureInPictureElement){await document.exitPictureInPicture();b.textContent='⧉ نافذة عائمة';}else{await vid.requestPictureInPicture();b.textContent='✕ إغلاق';} }catch(e){ console.warn('PiP:',e.message); } }
+    document.addEventListener('keydown',function(e){ if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return; if(e.code==='Space'){e.preventDefault();vTogglePlay();} if(e.code==='ArrowRight'){e.preventDefault();vSkip(10);} if(e.code==='ArrowLeft'){e.preventDefault();vSkip(-10);} if(e.code==='KeyF') toggleFullscreen(); });
+    startNativeTimer();
+    </script>
+    {% endif %}
+
+    <!-- معرّف المحاضرة للبوت الذكي -->
+    <div id="currentLectureId" data-id="{{ lec.id }}" style="display:none"></div>
+
+    <!-- ═══ شريط إحصائيات المشاهدة ═══ -->
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;
+                padding:12px 16px;background:rgba(16,185,129,0.05);
+                border:1px solid rgba(16,185,129,0.15);border-radius:14px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="width:32px;height:32px;border-radius:8px;background:rgba(16,185,129,0.12);
+                    display:flex;align-items:center;justify-content:center;font-size:1rem">📊</div>
+        <div>
+          <div style="font-size:0.72rem;color:#64748b">تقدمك في المحاضرة</div>
+          <div style="font-size:0.82rem;font-weight:700;color:#e2e8f0" id="watchStats">
+            {% if user_view and user_view.watch_secs and user_view.watch_secs > 0 %}
+              ⏱ شاهدت {{ (user_view.watch_secs // 60) }} دقيقة
+              {% if user_view.completed %} ✅ مكتملة{% endif %}
+            {% else %}
+              ابدأ المشاهدة — سيُسجَّل تقدمك تلقائياً
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div style="margin-right:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        {% if lec.transcript %}
+        <span style="background:rgba(99,102,241,0.12);color:#a5b4fc;
+                     border:1px solid rgba(99,102,241,0.25);border-radius:8px;
+                     padding:4px 10px;font-size:0.75rem">
+          📝 يوجد نص مفرَّغ — المساعد يعرفه
+        </span>
+        {% endif %}
+        <button onclick="openChatWithLecture()"
+          style="background:rgba(99,102,241,0.12);color:#6366f1;
+                 border:1px solid rgba(99,102,241,0.25);border-radius:8px;
+                 padding:5px 12px;cursor:pointer;font-size:0.78rem;font-family:inherit">
+          🤖 اسأل المساعد عن هذه المحاضرة
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ نص المحاضرة (للطالب + المالك) ═══ -->
+    {% if lec.transcript %}
+    <div id="transcriptBox" style="background:linear-gradient(135deg,rgba(99,102,241,0.08),rgba(139,92,246,0.05));
+         border:1px solid rgba(99,102,241,0.2);border-radius:16px;margin-bottom:20px">
+      <button onclick="toggleTranscript()" id="transcriptToggle"
+              style="width:100%;display:flex;align-items:center;justify-content:space-between;
+                     padding:14px 18px;background:none;border:none;cursor:pointer;
+                     font-family:inherit;color:#e2e8f0">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:34px;height:34px;border-radius:9px;
+                      background:linear-gradient(135deg,#6366f1,#8b5cf6);
+                      display:flex;align-items:center;justify-content:center;font-size:1rem">📝</div>
+          <div style="text-align:right">
+            <div style="font-weight:800;font-size:0.95rem">نص المحاضرة</div>
+            <div style="font-size:0.75rem;color:#64748b">اضغط لقراءة النص الكامل للمحاضرة</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button onclick="event.stopPropagation();openChatWithLecture()"
+                  style="background:rgba(99,102,241,0.15);color:#a5b4fc;border:1px solid rgba(99,102,241,0.3);
+                         border-radius:8px;padding:5px 12px;cursor:pointer;font-size:0.8rem;font-family:inherit">
+            🤖 اسأل عنها
+          </button>
+          <span id="transcriptChevron" style="color:#64748b;font-size:1rem;transition:.3s">▼</span>
+        </div>
+      </button>
+      <div id="transcriptContent" style="display:none;padding:0 18px 18px">
+        <div style="background:#0d1628;border-radius:12px;padding:16px;
+                    font-size:0.88rem;line-height:2;color:#cbd5e1;
+                    white-space:pre-wrap;max-height:400px;overflow-y:auto;
+                    border:1px solid rgba(99,102,241,0.15)">{{ lec.transcript }}</div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="openChatWithLecture()"
+                  style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;
+                         border:none;border-radius:10px;padding:9px 20px;
+                         font-weight:700;cursor:pointer;font-family:inherit;font-size:0.85rem">
+            🤖 تحدث مع المساعد عن هذه المحاضرة
+          </button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ نص التفريغ الصوتي — للمالك فقط ═══ -->
+    {% if current_user.is_admin %}
+    <div id="ownerTranscriptBox" style="background:linear-gradient(135deg,rgba(16,185,129,0.06),rgba(6,78,59,0.04));
+         border:1px solid rgba(16,185,129,0.25);border-radius:16px;margin-bottom:20px;padding:16px 18px">
+
+      <!-- رأس القسم -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(16,185,129,0.15);
+                    display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">🎙</div>
+        <div>
+          <div style="font-weight:800;font-size:0.9rem;color:#e2e8f0">التفريغ الصوتي التلقائي</div>
+          <div style="font-size:0.72rem;color:#64748b">يظهر للمالك فقط — يُرسل للمساعد كسياق للمحاضرة</div>
+        </div>
+        <button onclick="saveTranscript()"
+          style="margin-right:auto;background:rgba(99,102,241,0.15);color:#6366f1;border:1px solid rgba(99,102,241,0.3);
+                 border-radius:8px;padding:5px 14px;cursor:pointer;font-size:0.78rem;font-family:inherit">
+          💾 حفظ كنص محاضرة
+        </button>
+      </div>
+
+      <!-- أزرار اختيار الوضع -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button id="btnMicMode" onclick="setTranscribeMode('mic')"
+          style="background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.35);
+                 border-radius:9px;padding:6px 14px;cursor:pointer;font-size:0.8rem;font-family:inherit;font-weight:700">
+          🎙 وضع الميكروفون
+        </button>
+        <button id="btnTabMode" onclick="setTranscribeMode('tab')"
+          style="background:rgba(99,102,241,0.1);color:#818cf8;border:1px solid rgba(99,102,241,0.25);
+                 border-radius:9px;padding:6px 14px;cursor:pointer;font-size:0.8rem;font-family:inherit">
+          🎬 وضع صوت الفيديو (تلقائي)
+        </button>
+        <button id="transcribeBtn" onclick="toggleCapture()"
+          style="background:rgba(239,68,68,0.0);color:#10b981;border:1px solid rgba(16,185,129,0.3);
+                 border-radius:9px;padding:6px 16px;cursor:pointer;font-size:0.8rem;font-family:inherit;font-weight:700">
+          ▶ بدء التفريغ
+        </button>
+      </div>
+
+      <!-- تعليمات الوضع الحالي -->
+      <div id="modeHint" style="font-size:0.75rem;color:#64748b;margin-bottom:8px;padding:6px 10px;
+           background:rgba(255,255,255,0.03);border-radius:7px;border:1px solid rgba(255,255,255,0.06)">
+        💡 <strong style="color:#94a3b8">وضع الميكروفون:</strong> شغّل الفيديو ورفع الصوت — سيلتقط الميكروفون الصوت تلقائياً ويكتبه
+      </div>
+
+      <!-- شريط الحالة -->
+      <div id="voiceStatusBar" style="font-size:0.75rem;color:#10b981;margin-bottom:8px;display:none;
+           display:none;align-items:center;gap:6px">
+        <span id="voiceStatusDot" style="display:inline-block;width:8px;height:8px;border-radius:50%;
+              background:#10b981;animation:voicePulse 1s infinite"></span>
+        <span id="voiceStatusText">جاري الاستماع...</span>
+      </div>
+
+      <!-- صندوق النص -->
+      <div id="ownerTranscriptText" contenteditable="true"
+        style="background:#0d1628;border-radius:10px;padding:14px;font-size:0.85rem;
+               line-height:1.8;color:#cbd5e1;white-space:pre-wrap;min-height:80px;
+               border:1px solid rgba(16,185,129,0.15);max-height:350px;overflow-y:auto;outline:none"
+        oninput="updateWordCount()">{{ lec.transcript or '' }}</div>
+
+      <!-- شريط الحالة السفلي -->
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px">
+        <span style="font-size:0.7rem;color:#475569">
+          ✏️ يمكنك تعديل النص مباشرة
+          &nbsp;|&nbsp; <span id="wordCountBadge" style="color:#64748b">0 كلمة</span>
+        </span>
+        <div style="margin-right:auto;display:flex;gap:6px">
+          <span id="autoSaveStatus" style="font-size:0.7rem;color:#475569"></span>
+          <button onclick="copyTranscript()"
+            style="background:rgba(255,255,255,0.05);color:#94a3b8;border:1px solid rgba(255,255,255,0.1);
+                   border-radius:7px;padding:3px 10px;cursor:pointer;font-size:0.72rem;font-family:inherit">
+            📋 نسخ
+          </button>
+          <button onclick="clearTranscript()"
+            style="background:rgba(239,68,68,0.06);color:#f87171;border:1px solid rgba(239,68,68,0.2);
+                   border-radius:7px;padding:3px 10px;cursor:pointer;font-size:0.72rem;font-family:inherit">
+            🗑 مسح
+          </button>
+        </div>
+      </div>
+    </div>
+    <style>
+    @keyframes voicePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+    #btnMicMode.active-mode{background:rgba(16,185,129,0.25)!important;border-color:rgba(16,185,129,0.6)!important}
+    #btnTabMode.active-mode{background:rgba(99,102,241,0.25)!important;border-color:rgba(99,102,241,0.6)!important;color:#a5b4fc!important}
+    #transcribeBtn.recording{background:rgba(239,68,68,0.15)!important;color:#ef4444!important;border-color:rgba(239,68,68,0.4)!important}
+
+    /* ══ ملء الشاشة الكامل — موبايل + Desktop ══ */
+    #videoContainer:-webkit-full-screen,
+    #videoContainer:-moz-full-screen,
+    #videoContainer:-ms-fullscreen,
+    #videoContainer:fullscreen {
+      width: 100vw   !important;
+      height: 100vh  !important;
+      max-width: 100vw !important;
+      border-radius: 0 !important;
+      display: flex  !important;
+      flex-direction: column !important;
+      background: #000 !important;
+      position: fixed !important;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow: hidden !important;
+    }
+    /* الشريط العلوي (العنوان) يأخذ حجمه الطبيعي فقط */
+    #videoContainer:-webkit-full-screen > div:first-child,
+    #videoContainer:fullscreen > div:first-child { flex-shrink: 0; }
+    /* الـ wrapper يملأ ما تبقى */
+    #videoContainer:-webkit-full-screen #videoRatioWrap,
+    #videoContainer:fullscreen #videoRatioWrap {
+      flex: 1 !important;
+      padding-top: 0 !important;
+      position: relative !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
+    /* أشرطة التحكم تنهار لأسفل */
+    #videoContainer:-webkit-full-screen #playerControls,
+    #videoContainer:fullscreen #playerControls { flex-shrink: 0; }
+    </style>
+    {% endif %}
+
+    <!-- ═══ Info Card ═══ -->
+    <div class="card" style="margin-bottom:20px;background:linear-gradient(135deg,var(--bg-card),#0f1623);border:1px solid rgba(99,102,241,0.15)">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div style="flex:1">
+          <h1 style="font-size:1.3rem;font-weight:900;margin-bottom:10px;line-height:1.4;color:#e2e8f0">{{ lec.title }}</h1>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+            {% if lec.subject and lec.subject in subjects_ar %}
+            <span style="background:rgba(99,102,241,0.15);color:#6366f1;font-size:0.8rem;padding:3px 10px;border-radius:8px;border:1px solid rgba(99,102,241,0.2)">{{ subjects_ar[lec.subject] }}</span>
+            {% endif %}
+            {% if lec.section and lec.section in sections_ar %}
+            <span style="background:rgba(16,185,129,0.15);color:#10b981;font-size:0.8rem;padding:3px 10px;border-radius:8px;border:1px solid rgba(16,185,129,0.2)">{{ sections_ar[lec.section] }}</span>
+            {% endif %}
+            {% if lec.standard %}
+            <span style="background:rgba(255,184,0,0.12);color:var(--gold);font-size:0.8rem;padding:3px 10px;border-radius:8px;border:1px solid rgba(255,184,0,0.2)">📋 {{ lec.standard }}</span>
+            {% endif %}
+          </div>
+          {% if lec.description %}
+          <div style="color:#94a3b8;font-size:0.9rem;line-height:1.7;border-top:1px solid var(--border);padding-top:12px">
+            {{ lec.description }}
+          </div>
+          {% endif %}
+        </div>
+        <div style="text-align:center;min-width:90px">
+          <div style="font-size:1.6rem;font-weight:900;color:#6366f1;line-height:1">{{ lec.total_views }}</div>
+          <div style="font-size:0.72rem;color:#64748b;margin-top:2px">مشاهدة</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ خانة ملاحظات الطالب ═══ -->
+    <div class="card" style="margin-bottom:24px;border:1px solid rgba(16,185,129,0.2);background:linear-gradient(135deg,rgba(16,185,129,0.05),var(--bg-card))">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(16,185,129,0.15);
+                    display:flex;align-items:center;justify-content:center;font-size:1.2rem">💬</div>
+        <div>
+          <div style="font-weight:800;font-size:1rem">ما الذي استفدته من هذه المحاضرة؟</div>
+          <div style="font-size:0.8rem;color:#64748b">ملاحظاتك خاصة وتُرسل للمشرف فقط</div>
+        </div>
+        <button id="toggleFeedback" onclick="toggleFeedbackForm()"
+          style="margin-right:auto;background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);
+                 border-radius:8px;padding:6px 14px;cursor:pointer;font-size:0.82rem;font-family:inherit">
+          {% if existing_feedback %}✏️ تعديل ملاحظاتك{% else %}✍️ أضف ملاحظاتك{% endif %}
+        </button>
+      </div>
+
+      {% if existing_feedback %}
+      <div id="existingFeedback" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.15);
+           border-radius:12px;padding:14px;margin-bottom:12px">
+        <div style="font-size:0.82rem;color:#10b981;margin-bottom:6px;font-weight:700">✅ لقد أرسلت ملاحظاتك مسبقاً:</div>
+        {% if existing_feedback.learned %}
+        <div style="font-size:0.85rem;color:#94a3b8;margin-bottom:4px"><span style="color:#e2e8f0">ما استفدته:</span> {{ existing_feedback.learned }}</div>
+        {% endif %}
+        {% if existing_feedback.needs_clarification %}
+        <div style="font-size:0.85rem;color:#94a3b8"><span style="color:#e2e8f0">يحتاج توضيح:</span> {{ existing_feedback.needs_clarification }}</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <div id="feedbackForm" style="display:none">
+        <form method="POST" action="{{ url_for('lectures.submit_feedback', lid=lec.id) }}">
+          <!-- تقييم النجوم -->
+          <div style="margin-bottom:16px">
+            <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:8px">تقييمك للمحاضرة</label>
+            <div class="star-rating" style="display:flex;gap:6px;flex-direction:row-reverse;justify-content:flex-end">
+              {% for i in [5,4,3,2,1] %}
+              <input type="radio" name="rating" id="star{{ i }}" value="{{ i }}"
+                     style="display:none" {% if existing_feedback and existing_feedback.rating == i %}checked{% endif %}>
+              <label for="star{{ i }}" style="font-size:1.6rem;cursor:pointer;color:#334155;transition:.2s"
+                     onmouseover="highlightStars({{ i }})" onmouseout="resetStars()">★</label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div style="margin-bottom:14px">
+            <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">
+              📝 ما الذي استفدته من هذه المحاضرة؟ <span style="color:#ef4444">*</span>
+            </label>
+            <textarea name="learned" rows="3" required
+              placeholder="اكتب ما تعلمته وما أفادك في هذه المحاضرة..."
+              style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                     padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;resize:vertical;box-sizing:border-box">{{ existing_feedback.learned if existing_feedback else '' }}</textarea>
+          </div>
+
+          <div style="margin-bottom:18px">
+            <label style="font-size:0.85rem;color:#94a3b8;display:block;margin-bottom:6px">
+              ❓ ما الجوانب التي تحتاج توضيحاً أكثر؟
+            </label>
+            <textarea name="needs_clarification" rows="2"
+              placeholder="أي نقطة أو موضوع تريد شرحاً إضافياً عنه..."
+              style="width:100%;background:#0d1628;border:1px solid var(--border);border-radius:10px;
+                     padding:10px 14px;color:#e2e8f0;font-family:inherit;font-size:0.9rem;resize:vertical;box-sizing:border-box">{{ existing_feedback.needs_clarification if existing_feedback else '' }}</textarea>
+          </div>
+
+          <div style="display:flex;gap:10px">
+            <button type="submit"
+              style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;
+                     border-radius:10px;padding:10px 24px;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.9rem">
+              🚀 إرسال الملاحظات
+            </button>
+            <button type="button" onclick="toggleFeedbackForm()"
+              style="background:var(--bg-elevated);color:#94a3b8;border:1px solid var(--border);
+                     border-radius:10px;padding:10px 18px;cursor:pointer;font-family:inherit">
+              إلغاء
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ═══ محاضرات ذات صلة ═══ -->
+    {% if related %}
+    <h3 style="font-weight:800;margin-bottom:14px">📚 محاضرات ذات صلة</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px">
+      {% for r in related %}
+      <a href="{{ url_for('lectures.watch_lecture', lid=r.id) }}"
+        style="text-decoration:none;background:var(--bg-card);border:1px solid var(--border);
+               border-radius:12px;padding:14px;display:block;transition:.2s"
+        onmouseover="this.style.borderColor='#6366f1';this.style.transform='translateY(-2px)'"
+        onmouseout="this.style.borderColor='var(--border)';this.style.transform=''">
+        <div style="width:40px;height:40px;border-radius:10px;background:rgba(99,102,241,0.15);
+                    display:flex;align-items:center;justify-content:center;font-size:1.1rem;margin-bottom:8px">▶️</div>
+        <div style="font-weight:700;font-size:0.88rem;color:#e2e8f0;line-height:1.4">{{ r.title }}</div>
+        {% if r.total_views > 0 %}
+        <div style="color:#64748b;font-size:0.72rem;margin-top:4px">👁 {{ r.total_views }} مشاهدة</div>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </main>
+</div>
+
+<style>
+/* نجوم التقييم */
+.star-rating label { color: #334155; }
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label { color: #f59e0b !important; }
+</style>
+
+<script>
+// ─── نموذج الملاحظات ───
+function toggleFeedbackForm(){
+  const f = document.getElementById('feedbackForm');
+  const existing = document.getElementById('existingFeedback');
+  if(f.style.display === 'none'){
+    f.style.display = 'block';
+    if(existing) existing.style.display = 'none';
+  } else {
+    f.style.display = 'none';
+    if(existing) existing.style.display = 'block';
+  }
+}
+
+// ─── نجوم التقييم ───
+function highlightStars(n){
+  document.querySelectorAll('.star-rating label').forEach((l,i) => {
+    l.style.color = (5 - i) <= n ? '#f59e0b' : '#334155';
+  });
+}
+function resetStars(){
+  const checked = document.querySelector('.star-rating input:checked');
+  const val = checked ? parseInt(checked.value) : 0;
+  document.querySelectorAll('.star-rating label').forEach((l,i) => {
+    l.style.color = (5 - i) <= val ? '#f59e0b' : '#334155';
+  });
+}
+
+// تهيئة النجوم
+resetStars();
+
+// ─── نص المحاضرة ───
+function toggleTranscript(){
+  const c = document.getElementById('transcriptContent');
+  const v = document.getElementById('transcriptChevron');
+  if(!c) return;
+  const open = c.style.display !== 'none';
+  c.style.display = open ? 'none' : 'block';
+  if(v) v.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+// ─── فتح المساعد مع سياق المحاضرة ───
+function openChatWithLecture(){
+  if(typeof toggleChat === 'function'){
+    if(!document.getElementById('chatWindow').classList.contains('open')){
+      toggleChat();
+    }
+    const inp = document.getElementById('chatInput');
+    if(inp){
+      inp.value = 'اشرح لي هذه المحاضرة بإيجاز وأهم نقاطها';
+      inp.focus();
+    }
+  }
+}
+
+// ─── تتبع تقدم المشاهدة (لكل المستخدمين تلقائياً) ───────────
+(function(){
+  const LID      = {{ lec.id }};
+  let watchSecs  = {{ user_view.watch_secs or 0 }};
+  let startTime  = Date.now();
+  let completed  = {{ 'true' if user_view and user_view.completed else 'false' }};
+  let lastSent   = watchSecs;
+
+  async function sendHeartbeat(force){
+    const elapsed  = Math.floor((Date.now() - startTime) / 1000);
+    const newTotal = watchSecs + elapsed;
+    if(!force && newTotal - lastSent < 30) return;  // كل 30 ث
+
+    // اعتبر المحاضرة مكتملة إذا شاهد أكثر من 80% (تقدير بـ 600 ث = 10 د)
+    const isDone = completed || newTotal >= 600;
+    try {
+      const r = await fetch('/api/lecture/heartbeat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({lecture_id: LID, watch_secs: newTotal, completed: isDone}),
+      });
+      const d = await r.json();
+      if(d.ok){ lastSent = newTotal; watchSecs = d.watch_secs; startTime = Date.now(); }
+    } catch(e){}
+  }
+
+  // أرسل كل 30 ثانية
+  setInterval(() => sendHeartbeat(false), 30000);
+  // أرسل عند مغادرة الصفحة
+  window.addEventListener('beforeunload', () => sendHeartbeat(true));
+  // أرسل عند إخفاء التاب
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden) sendHeartbeat(true);
+    else startTime = Date.now();
+  });
+})();
+
+// ─── التفريغ الصوتي (للمالك فقط) ───
+(function(){
+  const LECTURE_ID = {{ lec.id }};
+  const isAdmin = {{ 'true' if current_user.is_admin else 'false' }};
+  if(!isAdmin) return;
+
+  let currentMode  = 'mic';   // 'mic' | 'tab'
+  let isCapturing  = false;
+  let recognition  = null;    // Web Speech API (وضع الميكروفون)
+  let tabStream    = null;    // MediaStream (وضع صوت الفيديو)
+  let audioCtx     = null;
+  let scriptNode   = null;
+  let chunkTimer   = null;
+  let pcmBuffer    = [];      // بيانات PCM للفقرة الحالية
+  let sampleRate   = 16000;
+
+  /* ── اختيار الوضع ── */
+  window.setTranscribeMode = function(mode){
+    if(isCapturing) stopCapture();
+    currentMode = mode;
+    document.getElementById('btnMicMode').classList.toggle('active-mode', mode==='mic');
+    document.getElementById('btnTabMode').classList.toggle('active-mode', mode==='tab');
+    const hint = document.getElementById('modeHint');
+    if(mode === 'mic'){
+      hint.innerHTML = '💡 <strong style="color:#94a3b8">وضع الميكروفون:</strong> شغّل الفيديو ورفع الصوت — سيلتقط الميكروفون الصوت ويكتبه';
+    } else {
+      hint.innerHTML = '💡 <strong style="color:#a5b4fc">وضع صوت الفيديو:</strong> ستُطلب منك إذن مشاركة الشاشة — اختر هذه النافذة/التبويب وفعّل خيار "مشاركة صوت التبويب" ✅';
+    }
+  };
+  setTranscribeMode('mic');
+
+  /* ── تبديل التشغيل/الإيقاف ── */
+  window.toggleCapture = function(){
+    if(!isCapturing) startCapture(); else stopCapture();
+  };
+
+  function startCapture(){
+    isCapturing = true;
+    const btn = document.getElementById('transcribeBtn');
+    btn.textContent = '⏹ إيقاف التفريغ';
+    btn.classList.add('recording');
+    const bar = document.getElementById('voiceStatusBar');
+    if(bar){ bar.style.display = 'flex'; }
+
+    if(currentMode === 'mic'){
+      startMicRecognition();
+    } else {
+      startTabCapture();
+    }
+  }
+
+  function stopCapture(){
+    isCapturing = false;
+    const btn = document.getElementById('transcribeBtn');
+    btn.textContent = '▶ بدء التفريغ';
+    btn.classList.remove('recording');
+    const bar = document.getElementById('voiceStatusBar');
+    if(bar) bar.style.display = 'none';
+
+    if(recognition){ try{ recognition.stop(); }catch(e){} recognition = null; }
+    if(chunkTimer){ clearInterval(chunkTimer); chunkTimer = null; }
+    if(scriptNode){ try{ scriptNode.disconnect(); }catch(e){} scriptNode = null; }
+    if(audioCtx)  { try{ audioCtx.close(); }catch(e){} audioCtx = null; }
+    if(tabStream) { tabStream.getTracks().forEach(t => t.stop()); tabStream = null; }
+    pcmBuffer = [];
+
+    /* حفظ تلقائي فور التوقف */
+    autoSaveTranscript();
+  }
+
+  /* ══ وضع الميكروفون / الفيديو المباشر ══
+     للفيديو المباشر (mp4): يلتقط صوت الفيديو مباشرة بدون ميكروفون → لا تقطع
+     لـ YouTube / GDrive / Telegram: يستخدم Web Speech API عبر الميكروفون
+  */
+  function startMicRecognition(){
+    const nv = document.getElementById('nativeVideo');
+    if(nv && typeof nv.captureStream === 'function'){
+      _startVideoDirectCapture(nv);
+    } else {
+      _startSpeechRecognition();
+    }
+  }
+
+  /* التقاط صوت الفيديو مباشرة (لا ميكروفون = لا تقطع) */
+  function _startVideoDirectCapture(videoEl){
+    try {
+      const stream     = videoEl.captureStream ? videoEl.captureStream() : videoEl.mozCaptureStream();
+      const audioTracks = stream.getAudioTracks();
+      if(!audioTracks.length){
+        document.getElementById('voiceStatusText').textContent = '⚠️ شغّل الفيديو أولاً ثم أعد المحاولة';
+        _startSpeechRecognition();
+        return;
+      }
+      const audioStream = new MediaStream(audioTracks);
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                       ? 'audio/webm;codecs=opus' : 'audio/webm';
+      const recorder = new MediaRecorder(audioStream, { mimeType });
+      let activeChunks = [];
+
+      recorder.ondataavailable = function(e){
+        if(e.data && e.data.size > 0) activeChunks.push(e.data);
+      };
+
+      recorder.onstop = async function(){
+        if(!activeChunks.length){ if(isCapturing) recorder.start(6000); return; }
+        const blob = new Blob(activeChunks, { type: mimeType });
+        activeChunks = [];
+        const b64 = await blobToBase64(blob);
+        try {
+          const r = await fetch('/api/lecture/transcribe-chunk', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ audio: b64.split(',')[1] })
+          });
+          const d = await r.json();
+          if(d.ok && d.text && d.text.trim()){
+            const box = document.getElementById('ownerTranscriptText');
+            box.textContent += d.text.trim() + ' ';
+            box.scrollTop = box.scrollHeight;
+            updateWordCount();
+            scheduleAutoSave();
+            document.getElementById('voiceStatusText').textContent =
+              '✅ ' + d.text.trim().slice(0,35) + '…';
+          } else {
+            document.getElementById('voiceStatusText').textContent = '🎬 يلتقط صوت الفيديو…';
+          }
+        } catch(ex){ console.warn('video transcribe:', ex); }
+        if(isCapturing) recorder.start(6000);
+      };
+
+      /* stub حتى يعمل stopCapture() */
+      recognition = { stop: function(){ try{ recorder.stop(); }catch(e){} } };
+      recorder.start(6000);
+      document.getElementById('voiceStatusText').textContent = '🎬 يلتقط صوت الفيديو مباشرة (بدون تقطع)…';
+    } catch(e){
+      console.warn('captureStream failed:', e);
+      _startSpeechRecognition(); /* fallback للميكروفون */
+    }
+  }
+
+  /* Web Speech API — للـ YouTube والروابط الخارجية */
+  function _startSpeechRecognition(){
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){ alert('المتصفح لا يدعم التفريغ. استخدم Chrome أو Edge.'); stopCapture(); return; }
+    recognition = new SR();
+    recognition.lang = 'ar-SA';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.onresult = function(e){
+      const box = document.getElementById('ownerTranscriptText');
+      let interim = '';
+      for(let i = e.resultIndex; i < e.results.length; i++){
+        const t = e.results[i][0].transcript;
+        if(e.results[i].isFinal){
+          box.textContent += t + ' ';
+          box.scrollTop = box.scrollHeight;
+          updateWordCount();
+          scheduleAutoSave();
+        } else { interim = t; }
+      }
+      document.getElementById('voiceStatusText').textContent = interim ? interim : 'جاري الاستماع…';
+    };
+    recognition.onerror = function(e){
+      if(e.error !== 'aborted')
+        document.getElementById('voiceStatusText').textContent = 'خطأ: ' + e.error;
+    };
+    recognition.onend = function(){ if(isCapturing) try{ recognition.start(); }catch(ex){} };
+    try{ recognition.start(); }
+    catch(ex){ stopCapture(); alert('فشل تشغيل الميكروفون: ' + ex.message); }
+  }
+
+  /* ══ وضع صوت الفيديو (getDisplayMedia + AudioContext → PCM → WAV → خادم) ══ */
+  async function startTabCapture(){
+    try {
+      tabStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { displaySurface: 'browser' },
+        audio: { echoCancellation: false, noiseSuppression: false, sampleRate: 16000 },
+        preferCurrentTab: true,
+        selfBrowserSurface: 'include',
+        systemAudio: 'include'
+      });
+    } catch(e){
+      alert('تعذّر الحصول على إذن مشاركة الصوت.\nتأكد من تفعيل "مشاركة صوت التبويب" عند اختيار التبويب.');
+      stopCapture(); return;
+    }
+
+    const audioTracks = tabStream.getAudioTracks();
+    if(!audioTracks.length){
+      alert('لم يُعثر على صوت في البث. تأكد من تفعيل خيار "مشاركة صوت التبويب" ✅');
+      stopCapture(); return;
+    }
+
+    audioCtx  = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    sampleRate = audioCtx.sampleRate;
+    const source = audioCtx.createMediaStreamSource(new MediaStream(audioTracks));
+    scriptNode = audioCtx.createScriptProcessor(4096, 1, 1);
+    scriptNode.onaudioprocess = function(e){
+      if(!isCapturing) return;
+      const data = e.inputBuffer.getChannelData(0);
+      pcmBuffer.push(new Float32Array(data));
+    };
+    source.connect(scriptNode);
+    /*
+     * لا نوصل scriptNode مباشرة لـ audioCtx.destination
+     * لأن ذلك يُعيد تشغيل صوت التبويب مرة ثانية → ازدواجية صوت + تقطع.
+     * الصوت يُشغَّل أصلاً من المتصفح بشكل طبيعي.
+     * نوصل عبر GainNode صامت (gain=0) فقط لضمان تشغيل onaudioprocess.
+     */
+    const _silentGain = audioCtx.createGain();
+    _silentGain.gain.value = 0;
+    scriptNode.connect(_silentGain);
+    _silentGain.connect(audioCtx.destination);
+
+    document.getElementById('voiceStatusText').textContent = 'يلتقط صوت التبويب...';
+
+    // إرسال قطعة كل 6 ثوانٍ إلى الخادم
+    chunkTimer = setInterval(async function(){
+      if(!isCapturing || !pcmBuffer.length) return;
+      const chunk = pcmBuffer.splice(0);
+      const wav   = encodeWAV(chunk, sampleRate);
+      const b64   = await blobToBase64(wav);
+      try {
+        const r = await fetch('/api/lecture/transcribe-chunk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ audio: b64.split(',')[1] })
+        });
+        const d = await r.json();
+        if(d.ok && d.text && d.text.trim()){
+          const box = document.getElementById('ownerTranscriptText');
+          box.textContent += d.text.trim() + ' ';
+          box.scrollTop = box.scrollHeight;
+          updateWordCount();
+          scheduleAutoSave();
+          document.getElementById('voiceStatusText').textContent = d.text.trim().slice(0, 40) + '...';
+        }
+      } catch(ex){ console.warn('transcribe error', ex); }
+    }, 6000);
+
+    // توقف إذا انقطع البث
+    tabStream.getVideoTracks()[0]?.addEventListener('ended', function(){ if(isCapturing) stopCapture(); });
+  }
+
+  /* ── تشفير WAV في المتصفح ── */
+  function encodeWAV(chunks, rate){
+    let total = 0;
+    chunks.forEach(c => total += c.length);
+    const buf  = new ArrayBuffer(44 + total * 2);
+    const view = new DataView(buf);
+    function ws(off, str){ for(let i=0;i<str.length;i++) view.setUint8(off+i, str.charCodeAt(i)); }
+    ws(0,'RIFF'); view.setUint32(4, 36 + total*2, true);
+    ws(8,'WAVE'); ws(12,'fmt ');
+    view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, rate, true); view.setUint32(28, rate*2, true);
+    view.setUint16(32, 2, true);   view.setUint16(34, 16, true);
+    ws(36,'data'); view.setUint32(40, total*2, true);
+    let off = 44;
+    chunks.forEach(ch => {
+      for(let i=0;i<ch.length;i++,off+=2){
+        const s = Math.max(-1, Math.min(1, ch[i]));
+        view.setInt16(off, s < 0 ? s*0x8000 : s*0x7FFF, true);
+      }
+    });
+    return new Blob([view], {type:'audio/wav'});
+  }
+
+  function blobToBase64(blob){
+    return new Promise(res => { const r = new FileReader(); r.onload = e => res(e.target.result); r.readAsDataURL(blob); });
+  }
+
+  /* ── عداد الكلمات ── */
+  window.updateWordCount = function(){
+    const box = document.getElementById('ownerTranscriptText');
+    const badge = document.getElementById('wordCountBadge');
+    if(!box || !badge) return;
+    const words = (box.textContent || '').trim().split(/\s+/).filter(w => w.length > 0).length;
+    badge.textContent = words.toLocaleString('ar-SA') + ' كلمة';
+  };
+  updateWordCount();
+
+  /* ── نسخ النص ── */
+  window.copyTranscript = function(){
+    const box = document.getElementById('ownerTranscriptText');
+    const text = (box ? box.textContent : '').trim();
+    if(!text) return;
+    navigator.clipboard.writeText(text).then(function(){
+      const st = document.getElementById('autoSaveStatus');
+      if(st){ st.textContent = '📋 تم النسخ'; setTimeout(()=>{ if(st.textContent==='📋 تم النسخ') st.textContent=''; },2000); }
+    }).catch(function(){
+      /* fallback */
+      const ta = document.createElement('textarea');
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    });
+  };
+
+  /* ── مسح النص ── */
+  window.clearTranscript = function(){
+    if(!confirm('هل تريد مسح النص كاملاً؟')) return;
+    const box = document.getElementById('ownerTranscriptText');
+    if(box){ box.textContent = ''; updateWordCount(); }
+  };
+
+  /* ── حفظ تلقائي صامت (بدون alert) ── */
+  let _autoSaveTimer = null;
+  function scheduleAutoSave(){
+    if(_autoSaveTimer) clearTimeout(_autoSaveTimer);
+    _autoSaveTimer = setTimeout(autoSaveTranscript, 8000); /* 8 ثوانٍ بعد آخر كلمة */
+  }
+  async function autoSaveTranscript(){
+    _autoSaveTimer = null;
+    const box  = document.getElementById('ownerTranscriptText');
+    const text = (box ? box.textContent : '').trim();
+    if(!text) return;
+    const st = document.getElementById('autoSaveStatus');
+    if(st) st.textContent = '💾 جاري الحفظ...';
+    try {
+      const r = await fetch('/api/lecture/save-transcript', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lecture_id: LECTURE_ID, transcript: text })
+      });
+      const d = await r.json();
+      if(st){
+        if(d.ok){
+          const now = new Date();
+          const t = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+          st.textContent = '✅ حُفظ تلقائياً ' + t;
+          const box2 = document.getElementById('ownerTranscriptText');
+          if(box2) box2.style.borderColor = 'rgba(16,185,129,0.5)';
+        } else { st.textContent = '⚠️ لم يُحفظ'; }
+      }
+    } catch(ex){ if(st) st.textContent = '⚠️ خطأ في الاتصال'; }
+  }
+
+  /* ── حفظ يدوي (زر "حفظ كنص محاضرة") ── */
+  window.saveTranscript = async function(){
+    const box  = document.getElementById('ownerTranscriptText');
+    const text = (box ? box.textContent : '').trim();
+    if(!text){ alert('لا يوجد نص لحفظه'); return; }
+    const st = document.getElementById('autoSaveStatus');
+    if(st) st.textContent = '💾 جاري الحفظ...';
+    try {
+      const r = await fetch('/api/lecture/save-transcript', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lecture_id: LECTURE_ID, transcript: text })
+      });
+      const d = await r.json();
+      if(d.ok){
+        if(box) box.style.borderColor = 'rgba(16,185,129,0.6)';
+        if(st){
+          const now = new Date();
+          st.textContent = '✅ محفوظ ' + now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0');
+        }
+        /* تحديث بادج "يوجد نص مفرَّغ" دون إعادة تحميل */
+        const badge = document.querySelector('[data-transcript-badge]');
+        if(badge) badge.style.display = 'inline';
+      } else {
+        alert('❌ فشل الحفظ: ' + (d.error || ''));
+      }
+    } catch(ex){ alert('❌ خطأ في الاتصال'); }
+  };
+})();
+</script>
+{% endblock %}

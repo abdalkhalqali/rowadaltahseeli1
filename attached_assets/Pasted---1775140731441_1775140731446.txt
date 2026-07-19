@@ -1,0 +1,642 @@
+# ====================================================================
+# الدفعة الثانية: أسئلة الفيزياء (الاستمرار)
+# تم إعادة صياغتها على نمط اختبارات التحصيلي الرسمية
+# ====================================================================
+
+exam_questions_batch_2 = [
+    # ==================== الكهرباء (استمرار) ====================
+    {
+        "id": 51,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "المقاومة الكهربائية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "سلك معدني طوله 2 m ومساحة مقطعه 4×10⁻⁷ m²، ومقاومته النوعية 2×10⁻⁸ Ω·m. ما مقدار مقاومة السلك؟",
+        "options": ["0.1 Ω", "0.2 Ω", "0.4 Ω", "0.8 Ω"],
+        "answer": "A",
+        "explanation": "R = ρL/A = (2×10⁻⁸ × 2)/(4×10⁻⁷) = (4×10⁻⁸)/(4×10⁻⁷) = 0.1 Ω."
+    },
+    {
+        "id": 52,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "قانون أوم",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "مصباح كهربائي مقاومته 20 Ω، يُوصل ببطارية فرق جهدها 12 V. ما شدة التيار المار في المصباح؟",
+        "options": ["0.6 A", "1.2 A", "240 A", "0.3 A"],
+        "answer": "A",
+        "explanation": "I = V/R = 12/20 = 0.6 A."
+    },
+    {
+        "id": 53,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "قانون أوم",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "تغير فرق الجهد بين طرفي مقاومة من 6 V إلى 12 V، فتغير التيار من 0.5 A إلى 1 A. ما مقدار المقاومة؟",
+        "options": ["12 Ω", "6 Ω", "24 Ω", "18 Ω"],
+        "answer": "A",
+        "explanation": "R = ΔV/ΔI = (12-6)/(1-0.5) = 6/0.5 = 12 Ω."
+    },
+    {
+        "id": 54,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "القدرة الكهربائية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "سخان كهربائي يعمل على فرق جهد 220 V، ويمر فيه تيار شدته 5 A. ما قدرة السخان؟",
+        "options": ["1100 W", "44 W", "220 W", "550 W"],
+        "answer": "A",
+        "explanation": "P = V × I = 220 × 5 = 1100 W."
+    },
+    {
+        "id": 55,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "الطاقة الكهربائية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "مكواة كهربائية قدرتها 1500 W تعمل لمدة ساعتين. ما مقدار الطاقة الكهربائية المستهلكة بوحدة kWh؟",
+        "options": ["3 kWh", "1.5 kWh", "3000 kWh", "0.75 kWh"],
+        "answer": "A",
+        "explanation": "E = P × t = 1500 W × 2 h = 3000 Wh = 3 kWh."
+    },
+    {
+        "id": 56,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "توصيل المقاومات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "ثلاث مقاومات قيمها 2 Ω، 3 Ω، 6 Ω وُصلت على التوازي. ما المقاومة المكافئة للتركيب؟",
+        "options": ["1 Ω", "11 Ω", "0.5 Ω", "2 Ω"],
+        "answer": "A",
+        "explanation": "1/R = 1/2 + 1/3 + 1/6 = 3/6 + 2/6 + 1/6 = 6/6 = 1 ⇒ R = 1 Ω."
+    },
+    {
+        "id": 57,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "توصيل المقاومات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "مقاومتان 4 Ω و 6 Ω وُصلتا على التوالي مع بطارية فرق جهدها 20 V. ما شدة التيار المار في الدائرة؟",
+        "options": ["2 A", "10 A", "0.5 A", "5 A"],
+        "answer": "A",
+        "explanation": "R_total = 4 + 6 = 10 Ω، I = V/R = 20/10 = 2 A."
+    },
+    
+    # ==================== المغناطيسية ====================
+    {
+        "id": 58,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "المجال المغناطيسي",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "يتدفق تيار شدته 2 A في سلك مستقيم طويل. ما شدة المجال المغناطيسي على بعد 0.1 m من السلك؟ (μ₀ = 4π×10⁻⁷ T·m/A)",
+        "options": ["4×10⁻⁶ T", "2×10⁻⁶ T", "8×10⁻⁶ T", "1×10⁻⁶ T"],
+        "answer": "A",
+        "explanation": "B = (μ₀ I)/(2πr) = (4π×10⁻⁷ × 2)/(2π × 0.1) = (8π×10⁻⁷)/(0.2π) = 4×10⁻⁶ T."
+    },
+    {
+        "id": 59,
+        "subject": "physics",
+        "chapter": 4,
+        "topic": "القوة المغناطيسية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "سلك طوله 0.5 m يمر فيه تيار شدته 3 A، وُضع عمودياً على مجال مغناطيسي شدته 0.4 T. ما مقدار القوة المؤثرة على السلك؟",
+        "options": ["0.6 N", "1.2 N", "0.3 N", "2.4 N"],
+        "answer": "A",
+        "explanation": "F = BIL sinθ = 0.4 × 3 × 0.5 × sin90° = 0.6 × 1 = 0.6 N."
+    },
+    
+    # ==================== الحرارة والديناميكا الحرارية ====================
+    {
+        "id": 60,
+        "subject": "physics",
+        "chapter": 5,
+        "topic": "التمدد الحراري",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "قضيب من الألومنيوم طوله 2 m عند درجة حرارة 20°C. معامل تمدده الطولي 2.3×10⁻⁵ /°C. ما طوله عند درجة حرارة 70°C؟",
+        "options": ["2.0023 m", "2.023 m", "2.23 m", "2.00023 m"],
+        "answer": "A",
+        "explanation": "ΔL = L₀ × α × ΔT = 2 × 2.3×10⁻⁵ × 50 = 2.3×10⁻³ m = 0.0023 m، L = 2 + 0.0023 = 2.0023 m."
+    },
+    {
+        "id": 61,
+        "subject": "physics",
+        "chapter": 5,
+        "topic": "كمية الحرارة",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "كمية من الماء كتلتها 2 kg، درجة حرارتها 30°C، أضيفت إليها 42000 J من الحرارة. ما درجة حرارتها النهائية؟ (الحرارة النوعية للماء = 4200 J/kg·°C)",
+        "options": ["35°C", "40°C", "30°C", "25°C"],
+        "answer": "A",
+        "explanation": "Q = m × c × ΔT ⇒ 42000 = 2 × 4200 × ΔT ⇒ ΔT = 42000/(8400) = 5°C، T_f = 30 + 5 = 35°C."
+    },
+    {
+        "id": 62,
+        "subject": "physics",
+        "chapter": 5,
+        "topic": "السعة الحرارية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "جسم كتلته 0.5 kg، رفعت درجة حرارته من 25°C إلى 45°C بامتصاص 3000 J من الحرارة. ما الحرارة النوعية للمادة المصنوع منها الجسم؟",
+        "options": ["300 J/kg·°C", "600 J/kg·°C", "150 J/kg·°C", "120 J/kg·°C"],
+        "answer": "A",
+        "explanation": "c = Q/(m × ΔT) = 3000/(0.5 × 20) = 3000/10 = 300 J/kg·°C."
+    },
+    
+    # ==================== الصوت والموجات ====================
+    {
+        "id": 63,
+        "subject": "physics",
+        "chapter": 5,
+        "topic": "الموجات الصوتية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "موجة صوتية ترددها 500 Hz، وسرعتها في الهواء 340 m/s. ما طولها الموجي؟",
+        "options": ["0.68 m", "1.36 m", "0.34 m", "1.7 m"],
+        "answer": "A",
+        "explanation": "λ = v/f = 340/500 = 0.68 m."
+    },
+    {
+        "id": 64,
+        "subject": "physics",
+        "chapter": 5,
+        "topic": "شدة الصوت",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "شدة صوت ما هي 10⁻⁶ W/m². ما مستوى شدة الصوت بوحدة dB؟ (I₀ = 10⁻¹² W/m²)",
+        "options": ["60 dB", "50 dB", "70 dB", "80 dB"],
+        "answer": "A",
+        "explanation": "β = 10 log(I/I₀) = 10 log(10⁻⁶/10⁻¹²) = 10 log(10⁶) = 10 × 6 = 60 dB."
+    },
+    {
+        "id": 65,
+        "subject": "physics",
+        "chapter": 5,
+        "topic": "ظاهرة دوبلر",
+        "difficulty": "hard",
+        "exam_style": "تحصيلي",
+        "question": "سيارة تسير بسرعة 30 m/s وتطلق صفارة ترددها 500 Hz. ما التردد الذي يسمعه راصد ثابت عندما تقترب السيارة منه؟ (سرعة الصوت = 340 m/s)",
+        "options": ["548 Hz", "500 Hz", "458 Hz", "520 Hz"],
+        "answer": "A",
+        "explanation": "f' = f × (v/(v - v_s)) = 500 × (340/(340-30)) = 500 × (340/310) = 500 × 1.0968 = 548.4 Hz."
+    },
+    
+    # ==================== الفيزياء الحديثة (الطاقة النووية) ====================
+    {
+        "id": 66,
+        "subject": "physics",
+        "chapter": 5,
+        "topic": "الطاقة النووية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "معادلة أينشتاين التي تربط الكتلة والطاقة هي ...",
+        "options": ["E = mc²", "E = ½ mv²", "E = mgh", "E = hf"],
+        "answer": "A",
+        "explanation": "معادلة أينشتاين E = mc²، حيث m النقص في الكتلة، c سرعة الضوء."
+    },
+    {
+        "id": 67,
+        "subject": "physics",
+        "chapter": 5,
+        "topic": "الطاقة النووية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "نقص في الكتلة مقداره 0.01 kg في تفاعل نووي. ما مقدار الطاقة الناتجة؟ (c = 3×10⁸ m/s)",
+        "options": ["9×10¹⁴ J", "3×10⁶ J", "9×10⁵ J", "3×10¹⁴ J"],
+        "answer": "A",
+        "explanation": "E = mc² = 0.01 × (3×10⁸)² = 0.01 × 9×10¹⁶ = 9×10¹⁴ J."
+    },
+    
+    # ==================== الرياضيات (بداية) ====================
+    # ==================== الأعداد الحقيقية ====================
+    {
+        "id": 68,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "الأعداد الحقيقية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من الأعداد التالية يعتبر عدداً غير نسبي؟",
+        "options": ["√5", "9", "0.333...", "22/7"],
+        "answer": "A",
+        "explanation": "√5 عدد غير نسبي لأنه لا يمكن كتابته على صورة كسر بسيط. الأعداد الأخرى نسبية."
+    },
+    {
+        "id": 69,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "الأعداد الحقيقية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ناتج جمع العددين النسبيين: 2/3 + 3/4 يساوي ...",
+        "options": ["17/12", "5/7", "5/12", "6/7"],
+        "answer": "A",
+        "explanation": "2/3 + 3/4 = 8/12 + 9/12 = 17/12."
+    },
+    {
+        "id": 70,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "الأعداد الحقيقية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من المجموعات التالية تمثل الأعداد الصحيحة؟",
+        "options": ["{..., -2, -1, 0, 1, 2, ...}", "{1, 2, 3, ...}", "{0, 1, 2, ...}", "{... , -1, 0, 1, ...}"],
+        "answer": "A",
+        "explanation": "الأعداد الصحيحة تشمل الأعداد الموجبة والسالبة والصفر."
+    },
+    
+    # ==================== المعادلات ====================
+    {
+        "id": 71,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "المعادلات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "حل المعادلة: 5x - 7 = 3x + 9",
+        "options": ["8", "7", "6", "5"],
+        "answer": "A",
+        "explanation": "5x - 3x = 9 + 7 ⇒ 2x = 16 ⇒ x = 8."
+    },
+    {
+        "id": 72,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "المعادلات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "حل المعادلة: 2(x - 4) = 3(x + 2)",
+        "options": ["-14", "14", "-2", "2"],
+        "answer": "A",
+        "explanation": "2x - 8 = 3x + 6 ⇒ 2x - 3x = 6 + 8 ⇒ -x = 14 ⇒ x = -14."
+    },
+    {
+        "id": 73,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "المعادلات",
+        "difficulty": "hard",
+        "exam_style": "تحصيلي",
+        "question": "حل المعادلة: x/2 + x/3 = 10",
+        "options": ["12", "15", "10", "20"],
+        "answer": "A",
+        "explanation": "المقام المشترك 6: 3x/6 + 2x/6 = 10 ⇒ 5x/6 = 10 ⇒ 5x = 60 ⇒ x = 12."
+    },
+    
+    # ==================== المتباينات ====================
+    {
+        "id": 74,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "المتباينات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "حل المتباينة: 3x + 5 > 14",
+        "options": ["x > 3", "x < 3", "x > 5", "x < 5"],
+        "answer": "A",
+        "explanation": "3x > 9 ⇒ x > 3."
+    },
+    {
+        "id": 75,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "المتباينات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "حل المتباينة: -2x + 4 ≤ 10",
+        "options": ["x ≥ -3", "x ≤ -3", "x ≥ 3", "x ≤ 3"],
+        "answer": "A",
+        "explanation": "-2x ≤ 6 ⇒ x ≥ -3 (عكس الإشارة عند القسمة على عدد سالب)."
+    },
+    {
+        "id": 76,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "المتباينات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "ما مجموعة حل المتباينة: |x - 3| ≤ 2",
+        "options": ["[1, 5]", "(-∞, 1] ∪ [5, ∞)", "[3, 5]", "[1, 3]"],
+        "answer": "A",
+        "explanation": "|x - 3| ≤ 2 ⇒ -2 ≤ x - 3 ≤ 2 ⇒ 1 ≤ x ≤ 5، أي [1, 5]."
+    },
+    
+    # ==================== الهندسة التحليلية ====================
+    {
+        "id": 77,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الهندسة التحليلية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما بعد النقطة (3, 4) عن نقطة الأصل (0, 0)؟",
+        "options": ["5", "7", "12", "25"],
+        "answer": "A",
+        "explanation": "d = √(3² + 4²) = √(9 + 16) = √25 = 5."
+    },
+    {
+        "id": 78,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الهندسة التحليلية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما إحداثيات منتصف القطعة الواصلة بين النقطتين A(2, 5) و B(6, 9)؟",
+        "options": ["(4, 7)", "(3, 5)", "(5, 8)", "(2, 4)"],
+        "answer": "A",
+        "explanation": "M = ((2+6)/2, (5+9)/2) = (8/2, 14/2) = (4, 7)."
+    },
+    {
+        "id": 79,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الهندسة التحليلية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما ميل المستقيم المار بالنقطتين (1, 2) و (4, 8)؟",
+        "options": ["2", "1/2", "3", "6"],
+        "answer": "A",
+        "explanation": "m = (8-2)/(4-1) = 6/3 = 2."
+    },
+    {
+        "id": 80,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الهندسة التحليلية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "ما معادلة المستقيم الذي ميله 2 ويمر بالنقطة (1, 3)؟",
+        "options": ["y = 2x + 1", "y = 2x + 3", "y = 2x - 1", "y = x + 2"],
+        "answer": "A",
+        "explanation": "باستخدام صيغة الميل والنقطة: y - 3 = 2(x - 1) ⇒ y = 2x - 2 + 3 = 2x + 1."
+    },
+    {
+        "id": 81,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الهندسة التحليلية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "ما ميل المستقيم العمودي على المستقيم الذي معادلته y = 3x - 4؟",
+        "options": ["-1/3", "3", "1/3", "-3"],
+        "answer": "A",
+        "explanation": "ميل المستقيم المعطى = 3، ميل المستقيم العمودي عليه = -1/3 (حاصل ضربهما = -1)."
+    },
+    {
+        "id": 82,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الهندسة التحليلية",
+        "difficulty": "hard",
+        "exam_style": "تحصيلي",
+        "question": "ما البعد بين النقطة (2, 3) والمستقيم الذي معادلته 3x + 4y - 5 = 0؟",
+        "options": ["2.6", "3.4", "4.2", "1.8"],
+        "answer": "A",
+        "explanation": "d = |Ax₁ + By₁ + C|/√(A²+B²) = |3×2 + 4×3 - 5|/√(9+16) = |6+12-5|/5 = 13/5 = 2.6."
+    },
+    
+    # ==================== المصفوفات ====================
+    {
+        "id": 83,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "المصفوفات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما رتبة المصفوفة A = [[2, 3, 4], [5, 6, 7]]؟",
+        "options": ["2×3", "3×2", "2×2", "3×3"],
+        "answer": "A",
+        "explanation": "المصفوفة لها صفان وثلاثة أعمدة، فرتبتها 2×3."
+    },
+    {
+        "id": 84,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "المصفوفات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما ناتج جمع المصفوفتين: [[1, 2], [3, 4]] + [[5, 6], [7, 8]]؟",
+        "options": ["[[6, 8], [10, 12]]", "[[6, 8], [10, 12]]", "[[4, 4], [4, 4]]", "[[5, 12], [21, 32]]"],
+        "answer": "A",
+        "explanation": "جمع العناصر المتناظرة: [[1+5, 2+6], [3+7, 4+8]] = [[6, 8], [10, 12]]."
+    },
+    {
+        "id": 85,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "المصفوفات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "ما ناتج ضرب المصفوفتين: [[1, 2], [3, 4]] × [[5, 6], [7, 8]]؟",
+        "options": ["[[19, 22], [43, 50]]", "[[19, 22], [43, 50]]", "[[23, 34], [31, 46]]", "[[5, 12], [21, 32]]"],
+        "answer": "A",
+        "explanation": "A×B = [[1×5+2×7, 1×6+2×8], [3×5+4×7, 3×6+4×8]] = [[5+14, 6+16], [15+28, 18+32]] = [[19, 22], [43, 50]]."
+    },
+    {
+        "id": 86,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "المصفوفات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما محدد المصفوفة A = [[2, 5], [1, 3]]؟",
+        "options": ["1", "2", "3", "4"],
+        "answer": "A",
+        "explanation": "det(A) = (2×3) - (5×1) = 6 - 5 = 1."
+    },
+    
+    # ==================== المثلثات ====================
+    {
+        "id": 87,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المثلثات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "في المثلث ABC، قياس ∠A = 50°، ∠B = 70°. ما قياس ∠C؟",
+        "options": ["60°", "50°", "70°", "120°"],
+        "answer": "A",
+        "explanation": "مجموع زوايا المثلث = 180° ⇒ ∠C = 180 - (50+70) = 60°."
+    },
+    {
+        "id": 88,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المثلثات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "في المثلث المتطابق الضلعين ABC، AB = AC، وقياس ∠A = 40°. ما قياس ∠B؟",
+        "options": ["70°", "40°", "100°", "50°"],
+        "answer": "A",
+        "explanation": "∠B = ∠C، و ∠A + ∠B + ∠C = 180° ⇒ 40 + 2∠B = 180 ⇒ 2∠B = 140 ⇒ ∠B = 70°."
+    },
+    {
+        "id": 89,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المثلثات",
+        "difficulty": "hard",
+        "exam_style": "تحصيلي",
+        "question": "أطوال أضلاع مثلث هي 5 cm، 12 cm، 13 cm. ما نوع هذا المثلث؟",
+        "options": ["قائم الزاوية", "حاد الزوايا", "منفرج الزاوية", "متطابق الضلعين"],
+        "answer": "A",
+        "explanation": "5² + 12² = 25 + 144 = 169 = 13²، إذن المثلث قائم الزاوية (تحقق نظرية فيثاغورس)."
+    },
+    {
+        "id": 90,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المثلثات",
+        "difficulty": "hard",
+        "exam_style": "تحصيلي",
+        "question": "في المثلث القائم ABC، ∠B = 90°، AB = 8 cm، BC = 6 cm. ما طول AC؟",
+        "options": ["10 cm", "14 cm", "2 cm", "100 cm"],
+        "answer": "A",
+        "explanation": "AC² = AB² + BC² = 64 + 36 = 100 ⇒ AC = 10 cm."
+    },
+    
+    # ==================== المتتابعات ====================
+    {
+        "id": 91,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الحسابية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما أساس المتتابعة الحسابية: 3, 8, 13, 18, ...؟",
+        "options": ["5", "3", "8", "13"],
+        "answer": "A",
+        "explanation": "الأساس = 8 - 3 = 5."
+    },
+    {
+        "id": 92,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الحسابية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "ما الحد العاشر في المتتابعة الحسابية: 2, 6, 10, 14, ...؟",
+        "options": ["38", "34", "36", "40"],
+        "answer": "A",
+        "explanation": "a₁ = 2، d = 4، a₁₀ = a₁ + 9d = 2 + 36 = 38."
+    },
+    {
+        "id": 93,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الحسابية",
+        "difficulty": "hard",
+        "exam_style": "تحصيلي",
+        "question": "ما مجموع أول 12 حداً من المتتابعة الحسابية: 5, 9, 13, 17, ...؟",
+        "options": ["324", "300", "336", "312"],
+        "answer": "A",
+        "explanation": "S₁₂ = 12/2 [2×5 + (11×4)] = 6 × [10 + 44] = 6 × 54 = 324."
+    },
+    {
+        "id": 94,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الهندسية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما أساس المتتابعة الهندسية: 2, 6, 18, 54, ...؟",
+        "options": ["3", "2", "4", "6"],
+        "answer": "A",
+        "explanation": "الأساس = 6/2 = 3."
+    },
+    {
+        "id": 95,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الهندسية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "ما الحد السادس في المتتابعة الهندسية: 3, 6, 12, 24, ...؟",
+        "options": ["96", "48", "72", "84"],
+        "answer": "A",
+        "explanation": "a₁ = 3، r = 2، a₆ = a₁ × r⁵ = 3 × 32 = 96."
+    },
+    
+    # ==================== حساب المثلثات ====================
+    {
+        "id": 96,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "إذا كان sinθ = 3/5، فإن cosθ = ... (θ في الربع الأول)",
+        "options": ["4/5", "3/4", "5/4", "4/3"],
+        "answer": "A",
+        "explanation": "sin²θ + cos²θ = 1 ⇒ cos²θ = 1 - 9/25 = 16/25 ⇒ cosθ = 4/5."
+    },
+    {
+        "id": 97,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "tanθ = ...",
+        "options": ["sinθ/cosθ", "cosθ/sinθ", "1/sinθ", "1/cosθ"],
+        "answer": "A",
+        "explanation": "tanθ = sinθ/cosθ (حيث cosθ ≠ 0)."
+    },
+    {
+        "id": 98,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "sin30° = ...",
+        "options": ["1/2", "√3/2", "1/√2", "1"],
+        "answer": "A",
+        "explanation": "sin30° = 1/2."
+    },
+    {
+        "id": 99,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "cos60° = ...",
+        "options": ["1/2", "√3/2", "1/√2", "1"],
+        "answer": "A",
+        "explanation": "cos60° = 1/2."
+    },
+    {
+        "id": 100,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "tan45° = ...",
+        "options": ["1", "0", "√3", "1/√3"],
+        "answer": "A",
+        "explanation": "tan45° = 1."
+    }
+]
+
+print(f"✓ تم إعادة صياغة {len(exam_questions_batch_2)} سؤالاً (الدفعة الثانية: الأسئلة 51-100)")
+print("=" * 60)
+print("نموذج للسؤال رقم 51 بعد إعادة الصياغة:")
+print("-" * 60)
+print(exam_questions_batch_2[0]["question"])
+print(f"الخيارات: {exam_questions_batch_2[0]['options']}")
+print(f"الإجابة: {exam_questions_batch_2[0]['answer']}")
+print("=" * 60)

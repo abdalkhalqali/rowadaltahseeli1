@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}مسابقاتي{% endblock %}
+{% block content %}
+<div style="max-width:800px;margin:40px auto;padding:0 24px">
+  <h1 style="font-size:1.6rem;font-weight:900;margin-bottom:24px">🏆 مسابقاتي</h1>
+
+  {% if parts %}
+  <div style="display:flex;flex-direction:column;gap:12px">
+    {% for p in parts %}
+    <div class="card {{ 'card-gold' if p.rank == 1 else '' }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-weight:800;margin-bottom:4px">{{ p.competition.name }}</div>
+          <div style="font-size:0.82rem;color:var(--text-muted)">{{ p.competition.subject_ar }}</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          {% if p.submitted %}
+            <span class="badge badge-{{ 'green' if p.score >= 75 else 'gold' if p.score >= 50 else 'red' }}">
+              {{ p.score }}%
+            </span>
+            {% if p.rank > 0 %}
+            <span class="badge badge-{{ 'gold' if p.rank == 1 else 'cyan' if p.rank == 2 else 'purple' if p.rank == 3 else 'gray' }}">
+              #{{ p.rank }}
+            </span>
+            {% endif %}
+            <a href="{{ url_for('competition.leaderboard', comp_id=p.competition_id) }}" class="btn btn-sm btn-secondary">الترتيب</a>
+          {% else %}
+            <span class="badge badge-gold">لم تكمل</span>
+            {% if p.competition.status in ['active', 'upcoming'] %}
+            <a href="{{ url_for('competition.live', comp_id=p.competition_id) }}" class="btn btn-sm btn-primary">متابعة</a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:60px">
+    <div style="font-size:4rem;margin-bottom:16px">🏆</div>
+    <h2 style="font-weight:800;margin-bottom:8px">لم تشارك في أي مسابقة بعد</h2>
+    <a href="{{ url_for('competition.index') }}" class="btn btn-primary" style="margin-top:16px">استعرض المسابقات</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

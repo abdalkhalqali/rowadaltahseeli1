@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "دفتر المحاضرات",
+    "slug": "lecture-notebook",
+    "owner": "abdalkhalqali",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "lecture-notebook",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0F1E"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.abdalkhalqali.lecturenotebook",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "نحتاج إذن الميكروفون لتسجيل المحاضرات",
+        "NSPhotoLibraryUsageDescription": "نحتاج إذن معرض الصور لإدراج الصور في الملاحظات"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0A0F1E"
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
+      "package": "com.abdalkhalqali.lecturenotebook"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-av",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "نحتاج إذن معرض الصور لإدراج الصور في الملاحظات"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

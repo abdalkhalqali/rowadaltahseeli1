@@ -1,0 +1,633 @@
+# ====================================================================
+# الدفعة الثالثة: الأسئلة 101-150 (رياضيات + كيمياء)
+# تم إعادة صياغتها على نمط اختبارات التحصيلي الرسمية
+# جميع الإجابات تم فحصها والتأكد من صحتها
+# ====================================================================
+
+exam_questions_batch_3 = [
+    # ==================== الرياضيات (استمرار) ====================
+    # ==================== حساب المثلثات (متطابقات) ====================
+    {
+        "id": 101,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من المتطابقات التالية صحيحة؟",
+        "options": ["sin²θ + cos²θ = 1", "sin²θ - cos²θ = 1", "tan²θ + 1 = sin²θ", "cot²θ + 1 = cos²θ"],
+        "answer": "A",
+        "explanation": "المتطابقة الأساسية sin²θ + cos²θ = 1 صحيحة لجميع قيم θ."
+    },
+    {
+        "id": 102,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "إذا كان sinθ = 0.6، فإن قيمة cos(90° - θ) تساوي ...",
+        "options": ["0.6", "0.8", "0.4", "0.2"],
+        "answer": "A",
+        "explanation": "cos(90° - θ) = sinθ = 0.6 (الزاويتان المتتامتان)."
+    },
+    {
+        "id": 103,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "إذا كان tanθ = 1، فإن θ = ... (0° ≤ θ ≤ 90°)",
+        "options": ["45°", "30°", "60°", "90°"],
+        "answer": "A",
+        "explanation": "tan45° = 1، وهي الزاوية الوحيدة في الربع الأول التي ظلها يساوي 1."
+    },
+    {
+        "id": 104,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "في المثلث القائم الزاوية ABC، ∠B = 90°، AB = 3، BC = 4. ما قيمة sin A؟",
+        "options": ["4/5", "3/5", "3/4", "4/3"],
+        "answer": "A",
+        "explanation": "AC = √(3²+4²) = 5 (وتر المثلث). sin A = المقابل/الوتر = BC/AC = 4/5."
+    },
+    {
+        "id": 105,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "إذا كانت sinθ = 3/5، فإن قيمة secθ تساوي ...",
+        "options": ["5/4", "5/3", "4/5", "3/5"],
+        "answer": "A",
+        "explanation": "sinθ = 3/5 ⇒ cosθ = 4/5 (لأن sin²+cos²=1)، secθ = 1/cosθ = 5/4."
+    },
+    {
+        "id": 106,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "hard",
+        "exam_style": "تحصيلي",
+        "question": "إذا كانت sinθ = 12/13، فإن قيمة cotθ تساوي ...",
+        "options": ["5/12", "12/5", "13/12", "12/13"],
+        "answer": "A",
+        "explanation": "sinθ = 12/13 ⇒ cosθ = 5/13 (لأن 5-12-13 مثلث قائم)، cotθ = cosθ/sinθ = (5/13)/(12/13) = 5/12."
+    },
+    
+    # ==================== الدوال ====================
+    {
+        "id": 107,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الدوال",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما مجال الدالة f(x) = √(x - 5)؟",
+        "options": ["x ≥ 5", "x > 5", "x ≤ 5", "x < 5"],
+        "answer": "A",
+        "explanation": "ما تحت الجذر يجب أن يكون ≥ 0، إذن x - 5 ≥ 0 ⇒ x ≥ 5."
+    },
+    {
+        "id": 108,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الدوال",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما مجال الدالة f(x) = 1/(x - 3)؟",
+        "options": ["x ≠ 3", "x > 3", "x < 3", "x = 3"],
+        "answer": "A",
+        "explanation": "المقام لا يمكن أن يساوي صفراً، إذن x - 3 ≠ 0 ⇒ x ≠ 3."
+    },
+    {
+        "id": 109,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الدوال",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "إذا كانت f(x) = 2x² - 3x + 1، فإن f(2) = ...",
+        "options": ["3", "5", "7", "9"],
+        "answer": "A",
+        "explanation": "f(2) = 2(4) - 3(2) + 1 = 8 - 6 + 1 = 3."
+    },
+    {
+        "id": 110,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الدوال",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "إذا كانت f(x) = x² + 2x و g(x) = x - 1، فإن (f ∘ g)(2) = ...",
+        "options": ["3", "5", "7", "9"],
+        "answer": "A",
+        "explanation": "g(2) = 2 - 1 = 1، f(1) = 1 + 2 = 3."
+    },
+    {
+        "id": 111,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الدوال",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "أي من الدوال التالية تمثل دالة خطية؟",
+        "options": ["y = 2x + 5", "y = x² + 3", "y = |x|", "y = 1/x"],
+        "answer": "A",
+        "explanation": "الدالة الخطية هي من الشكل y = mx + b، حيث m و b ثابتان."
+    },
+    
+    # ==================== المحددات والمصفوفات ====================
+    {
+        "id": 112,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "المصفوفات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما قيمة محدد المصفوفة A = [[1, 2], [3, 4]]؟",
+        "options": ["-2", "2", "1", "-1"],
+        "answer": "A",
+        "explanation": "det(A) = (1×4) - (2×3) = 4 - 6 = -2."
+    },
+    {
+        "id": 113,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "المصفوفات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "ما معكوس المصفوفة A = [[2, 1], [1, 1]]؟",
+        "options": ["[[1, -1], [-1, 2]]", "[[1, 1], [1, 2]]", "[[2, -1], [-1, 1]]", "[[-1, 1], [1, -2]]"],
+        "answer": "A",
+        "explanation": "det = (2×1)-(1×1)=1، A⁻¹ = (1/1) × [[1, -1], [-1, 2]] = [[1, -1], [-1, 2]]."
+    },
+    {
+        "id": 114,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "المصفوفات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما المصفوفة الناتجة عن ضرب المصفوفة A = [[1, 2]] في المصفوفة B = [[3], [4]]؟",
+        "options": ["[11]", "[11]", "[[3, 8]]", "[[3, 8], [3, 8]]"],
+        "answer": "A",
+        "explanation": "A (1×2) × B (2×1) = (1×1) = [1×3 + 2×4] = [11]."
+    },
+    
+    # ==================== الإحصاء والاحتمالات ====================
+    {
+        "id": 115,
+        "subject": "mathematics",
+        "chapter": 4,
+        "topic": "الإحصاء",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما الوسيط للأعداد: 5, 2, 8, 4, 9؟",
+        "options": ["5", "4", "6", "7"],
+        "answer": "A",
+        "explanation": "ترتيب الأعداد: 2, 4, 5, 8, 9، العدد الأوسط هو 5."
+    },
+    {
+        "id": 116,
+        "subject": "mathematics",
+        "chapter": 4,
+        "topic": "الإحصاء",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما المتوسط الحسابي للأعداد: 6, 8, 10, 12, 14؟",
+        "options": ["10", "8", "12", "14"],
+        "answer": "A",
+        "explanation": "المجموع = 6+8+10+12+14 = 50، المتوسط = 50/5 = 10."
+    },
+    {
+        "id": 117,
+        "subject": "mathematics",
+        "chapter": 4,
+        "topic": "الإحصاء",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ما المنوال للأعداد: 3, 5, 3, 7, 9, 3, 5؟",
+        "options": ["3", "5", "7", "9"],
+        "answer": "A",
+        "explanation": "العدد 3 تكرر 3 مرات وهو الأكثر تكراراً."
+    },
+    {
+        "id": 118,
+        "subject": "mathematics",
+        "chapter": 4,
+        "topic": "الاحتمالات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "عند رمي قطعة نقود مرة واحدة، ما احتمال ظهور الصورة؟",
+        "options": ["1/2", "1/4", "1/3", "1"],
+        "answer": "A",
+        "explanation": "النتائج الممكنة: صورة أو كتابة، عدد النواتج المطلوبة = 1، المجموع = 2، الاحتمال = 1/2."
+    },
+    {
+        "id": 119,
+        "subject": "mathematics",
+        "chapter": 4,
+        "topic": "الاحتمالات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "عند رمي حجر نرد منتظم مرة واحدة، ما احتمال ظهور عدد أولي؟",
+        "options": ["1/2", "1/3", "1/6", "2/3"],
+        "answer": "A",
+        "explanation": "الأعداد الأولية على حجر النرد: 2, 3, 5 (3 أعداد)، المجموع = 6، الاحتمال = 3/6 = 1/2."
+    },
+    {
+        "id": 120,
+        "subject": "mathematics",
+        "chapter": 4,
+        "topic": "الاحتمالات",
+        "difficulty": "hard",
+        "exam_style": "تحصيلي",
+        "question": "صندوق يحتوي على 4 كرات حمراء و 6 كرات زرقاء. سحبت كرتان معاً عشوائياً. ما احتمال أن تكون الكرتان حمراوين؟",
+        "options": ["2/15", "4/25", "6/25", "1/5"],
+        "answer": "A",
+        "explanation": "عدد طرق السحب الكلي = C(10,2) = 45، عدد طرق سحب 2 حمراء = C(4,2) = 6، الاحتمال = 6/45 = 2/15."
+    },
+    
+    # ==================== المتتابعات (استمرار) ====================
+    {
+        "id": 121,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الحسابية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "في متتابعة حسابية، الحد الثالث = 10، والحد السابع = 22. ما أساس المتتابعة؟",
+        "options": ["3", "4", "5", "6"],
+        "answer": "A",
+        "explanation": "a₃ = a₁ + 2d = 10، a₇ = a₁ + 6d = 22، بالطرح: 4d = 12 ⇒ d = 3."
+    },
+    {
+        "id": 122,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الحسابية",
+        "difficulty": "hard",
+        "exam_style": "تحصيلي",
+        "question": "ما مجموع أول 20 حداً من المتتابعة الحسابية: 1, 3, 5, 7, ...؟",
+        "options": ["400", "380", "420", "360"],
+        "answer": "A",
+        "explanation": "a₁ = 1، d = 2، S₂₀ = 20/2 [2×1 + (19×2)] = 10 × [2 + 38] = 10 × 40 = 400."
+    },
+    {
+        "id": 123,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الهندسية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "في متتابعة هندسية، الحد الثاني = 6، والحد الخامس = 48. ما أساس المتتابعة؟",
+        "options": ["2", "3", "4", "6"],
+        "answer": "A",
+        "explanation": "a₂ = a₁ r = 6، a₅ = a₁ r⁴ = 48، بقسمة المعادلتين: r³ = 8 ⇒ r = 2."
+    },
+    {
+        "id": 124,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الهندسية",
+        "difficulty": "hard",
+        "exam_style": "تحصيلي",
+        "question": "ما مجموع المتسلسلة الهندسية غير المنتهية: 1 + 1/2 + 1/4 + 1/8 + ...؟",
+        "options": ["2", "1", "1.5", "2.5"],
+        "answer": "A",
+        "explanation": "a = 1، r = 1/2، S∞ = a/(1-r) = 1/(1-1/2) = 1/(1/2) = 2."
+    },
+    
+    # ==================== المتباينات (متقدمة) ====================
+    {
+        "id": 125,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "المتباينات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "ما مجموعة حل المتباينة: |2x - 3| ≤ 5",
+        "options": ["[-1, 4]", "(-∞, -1] ∪ [4, ∞)", "[-4, 1]", "[1, 4]"],
+        "answer": "A",
+        "explanation": "|2x-3| ≤ 5 ⇒ -5 ≤ 2x-3 ≤ 5 ⇒ -2 ≤ 2x ≤ 8 ⇒ -1 ≤ x ≤ 4."
+    },
+    {
+        "id": 126,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "المتباينات",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "ما مجموعة حل المتباينة: |x + 2| > 3",
+        "options": ["(-∞, -5) ∪ (1, ∞)", "(-5, 1)", "(-∞, -1) ∪ (5, ∞)", "(-1, 5)"],
+        "answer": "A",
+        "explanation": "|x+2| > 3 ⇒ x+2 > 3 أو x+2 < -3 ⇒ x > 1 أو x < -5."
+    },
+    
+    # ==================== الكيمياء (بداية) ====================
+    # ==================== العناصر والمركبات ====================
+    {
+        "id": 127,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "العناصر والمركبات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من المواد التالية تعتبر عنصراً كيميائياً؟",
+        "options": ["الذهب (Au)", "الماء (H₂O)", "ملح الطعام (NaCl)", "ثاني أكسيد الكربون (CO₂)"],
+        "answer": "A",
+        "explanation": "الذهب عنصر لأنه لا يمكن تجزئته إلى مواد أبسط بالطرق الكيميائية."
+    },
+    {
+        "id": 128,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "العناصر والمركبات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من المواد التالية تعتبر مركباً كيميائياً؟",
+        "options": ["H₂O", "O₂", "N₂", "Fe"],
+        "answer": "A",
+        "explanation": "H₂O مركب لأنه يتكون من اتحاد عنصرين (هيدروجين وأكسجين)."
+    },
+    {
+        "id": 129,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "العناصر والمركبات",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من الرموز التالية يمثل عنصر الفضة؟",
+        "options": ["Ag", "Au", "Al", "Ar"],
+        "answer": "A",
+        "explanation": "Ag هو رمز عنصر الفضة (Argentum)."
+    },
+    {
+        "id": 130,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "التفاعلات الكيميائية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من التفاعلات التالية يمثل تفاعل تكوين؟",
+        "options": ["2H₂ + O₂ → 2H₂O", "2H₂O → 2H₂ + O₂", "CH₄ + 2O₂ → CO₂ + 2H₂O", "AgNO₃ + NaCl → AgCl + NaNO₃"],
+        "answer": "A",
+        "explanation": "تفاعل التكوين: يتحد عنصران أو أكثر لتكوين مركب واحد. 2H₂ + O₂ → 2H₂O."
+    },
+    {
+        "id": 131,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "التفاعلات الكيميائية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من التفاعلات التالية يمثل تفاعل احتراق؟",
+        "options": ["CH₄ + 2O₂ → CO₂ + 2H₂O", "2H₂ + O₂ → 2H₂O", "CaCO₃ → CaO + CO₂", "NaCl → Na⁺ + Cl⁻"],
+        "answer": "A",
+        "explanation": "تفاعل الاحتراق هو تفاعل مادة مع الأكسجين مع إنتاج حرارة وضوء."
+    },
+    {
+        "id": 132,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "التفاعلات الكيميائية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من التفاعلات التالية يمثل تفاعل تحليل؟",
+        "options": ["2H₂O → 2H₂ + O₂", "2H₂ + O₂ → 2H₂O", "CH₄ + 2O₂ → CO₂ + 2H₂O", "HCl + NaOH → NaCl + H₂O"],
+        "answer": "A",
+        "explanation": "تفاعل التحليل: يتفكك مركب إلى عناصره أو مركبات أبسط."
+    },
+    
+    # ==================== الذرة والبنية الذرية ====================
+    {
+        "id": 133,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "الذرة",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من الأجزاء التالية يوجد في نواة الذرة؟",
+        "options": ["البروتونات والنيوترونات", "الإلكترونات فقط", "البروتونات والإلكترونات", "النيوترونات والإلكترونات"],
+        "answer": "A",
+        "explanation": "النواة تحتوي على البروتونات (موجبة) والنيوترونات (متعددة)، بينما الإلكترونات تدور حول النواة."
+    },
+    {
+        "id": 134,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "الذرة",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "شحنة الإلكترون هي ...",
+        "options": ["سالبة", "موجبة", "متعددة", "لا شحنة له"],
+        "answer": "A",
+        "explanation": "الإلكترون جسيم سالب الشحنة، مقدارها 1.6×10⁻¹⁹ C."
+    },
+    {
+        "id": 135,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "الذرة",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "العدد الذري للعنصر هو عدد ...",
+        "options": ["البروتونات في النواة", "النيوترونات في النواة", "الإلكترونات في الذرة المتعادلة", "كل ما سبق"],
+        "answer": "A",
+        "explanation": "العدد الذري = عدد البروتونات في نواة الذرة، ويساوي عدد الإلكترونات في الذرة المتعادلة."
+    },
+    {
+        "id": 136,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "الذرة",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "ذرة الصوديوم (Na) عددها الذري 11 وعددها الكتلي 23. ما عدد النيوترونات فيها؟",
+        "options": ["12", "11", "23", "34"],
+        "answer": "A",
+        "explanation": "عدد النيوترونات = العدد الكتلي - العدد الذري = 23 - 11 = 12."
+    },
+    {
+        "id": 137,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "الذرة",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "أيون الكالسيوم Ca²⁺ له ... إلكترونات (العدد الذري للكالسيوم = 20)",
+        "options": ["18", "20", "22", "2"],
+        "answer": "A",
+        "explanation": "الذرة المتعادلة لها 20 إلكتروناً، عند فقد إلكترونين يصبح عدد الإلكترونات 18."
+    },
+    {
+        "id": 138,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "الذرة",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "أيون الكلور Cl⁻ له ... إلكترونات (العدد الذري للكلور = 17)",
+        "options": ["18", "17", "16", "1"],
+        "answer": "A",
+        "explanation": "الذرة المتعادلة لها 17 إلكتروناً، عند اكتساب إلكترون واحد يصبح عدد الإلكترونات 18."
+    },
+    
+    # ==================== الجدول الدوري ====================
+    {
+        "id": 139,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "الجدول الدوري",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من العناصر التالية يقع في المجموعة الأولى (الفلزات القلوية)؟",
+        "options": ["الصوديوم (Na)", "المغنيسيوم (Mg)", "الألومنيوم (Al)", "الكلور (Cl)"],
+        "answer": "A",
+        "explanation": "الصوديوم يقع في المجموعة IA (الفلزات القلوية) التي تشمل Li، Na، K، Rb، Cs، Fr."
+    },
+    {
+        "id": 140,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "الجدول الدوري",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من العناصر التالية يقع في المجموعة السابعة (الهالوجينات)؟",
+        "options": ["الكلور (Cl)", "الأكسجين (O)", "الكربون (C)", "الصوديوم (Na)"],
+        "answer": "A",
+        "explanation": "الهالوجينات تقع في المجموعة VIIA: F، Cl، Br، I، At."
+    },
+    {
+        "id": 141,
+        "subject": "chemistry",
+        "chapter": 1,
+        "topic": "الجدول الدوري",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من الغازات التالية يعتبر غازاً نبيلاً (خاملاً)؟",
+        "options": ["النيون (Ne)", "الأكسجين (O₂)", "النيتروجين (N₂)", "الهيدروجين (H₂)"],
+        "answer": "A",
+        "explanation": "الغازات النبيلة: He، Ne، Ar، Kr، Xe، Rn، وهي خاملة كيميائياً."
+    },
+    
+    # ==================== الروابط الكيميائية ====================
+    {
+        "id": 142,
+        "subject": "chemistry",
+        "chapter": 2,
+        "topic": "الروابط الكيميائية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من المركبات التالية يمتلك رابطة أيونية؟",
+        "options": ["NaCl", "H₂O", "CH₄", "CO₂"],
+        "answer": "A",
+        "explanation": "NaCl رابطة أيونية بين فلز (Na) ولا فلز (Cl)."
+    },
+    {
+        "id": 143,
+        "subject": "chemistry",
+        "chapter": 2,
+        "topic": "الروابط الكيميائية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من المركبات التالية يمتلك رابطة تساهمية؟",
+        "options": ["H₂O", "NaCl", "KBr", "MgO"],
+        "answer": "A",
+        "explanation": "H₂O رابطة تساهمية بين لا فلزين (H و O)."
+    },
+    {
+        "id": 144,
+        "subject": "chemistry",
+        "chapter": 2,
+        "topic": "الروابط الكيميائية",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "أي من العناصر التالية له أكبر قيمة للسالبية الكهربائية؟",
+        "options": ["الفلور (F)", "الأكسجين (O)", "النيتروجين (N)", "الكربون (C)"],
+        "answer": "A",
+        "explanation": "الفلور هو أكثر العناصر سالبية كهربائية (4.0 على مقياس باولنج)."
+    },
+    {
+        "id": 145,
+        "subject": "chemistry",
+        "chapter": 2,
+        "topic": "الروابط الكيميائية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "جزيء الماء (H₂O) له شكل هندسي ...",
+        "options": ["زاوي (منحني)", "خطي", "رباعي السطوح", "مثلث مستو"],
+        "answer": "A",
+        "explanation": "جزيء H₂O له شكل زاوي (منحني) بسبب وجود زوجين وحيدين على ذرة الأكسجين."
+    },
+    {
+        "id": 146,
+        "subject": "chemistry",
+        "chapter": 2,
+        "topic": "الروابط الكيميائية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "جزيء الميثان (CH₄) له شكل هندسي ...",
+        "options": ["رباعي السطوح", "خطي", "زاوي", "مثلث مستو"],
+        "answer": "A",
+        "explanation": "CH₄ له شكل رباعي السطوح لأن ذرة الكربون ترتبط بأربع ذرات هيدروجين."
+    },
+    {
+        "id": 147,
+        "subject": "chemistry",
+        "chapter": 2,
+        "topic": "الروابط الكيميائية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "أي من المركبات التالية يمتلك روابط هيدروجينية بين جزيئاته؟",
+        "options": ["HF", "HCl", "HBr", "HI"],
+        "answer": "A",
+        "explanation": "HF فقط هو الذي يمتلك روابط هيدروجينية بسبب السالبية الكهربائية العالية للفلور."
+    },
+    {
+        "id": 148,
+        "subject": "chemistry",
+        "chapter": 2,
+        "topic": "الروابط الكيميائية",
+        "difficulty": "medium",
+        "exam_style": "تحصيلي",
+        "question": "أي من المركبات التالية له أعلى درجة غليان؟",
+        "options": ["H₂O", "H₂S", "H₂Se", "H₂Te"],
+        "answer": "A",
+        "explanation": "الماء له درجة غليان عالية بسبب وجود الروابط الهيدروجينية."
+    },
+    
+    # ==================== المحاليل ====================
+    {
+        "id": 149,
+        "subject": "chemistry",
+        "chapter": 3,
+        "topic": "المحاليل",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "المذاب في محلول السكر والماء هو ...",
+        "options": ["السكر", "الماء", "كليهما", "لا شيء"],
+        "answer": "A",
+        "explanation": "المذاب هو المادة التي تذوب (السكر)، والمذيب هو المادة التي تذيب (الماء)."
+    },
+    {
+        "id": 150,
+        "subject": "chemistry",
+        "chapter": 3,
+        "topic": "المحاليل",
+        "difficulty": "easy",
+        "exam_style": "تحصيلي",
+        "question": "إذا أذيبت 20 g من الملح في 80 g من الماء، فإن النسبة المئوية الكتلية للملح في المحلول تساوي ...",
+        "options": ["20%", "25%", "16.7%", "80%"],
+        "answer": "A",
+        "explanation": "النسبة المئوية = (كتلة المذاب / كتلة المحلول) × 100 = (20 / 100) × 100 = 20%."
+    }
+]
+
+print(f"✓ تم إعادة صياغة {len(exam_questions_batch_3)} سؤالاً (الدفعة الثالث

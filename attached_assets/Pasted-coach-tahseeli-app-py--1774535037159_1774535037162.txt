@@ -1,0 +1,139 @@
+coach_tahseeli/
+├── app.py                                                                 # الملف الرئيسي: تهيئة Flask، تسجيل المسارات، تشغيل الخادم
+├── requirements.txt                                                       # قائمة المكتبات المطلوبة للتثبيت
+├── .env                                                                   # المتغيرات البيئية (البريد الإلكتروني، المفاتيح، إلخ)
+├── instance/
+│   └── tahseeli.db                                                        # قاعدة البيانات SQLite
+├── models/
+│   ├── __init__.py                                                        # تهيئة SQLAlchemy وتصدير النماذج
+│   ├── user.py                                                            # نموذج المستخدم: الاسم، البريد، كلمة المرور، المستوى، نقاط الضعف، is_assessed
+│   ├── question.py                                                        # نموذج السؤال: النص، الخيارات، الإجابة، المادة، الصعوبة، الدرس
+│   ├── evaluation.py                                                      # نموذج التقييم: الطالب، التاريخ، الأسئلة، الإجابات، النتائج، التحليل
+│   └── competition.py                                                     # نموذج المسابقة: الاسم، المادة، الوقت، الأسئلة، النتائج، الترتيب
+├── routes/
+│   ├── __init__.py                                                        # تهيئة Blueprints وتسجيل جميع المسارات
+│   ├── auth.py                                                            # مسارات: تسجيل، دخول، OTP، تحقق، تسجيل خروج، صفحة الاختيار
+│   ├── student.py                                                         # مسارات الطالب: الصفحة الرئيسية، المواد، الاختبارات، النتائج، التقدم
+│   ├── admin.py                                                           # مسارات المشرف: إدارة الأسئلة، متابعة الطلاب، إحصائيات
+│   ├── ai.py                                                              # مسارات الذكاء الاصطناعي: تقييم المستوى، توليد أسئلة من PDF
+│   └── competition.py                                                     # مسارات المسابقات: قائمة، انضمام، أداء مباشر، لوحة المتصدرين
+├── services/
+│   ├── __init__.py                                                        # تهيئة الخدمات وتصديرها
+│   ├── ai_service.py                                                      # واجهة AI مرنة (g4f/Gemini/قواعد): تقييم، توليد أسئلة، تحليل، توصيات
+│   ├── email_service.py                                                   # إرسال البريد: OTP، إشعارات، نتائج
+│   ├── question_service.py                                                # إدارة الأسئلة: إضافة، تعديل، حذف، بحث، تصفية، إضافة دفعة
+│   ├── assessment_service.py                                              # 🆕 تقييم المستوى الأولي: توليد 40 سؤال، تصحيح، تحليل، حفظ النتائج
+│   ├── pdf_reader_service.py                                              # 🆕 قراءة PDF: استخراج النص، تنظيم المحتوى حسب المادة والصف
+│   └── competition_service.py                                             # 🆕 إدارة المسابقات: إنشاء، جدولة، حساب النتائج، ترتيب المشاركين
+├── data/
+│   ├── __init__.py                                                        # تهيئة مجلد البيانات وتصدير محتوياته
+│   ├── exams/                                                             # الاختبارات العادية (يدوية الإعداد)
+│   │   ├── __init__.py
+│   │   ├── physics/                                                       # اختبارات الفيزياء
+│   │   │   ├── __init__.py
+│   │   │   ├── level_test.py                                              # اختبار تحديد المستوى
+│   │   │   ├── daily_train.py                                             # تدريب يومي
+│   │   │   ├── quick_test.py                                              # اختبار سريع
+│   │   │   ├── chapter_1.py                                               # اختبار الفصل الأول
+│   │   │   ├── chapter_2.py                                               # اختبار الفصل الثاني
+│   │   │   ├── final_test.py                                              # اختبار شامل
+│   │   │   └── mistakes.py                                                # الأخطاء الشائعة
+│   │   ├── chemistry/                                                     # اختبارات الكيمياء
+│   │   │   ├── __init__.py
+│   │   │   ├── level_test.py
+│   │   │   ├── daily_train.py
+│   │   │   ├── quick_test.py
+│   │   │   ├── chapter_1.py
+│   │   │   ├── chapter_2.py
+│   │   │   └── final_test.py
+│   │   ├── biology/                                                       # اختبارات الأحياء
+│   │   │   ├── __init__.py
+│   │   │   ├── level_test.py
+│   │   │   ├── daily_train.py
+│   │   │   ├── quick_test.py
+│   │   │   ├── chapter_1.py
+│   │   │   ├── chapter_2.py
+│   │   │   └── final_test.py
+│   │   └── math/                                                          # اختبارات الرياضيات
+│   │       ├── __init__.py
+│   │       ├── level_test.py
+│   │       ├── daily_train.py
+│   │       ├── quick_test.py
+│   │       ├── chapter_1.py
+│   │       ├── chapter_2.py
+│   │       └── final_test.py
+│   └── level_assessment/                                                  # 🆕 أسئلة التقييم الأولي (40 سؤال)
+│       ├── __init__.py
+│       ├── physics_assessment.py                                          # أسئلة تقييم الفيزياء (10 أسئلة)
+│       ├── chemistry_assessment.py                                        # أسئلة تقييم الكيمياء (10 أسئلة)
+│       ├── biology_assessment.py                                          # أسئلة تقييم الأحياء (10 أسئلة)
+│       └── math_assessment.py                                             # أسئلة تقييم الرياضيات (10 أسئلة)
+├── pdf_files/                                                             # 🆕 مجلد الملفات الدراسية PDF
+│   ├── __init__.py
+│   ├── physics/                                                           # كتب الفيزياء حسب الصفوف
+│   │   ├── grade_10/                                                      # أول ثانوي (كتاب واحد)
+│   │   │   └── physics_g10.pdf
+│   │   ├── grade_11/                                                      # ثاني ثانوي (فصلين)
+│   │   │   ├── physics_g11_term1.pdf
+│   │   │   └── physics_g11_term2.pdf
+│   │   └── grade_12/                                                      # ثالث ثانوي (فصلين)
+│   │       ├── physics_g12_term1.pdf
+│   │       └── physics_g12_term2.pdf
+│   ├── chemistry/                                                         # كتب الكيمياء حسب الصفوف
+│   │   ├── grade_10/
+│   │   │   └── chemistry_g10.pdf
+│   │   ├── grade_11/
+│   │   │   ├── chemistry_g11_term1.pdf
+│   │   │   └── chemistry_g11_term2.pdf
+│   │   └── grade_12/
+│   │       ├── chemistry_g12_term1.pdf
+│   │       └── chemistry_g12_term2.pdf
+│   ├── biology/                                                           # كتب الأحياء حسب الصفوف
+│   │   ├── grade_10/                                                      # أول ثانوي (كتابين)
+│   │   │   ├── biology_g10_term1.pdf
+│   │   │   └── biology_g10_term2.pdf
+│   │   ├── grade_11/                                                      # ثاني ثانوي (كتاب واحد)
+│   │   │   └── biology_g11.pdf
+│   │   └── grade_12/                                                      # ثالث ثانوي (كتاب واحد)
+│   │       └── biology_g12.pdf
+│   └── math/                                                              # كتب الرياضيات حسب الصفوف
+│       ├── grade_10/                                                      # أول ثانوي (كتابين)
+│       │   ├── math_g10_term1.pdf
+│       │   └── math_g10_term2.pdf
+│       ├── grade_11/                                                      # ثاني ثانوي (كتابين)
+│       │   ├── math_g11_term1.pdf
+│       │   └── math_g11_term2.pdf
+│       └── grade_12/                                                      # ثالث ثانوي (كتابين)
+│           ├── math_g12_term1.pdf
+│           └── math_g12_term2.pdf
+├── utils/
+│   ├── __init__.py
+│   └── helpers.py                                                         # دوال مساعدة: تحقق بريد، توليد أرقام عشوائية، تنسيق تواريخ، تشفير
+├── static/
+│   ├── css/
+│   │   └── style.css                                                      # تنسيقات الموقع: RTL، متجاوب، ألوان هادئة
+│   ├── js/
+│   │   └── main.js                                                        # تفاعلات: AJAX، تحقق نماذج، عد تنازلي، تحديث مباشر
+│   └── images/                                                            # صور: شعار، أيقونات المواد، خلفيات
+├── templates/
+│   ├── base.html                                                          # القالب الأساسي: header، footer، RTL
+│   ├── index.html                                                         # الصفحة الرئيسية (غير مسجل)
+│   ├── login.html                                                         # صفحة تسجيل الدخول
+│   ├── register.html                                                      # صفحة التسجيل
+│   ├── verify_otp.html                                                    # صفحة إدخال كود OTP
+│   ├── choice_page.html                                                   # 🆕 صفحة الاختيار بعد الدخول: دخول مباشر / بدء تقييم المستوى
+│   ├── assessment.html                                                    # 🆕 صفحة اختبار التقييم الأولي: 40 سؤال
+│   ├── assessment_results.html                                            # 🆕 صفحة نتائج التقييم: المستوى، نقاط الضعف، توصيات
+│   ├── student_dashboard.html                                             # لوحة الطالب: مستوى، تقدم، توصيات، قسم تقييم المهارات حسب الصفوف
+│   ├── admin_dashboard.html                                               # لوحة المشرف: إحصائيات، إدارة أسئلة، متابعة طلاب
+│   ├── questions_management.html                                          # صفحة إدارة الأسئلة
+│   ├── exam.html                                                          # صفحة أداء الاختبار
+│   ├── results.html                                                       # صفحة نتائج الاختبار
+│   ├── skill_assessment.html                                              # 🆕 صفحة تقييم المهارات حسب الصف: اختيار الصف، AI يقرأ PDF
+│   └── competitions/
+│       ├── index.html                                                     # قائمة المسابقات
+│       ├── join.html                                                      # الانضمام لمسابقة
+│       ├── live.html                                                      # صفحة المسابقة المباشرة
+│       ├── leaderboard.html                                               # لوحة المتصدرين
+│       └── my_competitions.html                                           # مسابقاتي
+└── README.md                                                              # شرح المشروع

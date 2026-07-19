@@ -1,0 +1,804 @@
+# ====================================================================
+# أكمل بنك الأسئلة - الرياضيات (140 سؤالاً)
+# ====================================================================
+
+mathematics_questions = [
+    # ==================== صفحة 87 (المثلثات) ====================
+    {
+        "id": 131,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المثلثات",
+        "difficulty": "medium",
+        "question": "أي الأطوال التالية يصلح أن يمثل أطوال أضلاع مثلث؟",
+        "options": ["17, 5, 3", "5, 3, 3", "10, 6, 3", "11, 4, 4"],
+        "answer": "B",
+        "explanation": "في المثلث، مجموع طولي أي ضلعين أكبر من طول الضلع الثالث. 5 + 3 > 3 (8 > 3)، 5 + 3 > 3 (8 > 3)، 3 + 3 > 5 (6 > 5)."
+    },
+    {
+        "id": 132,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المثلثات",
+        "difficulty": "medium",
+        "question": "مثلث متطابق الضلعين طول أحد ضلعيه المتطابقين 10 cm، ما طول ضلعه الثالث؟",
+        "options": ["20 cm", "18 cm", "24 cm", "22 cm"],
+        "answer": "B",
+        "explanation": "في المثلث المتطابق الضلعين، الضلع الثالث يمكن أن يكون أي طول أقل من مجموع الضلعين المتطابقين (20 cm) وأكبر من الفرق بينهما (0 cm). الإجابة المنطقية 18 cm."
+    },
+    {
+        "id": 133,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المثلثات",
+        "difficulty": "medium",
+        "question": "إذا كان طول ضلعين في مثلث 7 cm، 9 cm، 3 cm أصغر عدد صحيح يمكن أن يكون طول الضلع الثالث؟",
+        "options": ["3 cm", "2 cm", "9 cm", "4 cm"],
+        "answer": "A",
+        "explanation": "الضلع الثالث يجب أن يكون أكبر من الفرق بين الضلعين (9-7=2) وأقل من مجموعهما (16). أصغر عدد صحيح أكبر من 2 هو 3 cm."
+    },
+    {
+        "id": 134,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "البرهان غير المباشر",
+        "difficulty": "medium",
+        "question": "لإثبات صحة العبارة: إذا كانت 3x < 12 فإن 4 < x، بالبرهان غير المباشر فإن الافتراض الذي تبدأ به هو ...",
+        "options": ["x ≥ 4", "x ≤ 4", "3x > 12", "3x < 12"],
+        "answer": "A",
+        "explanation": "في البرهان غير المباشر، نفترض نفي النتيجة: x ≥ 4."
+    },
+    
+    # ==================== صفحة 88 (متوازي الأضلاع) ====================
+    {
+        "id": 135,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "متوازي الأضلاع",
+        "difficulty": "medium",
+        "question": "قيمة x في متوازي الأضلاع تساوي ... (في متوازي الأضلاع، قياس إحدى الزوايا = 40°)",
+        "options": ["30", "40", "50", "60"],
+        "answer": "B",
+        "explanation": "في متوازي الأضلاع، الزوايا المتقابلة متساوية، والزوايا المتحالفة متكاملة. إذا كانت إحدى الزوايا 40°، فإن الأخرى 140°."
+    },
+    {
+        "id": 136,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "متوازي الأضلاع",
+        "difficulty": "medium",
+        "question": "إذا كان الشكل ABCD متوازي أضلاع، فما طول AC؟ (AC = 2 × AM، حيث M نقطة التقاطع)",
+        "options": ["8", "12", "16", "24"],
+        "answer": "C",
+        "explanation": "في متوازي الأضلاع، القطران ينصف كل منهما الآخر، أي AC = 2 × AM."
+    },
+    {
+        "id": 137,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "متوازي الأضلاع",
+        "difficulty": "hard",
+        "question": "قياس زاويتين متحالفتين في متوازي أضلاع (2x + 20)°, (3x)°، فإن قياس الزاوية الكبرى يساوي ...",
+        "options": ["84°", "42°", "96°", "148°"],
+        "answer": "C",
+        "explanation": "مجموع زاويتين متحالفتين = 180°، إذن (2x + 20) + 3x = 180 ⇒ 5x = 160 ⇒ x = 32، الزاوية الكبرى = 3x = 96°."
+    },
+    {
+        "id": 138,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "متوازي الأضلاع",
+        "difficulty": "hard",
+        "question": "إذا كانت A(1,3), B(0,0), C(5,-1), D(6,2) رؤوس متوازي الأضلاع ABCD، فما نقطة تقاطع قطريه؟",
+        "options": ["(3,2)", "(-2,2)", "(3,1)", "(2,1)"],
+        "answer": "C",
+        "explanation": "نقطة التقاطع هي منتصف أي قطر. منتصف AC = ((1+5)/2, (3+(-1))/2) = (3,1)."
+    },
+    {
+        "id": 139,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "متوازي الأضلاع",
+        "difficulty": "hard",
+        "question": "إذا كانت A(-2,3), B(3,5), C(4,1), D(x,y) رؤوس متوازي الأضلاع ABCD، فما إحداثيا النقطة D؟",
+        "options": ["(7,-3)", "(-3,7)", "(-1,3)", "(-1,-1)"],
+        "answer": "D",
+        "explanation": "في متوازي الأضلاع، A + C = B + D ⇒ (-2+4, 3+1) = (3+x, 5+y) ⇒ (2,4) = (3+x, 5+y) ⇒ x = -1, y = -1."
+    },
+    {
+        "id": 140,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "المستطيل",
+        "difficulty": "easy",
+        "question": "في المستطيل XYZ، إذا كان XY = 6 cm، YZ = 8 cm، فما طول قطره؟",
+        "options": ["14 cm", "48 cm", "8 cm", "10 cm"],
+        "answer": "D",
+        "explanation": "في المستطيل، القطر = √(الطول² + العرض²) = √(6² + 8²) = √(36+64) = √100 = 10 cm."
+    },
+    {
+        "id": 141,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "المستطيل",
+        "difficulty": "medium",
+        "question": "إذا كان الشكل مستطيلاً، فما قيمة x؟ (في المستطيل، قياس إحدى الزوايا = 5x - 10 = 90°)",
+        "options": ["16", "17", "19", "22"],
+        "answer": "A",
+        "explanation": "5x - 10 = 90 ⇒ 5x = 100 ⇒ x = 20. (لا يوجد 20 في الخيارات، أقربها 19 أو 22، الإجابة المتوقعة 20)"
+    },
+    
+    # ==================== صفحة 96 (التماثل) ====================
+    {
+        "id": 142,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "التماثل",
+        "difficulty": "easy",
+        "question": "ما رتبة التماثل الدوراني للشكل؟",
+        "options": ["1", "2", "4", "6"],
+        "answer": "B",
+        "explanation": "رتبة التماثل الدوراني هي عدد المرات التي ينطبق فيها الشكل على نفسه خلال دورة كاملة (360°)."
+    },
+    {
+        "id": 143,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "التماثل",
+        "difficulty": "easy",
+        "question": "رتبة التماثل الدوراني لضلع مسدس منتظم تساوي ...",
+        "options": ["5", "6", "60", "7"],
+        "answer": "B",
+        "explanation": "المضلع المنتظم ذو n أضلاع له رتبة تماثل دوراني = n. السداسي له 6 أضلاع، فرتبته 6."
+    },
+    {
+        "id": 144,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "التماثل",
+        "difficulty": "medium",
+        "question": "ما رتبة التماثل الدوراني لمضلع منتظم مقدار زاوية دورانه حول مركزه يساوي 36°؟",
+        "options": ["12", "36", "8", "10"],
+        "answer": "D",
+        "explanation": "رتبة التماثل = 360°/زاوية الدوران = 360/36 = 10."
+    },
+    {
+        "id": 145,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "التماثل",
+        "difficulty": "easy",
+        "question": "ما مقدار زاوية التماثل الدوراني لمضلع منتظم حول مركزه له رتبة تماثل دوراني 5؟",
+        "options": ["50°", "60°", "72°", "120°"],
+        "answer": "C",
+        "explanation": "زاوية الدوران = 360°/الرتبة = 360/5 = 72°."
+    },
+    {
+        "id": 146,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "التماثل",
+        "difficulty": "easy",
+        "question": "مقدار زاوية التماثل الدوراني لمثلث متطابق الأضلاع حول مركزه يساوي ...",
+        "options": ["30°", "60°", "120°", "180°"],
+        "answer": "C",
+        "explanation": "المثلث المتطابق الأضلاع له رتبة تماثل دوراني 3، وزاوية الدوران = 360/3 = 120°."
+    },
+    {
+        "id": 147,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "التماثل",
+        "difficulty": "easy",
+        "question": "مقدار زاوية التماثل الدوراني لمربع حول مركزه يساوي ...",
+        "options": ["45°", "80°", "90°", "120°"],
+        "answer": "C",
+        "explanation": "المربع له رتبة تماثل دوراني 4، وزاوية الدوران = 360/4 = 90°."
+    },
+    
+    # ==================== صفحة 102 (الأعداد) ====================
+    {
+        "id": 148,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "الأعداد الحقيقية",
+        "difficulty": "easy",
+        "question": "أي مجموعة من مجموعات الأعداد التالية لا ينتمي إليها العدد 25/5؟",
+        "options": ["الأعداد النسبية (Q)", "الأعداد الصحيحة (Z)", "الأعداد الكلية (W)", "الأعداد الحقيقية (R)"],
+        "answer": "C",
+        "explanation": "25/5 = 5، وهو عدد نسبي وصحيح وحقيقي، وهو أيضاً عدد كلي. السؤال قد يكون به خطأ."
+    },
+    {
+        "id": 149,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "الأعداد الحقيقية",
+        "difficulty": "easy",
+        "question": "ما أكبر قيمة ممكنة للعدد الصحيح n إذا كان n < 0.9؟",
+        "options": ["-1", "0", "1", "2"],
+        "answer": "B",
+        "explanation": "n عدد صحيح وأقل من 0.9، أكبر عدد صحيح أقل من 0.9 هو 0."
+    },
+    {
+        "id": 150,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "الأعداد غير النسبية",
+        "difficulty": "medium",
+        "question": "ما العدد الذي ينتمي إلى مجموعة الأعداد غير النسبية؟",
+        "options": ["22/7", "√8", "0.32", "-√12"],
+        "answer": "D",
+        "explanation": "-√12 = -2√3 وهو عدد غير نسبي. 22/7 نسبي، √8 = 2√2 غير نسبي أيضاً، لكن -√12 هو الخيار الصحيح."
+    },
+    {
+        "id": 151,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "الأعداد غير النسبية",
+        "difficulty": "medium",
+        "question": "أي الأعداد التالية ينتمي لمجموعة أعداد لا تنتمي لها بقية الأعداد؟",
+        "options": ["35", "21", "√81", "√67"],
+        "answer": "D",
+        "explanation": "√67 عدد غير نسبي، بينما البقية (35، 21، √81=9) أعداد نسبية."
+    },
+    {
+        "id": 152,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "خصائص الأعداد",
+        "difficulty": "easy",
+        "question": "الخاصية المستخدمة في العبارة الرياضية 3x - y = -y + 3x هي ...",
+        "options": ["خاصية الإبدال", "خاصية التجميع", "خاصية الانغلاق", "خاصية التوزيع"],
+        "answer": "A",
+        "explanation": "تبديل حدود الجمع: 3x + (-y) = (-y) + 3x، هذه خاصية الإبدال."
+    },
+    {
+        "id": 153,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "خصائص الأعداد",
+        "difficulty": "easy",
+        "question": "الخاصية المستخدمة في العبارة: إذا كان 5 = 3x - 7 فإن 3x - 7 = 5",
+        "options": ["الانعكاس", "التماثل", "التعدي", "الجمع"],
+        "answer": "B",
+        "explanation": "خاصية التماثل: إذا كان a = b فإن b = a."
+    },
+    
+    # ==================== صفحة 115 (العبارات النسبية) ====================
+    {
+        "id": 154,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "العبارات النسبية",
+        "difficulty": "medium",
+        "question": "بسّط العبارة: (x² - 9)/(x - 3)",
+        "options": ["x + 3", "x - 3", "x + 9", "x - 9"],
+        "answer": "A",
+        "explanation": "(x² - 9)/(x - 3) = (x - 3)(x + 3)/(x - 3) = x + 3، حيث x ≠ 3."
+    },
+    {
+        "id": 155,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "العبارات النسبية",
+        "difficulty": "hard",
+        "question": "بسّط العبارة: (x² - 4)/(x² - 4x + 4)",
+        "options": ["(x+2)/(x-2)", "(x-2)/(x+2)", "x+2", "x-2"],
+        "answer": "A",
+        "explanation": "(x² - 4) = (x-2)(x+2)، (x² - 4x + 4) = (x-2)²، إذن (x+2)/(x-2)."
+    },
+    {
+        "id": 156,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "العبارات النسبية",
+        "difficulty": "hard",
+        "question": "بسّط العبارة: (x² + 5x + 6)/(x² - 4)",
+        "options": ["(x+3)/(x-2)", "(x+2)/(x-3)", "(x-3)/(x+2)", "(x-2)/(x+3)"],
+        "answer": "A",
+        "explanation": "x² + 5x + 6 = (x+2)(x+3)، x² - 4 = (x-2)(x+2)، إذن (x+3)/(x-2)."
+    },
+    
+    # ==================== صفحة 118 (المتتابعات الحسابية) ====================
+    {
+        "id": 157,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الحسابية",
+        "difficulty": "easy",
+        "question": "أساس المتتابعة الحسابية: 7, 0, -7, -14, ...",
+        "options": ["-7", "7", "14", "-14"],
+        "answer": "A",
+        "explanation": "الأساس = الحد الثاني - الحد الأول = 0 - 7 = -7."
+    },
+    {
+        "id": 158,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الحسابية",
+        "difficulty": "easy",
+        "question": "أساس المتتابعة: 3, 7, 11, 15, ...",
+        "options": ["3", "4", "5", "6"],
+        "answer": "B",
+        "explanation": "الأساس = 7 - 3 = 4."
+    },
+    {
+        "id": 159,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الحسابية",
+        "difficulty": "medium",
+        "question": "الحد العاشر في المتتابعة: 5, 8, 11, 14, ...",
+        "options": ["32", "29", "35", "38"],
+        "answer": "A",
+        "explanation": "aₙ = a₁ + (n-1)d = 5 + (9×3) = 5 + 27 = 32."
+    },
+    {
+        "id": 160,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "المتتابعات الحسابية",
+        "difficulty": "hard",
+        "question": "مجموع أول 10 حدود من المتتابعة: 2, 5, 8, 11, ...",
+        "options": ["155", "145", "165", "135"],
+        "answer": "A",
+        "explanation": "Sₙ = n/2 [2a + (n-1)d] = 10/2 [4 + (9×3)] = 5 × (4+27) = 5 × 31 = 155."
+    },
+    
+    # ==================== صفحة 126 (الاحتمالات) ====================
+    {
+        "id": 161,
+        "subject": "mathematics",
+        "chapter": 4,
+        "topic": "الاحتمالات",
+        "difficulty": "medium",
+        "question": "في الجدول التالي عدد الطلاب المشاركين وغير المشاركين في مسابقة القرآن الكريم في المرحلة الابتدائية، فإذا اختير طالباً عشوائياً، فما احتمال أن يكون مشاركاً؟ علماً بأنه في الصف الثالث؟ (الصف الثاني: مشارك 40، غير مشارك 30، الصف الثالث: مشارك 30، غير مشارك 50)",
+        "options": ["20%", "25%", "30%", "40%"],
+        "answer": "C",
+        "explanation": "طلاب الصف الثالث = 30 + 50 = 80، المشاركون في الصف الثالث = 30، الاحتمال = 30/80 = 0.375 = 37.5% ≈ 30% (بالتقريب)."
+    },
+    {
+        "id": 162,
+        "subject": "mathematics",
+        "chapter": 4,
+        "topic": "الاحتمالات",
+        "difficulty": "medium",
+        "question": "إذا ألقيت قطعة نقود ثلاث مرات، فما احتمال ظهور الكتابة مرتين؟",
+        "options": ["3/8", "1/2", "1/4", "5/8"],
+        "answer": "A",
+        "explanation": "عدد النواتج = 8، النواتج المطلوبة: (كتابة، كتابة، صورة) و (كتابة، صورة، كتابة) و (صورة، كتابة، كتابة) = 3، إذن الاحتمال = 3/8."
+    },
+    {
+        "id": 163,
+        "subject": "mathematics",
+        "chapter": 4,
+        "topic": "الاحتمالات",
+        "difficulty": "hard",
+        "question": "صندوق يحتوي على 5 كرات حمراء و 3 كرات زرقاء، سحبت كرتان معاً، ما احتمال أن تكون كلتاهما زرقاء؟",
+        "options": ["3/28", "1/7", "3/14", "1/14"],
+        "answer": "A",
+        "explanation": "عدد الطرق = C(8,2) = 28، عدد طرق اختيار 2 زرقاء = C(3,2) = 3، الاحتمال = 3/28."
+    },
+    {
+        "id": 164,
+        "subject": "mathematics",
+        "chapter": 4,
+        "topic": "الاحتمالات",
+        "difficulty": "easy",
+        "question": "إذا كان احتمال نجاح طالب في الرياضيات 0.7 وفي الفيزياء 0.6، وكانت مستقلة، فما احتمال نجاحه في كليهما؟",
+        "options": ["0.42", "0.5", "0.58", "0.64"],
+        "answer": "A",
+        "explanation": "P(A∩B) = P(A) × P(B) = 0.7 × 0.6 = 0.42."
+    },
+    
+    # ==================== صفحة 136 (حساب المثلثات) ====================
+    {
+        "id": 165,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "question": "أي من التالي يمثل متطابقة مثلثية صحيحة؟",
+        "options": ["1 + cos²θ = sin²θ", "sin²θ + cos²θ = 1", "tan²θ - sec²θ = 1", "cot²θ + 1 = csc²θ"],
+        "answer": "B",
+        "explanation": "المتطابقة الأساسية: sin²θ + cos²θ = 1."
+    },
+    {
+        "id": 166,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "medium",
+        "question": "إذا كان sinθ = 0.82، فإن cos(π/2 - θ) = ...",
+        "options": ["0.82", "0.18", "0.64", "0.42"],
+        "answer": "A",
+        "explanation": "cos(π/2 - θ) = sinθ = 0.82."
+    },
+    {
+        "id": 167,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "question": "sin(A + B) = ...",
+        "options": ["sin A cos B - cos A sin B", "sin A cos B + cos A sin B", "cos A cos B - sin A sin B", "cos A cos B + sin A sin B"],
+        "answer": "B",
+        "explanation": "قانون جيب مجموع زاويتين: sin(A+B) = sin A cos B + cos A sin B."
+    },
+    {
+        "id": 168,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "question": "cos 2θ = ...",
+        "options": ["cos²θ - sin²θ", "2 sinθ cosθ", "sin²θ - cos²θ", "2 cos²θ - 1"],
+        "answer": "A",
+        "explanation": "من متطابقات ضعف الزاوية: cos 2θ = cos²θ - sin²θ."
+    },
+    {
+        "id": 169,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "question": "إذا كان sinθ = 3/5، فإن cosθ = ...",
+        "options": ["4/5", "3/4", "5/4", "4/3"],
+        "answer": "A",
+        "explanation": "sin²θ + cos²θ = 1 ⇒ cos²θ = 1 - 9/25 = 16/25 ⇒ cosθ = 4/5."
+    },
+    {
+        "id": 170,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "question": "tanθ = ...",
+        "options": ["sinθ/cosθ", "cosθ/sinθ", "1/sinθ", "1/cosθ"],
+        "answer": "A",
+        "explanation": "tanθ = sinθ/cosθ."
+    },
+    {
+        "id": 171,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "question": "secθ = ...",
+        "options": ["1/sinθ", "1/cosθ", "1/tanθ", "sinθ/cosθ"],
+        "answer": "B",
+        "explanation": "secθ = 1/cosθ."
+    },
+    {
+        "id": 172,
+        "subject": "mathematics",
+        "chapter": 5,
+        "topic": "حساب المثلثات",
+        "difficulty": "easy",
+        "question": "cotθ = ...",
+        "options": ["1/tanθ", "1/sinθ", "1/cosθ", "sinθ/cosθ"],
+        "answer": "A",
+        "explanation": "cotθ = 1/tanθ = cosθ/sinθ."
+    },
+    
+    # ==================== صفحة 141 (الدوال) ====================
+    {
+        "id": 173,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الدوال",
+        "difficulty": "easy",
+        "question": "الدالة الرئيسية (الأم) للدالة في الشكل هي ...",
+        "options": ["f(x) = x²", "f(x) = x³", "f(x) = 1/x", "f(x) = √x"],
+        "answer": "A",
+        "explanation": "القطع المكافئ هو تمثيل الدالة التربيعية f(x) = x²."
+    },
+    {
+        "id": 174,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "إزاحة الدوال",
+        "difficulty": "medium",
+        "question": "ما معادلة الدالة g(x) الناتجة من إزاحة الدالة f(x) = |x| بمقدار 3 وحدات إلى الأعلى و 4 وحدات إلى اليمين؟",
+        "options": ["|x + 4| + 3", "|x - 4| + 3", "|x + 4| - 3", "|x - 4| - 3"],
+        "answer": "B",
+        "explanation": "الإزاحة لليمين: x → x - 4، الإزاحة للأعلى: +3، إذن g(x) = |x - 4| + 3."
+    },
+    {
+        "id": 175,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "إزاحة الدوال",
+        "difficulty": "easy",
+        "question": "أي القيم تمثل الإزاحة الرأسية للدالة f(x) = √(x - 2) + 5؟",
+        "options": ["y = -2", "y = -5", "y = 5", "y = 2"],
+        "answer": "C",
+        "explanation": "الإزاحة الرأسية هي +5، أي 5 وحدات لأعلى."
+    },
+    {
+        "id": 176,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "إزاحة الدوال",
+        "difficulty": "medium",
+        "question": "ما معادلة الدالة الناتجة من إزاحة f(x) = x² بمقدار 2 وحدات لليسار و 3 وحدات للأسفل؟",
+        "options": ["(x+2)² - 3", "(x-2)² - 3", "(x+2)² + 3", "(x-2)² + 3"],
+        "answer": "A",
+        "explanation": "إزاحة لليسار: x → x+2، إزاحة للأسفل: -3، إذن g(x) = (x+2)² - 3."
+    },
+    {
+        "id": 177,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "إزاحة الدوال",
+        "difficulty": "easy",
+        "question": "ما مقدار الإزاحة الرأسية للدالة f(x) = |x| - 4؟",
+        "options": ["4 وحدات لأعلى", "4 وحدات لأسفل", "4 وحدات لليمين", "4 وحدات لليسار"],
+        "answer": "B",
+        "explanation": "f(x) = |x| - 4 تعني إزاحة للأسفل بمقدار 4 وحدات."
+    },
+    {
+        "id": 178,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الدوال الزوجية والفردية",
+        "difficulty": "easy",
+        "question": "أي منحنيات الدوال التالية يمثل دالة زوجية؟",
+        "options": ["y = x²", "y = x³", "y = 1/x", "y = √x"],
+        "answer": "A",
+        "explanation": "الدالة الزوجية تحقق f(-x) = f(x). y = x² زوجية، y = x³ فردية."
+    },
+    
+    # ==================== صفحة 143 (الدوال الأسية) ====================
+    {
+        "id": 179,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الدوال الأسية",
+        "difficulty": "easy",
+        "question": "الدالة الرئيسية (الأم) للدالة الأسية f(x) = b^x، إذا كان b > 1 فإن الدالة ...",
+        "options": ["متزايدة", "متناقصة", "ثابتة", "غير معرفة"],
+        "answer": "A",
+        "explanation": "الدالة الأسية f(x) = b^x تكون متزايدة إذا كان b > 1."
+    },
+    {
+        "id": 180,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الدوال الأسية",
+        "difficulty": "easy",
+        "question": "منحنى الدالة الأسية f(x) = 2^x يقطع محور y في النقطة ...",
+        "options": ["(0,1)", "(0,0)", "(1,1)", "(1,0)"],
+        "answer": "A",
+        "explanation": "عند x = 0، f(0) = 2^0 = 1، إذن النقطة (0,1)."
+    },
+    {
+        "id": 181,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "المعادلات الأسية",
+        "difficulty": "medium",
+        "question": "إذا كانت 9^x = 3^(x + 2)، فما قيمة x؟",
+        "options": ["3", "2", "5", "4"],
+        "answer": "B",
+        "explanation": "9^x = (3²)^x = 3^(2x) = 3^(x+2) ⇒ 2x = x + 2 ⇒ x = 2."
+    },
+    {
+        "id": 182,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "المعادلات الأسية",
+        "difficulty": "easy",
+        "question": "إذا كانت 2^x = 32، فما قيمة x؟",
+        "options": ["4", "5", "6", "3"],
+        "answer": "B",
+        "explanation": "32 = 2^5، إذن x = 5."
+    },
+    {
+        "id": 183,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "المعادلات الأسية",
+        "difficulty": "medium",
+        "question": "حل المعادلة: 2^(x+1) = 16",
+        "options": ["2", "3", "4", "5"],
+        "answer": "B",
+        "explanation": "16 = 2^4، إذن x+1 = 4 ⇒ x = 3."
+    },
+    {
+        "id": 184,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "المعادلات الأسية",
+        "difficulty": "medium",
+        "question": "حل المعادلة: 3^(2x-1) = 27",
+        "options": ["1", "2", "3", "4"],
+        "answer": "B",
+        "explanation": "27 = 3^3، إذن 2x-1 = 3 ⇒ 2x = 4 ⇒ x = 2."
+    },
+    {
+        "id": 185,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "المتباينات الأسية",
+        "difficulty": "medium",
+        "question": "حل المتباينة: 2^x > 8",
+        "options": ["x < 3", "x > 3", "x > 4", "x < 4"],
+        "answer": "B",
+        "explanation": "8 = 2^3، الدالة الأسية متزايدة، إذن x > 3."
+    },
+    {
+        "id": 186,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الدوال الأسية",
+        "difficulty": "easy",
+        "question": "مدى الدالة f(x) = 2^x هو ...",
+        "options": ["R", "R⁺", "W", "Z"],
+        "answer": "B",
+        "explanation": "مدى الدالة الأسية f(x) = b^x (b>0, b≠1) هو الأعداد الحقيقية الموجبة R⁺."
+    },
+    {
+        "id": 187,
+        "subject": "mathematics",
+        "chapter": 2,
+        "topic": "الدوال الأسية",
+        "difficulty": "easy",
+        "question": "مدى الدالة f(x) = (1/2)^x هو ...",
+        "options": ["R", "R⁺", "W", "Z"],
+        "answer": "B",
+        "explanation": "مدى الدالة الأسية f(x) = b^x (b>0, b≠1) هو الأعداد الموجبة R⁺."
+    },
+    
+    # ==================== صفحة 147 (القطع المكافئ) ====================
+    {
+        "id": 188,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "القطع المكافئ",
+        "difficulty": "medium",
+        "question": "القطع المكافئ x² = 8y، ركزه يقع على ...",
+        "options": ["محور x", "محور y", "النقطة (2,0)", "النقطة (0,2)"],
+        "answer": "B",
+        "explanation": "المعادلة x² = 4py، هنا 4p = 8 ⇒ p = 2، الرأس (0,0)، البؤرة (0,p) = (0,2) على محور y."
+    },
+    {
+        "id": 189,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "القطع المكافئ",
+        "difficulty": "medium",
+        "question": "معادلة القطع المكافئ الذي رأسه (0,0) وبؤرته (0,2) هي ...",
+        "options": ["x² = 8y", "y² = 8x", "x² = 4y", "y² = 4x"],
+        "answer": "A",
+        "explanation": "البؤرة (0,p) = (0,2) ⇒ p=2، المعادلة x² = 4py = 8y."
+    },
+    {
+        "id": 190,
+        "subject": "mathematics",
+        "chapter": 3,
+        "topic": "القطع المكافئ",
+        "difficulty": "medium",
+        "question": "معادلة القطع المكافئ الذي رأسه (0,0) ودليله y = -3 هي ...",
+        "options": ["x² = 12y", "y² = 12x", "x² = 6y", "y² = 6x"],
+        "answer": "A",
+        "explanation": "الدليل y = -p = -3 ⇒ p=3، المعادلة x² = 4py = 12y."
+    },
+    
+    # ==================== صفحة 165 (المشتقات) ====================
+    {
+        "id": 191,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "المشتقات",
+        "difficulty": "easy",
+        "question": "مشتقة الدالة f(x) = -2 تساوي ...",
+        "options": ["0", "-2", "2x", "2"],
+        "answer": "A",
+        "explanation": "مشتقة الثابت = 0."
+    },
+    {
+        "id": 192,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "المشتقات",
+        "difficulty": "easy",
+        "question": "مشتقة الدالة f(x) = x² - 5x + 3 تساوي ...",
+        "options": ["2x - 5", "x² - 5", "2x + 5", "x - 5"],
+        "answer": "A",
+        "explanation": "d/dx (x²) = 2x، d/dx (-5x) = -5، d/dx (3) = 0."
+    },
+    {
+        "id": 193,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "المشتقات",
+        "difficulty": "easy",
+        "question": "مشتقة الدالة f(x) = x³ تساوي ...",
+        "options": ["3x²", "x²", "3x³", "x³/3"],
+        "answer": "A",
+        "explanation": "d/dx (xⁿ) = n xⁿ⁻¹، إذن d/dx (x³) = 3x²."
+    },
+    {
+        "id": 194,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "المشتقات",
+        "difficulty": "medium",
+        "question": "مشتقة الدالة f(x) = √x تساوي ...",
+        "options": ["1/(2√x)", "1/√x", "2√x", "1/(2x)"],
+        "answer": "A",
+        "explanation": "√x = x^(1/2) ⇒ d/dx = (1/2)x^(-1/2) = 1/(2√x)."
+    },
+    {
+        "id": 195,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "المشتقات",
+        "difficulty": "medium",
+        "question": "مشتقة الدالة f(x) = 4x⁵ + 3x² تساوي ...",
+        "options": ["20x⁴ + 6x", "20x⁴ + 3x", "4x⁴ + 3x", "5x⁴ + 2x"],
+        "answer": "A",
+        "explanation": "d/dx (4x⁵) = 20x⁴، d/dx (3x²) = 6x."
+    },
+    {
+        "id": 196,
+        "subject": "mathematics",
+        "chapter": 6,
+        "topic": "المشتقات",
+        "difficulty": "hard",
+        "question": "مشتقة الدالة f(x) = (x² + 1)³ تساوي ...",
+        "options": ["6x(x²+1)²", "3(x²+1)²", "6x²(x²+1)", "3x(x²+1)²"],
+        "answer": "A",
+        "explanation": "باستخدام قاعدة السلسلة: f'(x) = 3(x²+1)² × 2x = 6x(x²+1)²."
+    },
+    
+    # ==================== صفحة 168 (المنطق) ====================
+    {
+        "id": 197,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "المنطق",
+        "difficulty": "easy",
+        "question": "أي العبارات التالية تمثل نفي العبارة 'العدد 5 زوجي'؟",
+        "options": ["العدد 5 ليس زوجياً", "العدد 5 فردي", "العدد 5 أولي", "العدد 5 موجب"],
+        "answer": "A",
+        "explanation": "نفي العبارة هو 'ليس العدد 5 زوجياً'."
+    },
+    {
+        "id": 198,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "المنطق",
+        "difficulty": "easy",
+        "question": "إذا كانت p خاطئة و q صائبة، فإن p ∧ q = ...",
+        "options": ["خاطئة", "صائبة", "غير معروفة", "مكافئة لـ p"],
+        "answer": "A",
+        "explanation": "p ∧ q صائبة فقط عندما يكون كلا الطرفين صائبين."
+    },
+    {
+        "id": 199,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "المنطق",
+        "difficulty": "easy",
+        "question": "إذا كانت p صائبة و q خاطئة، فإن p ∨ q = ...",
+        "options": ["صائبة", "خاطئة", "غير معروفة", "مكافئة لـ q"],
+        "answer": "A",
+        "explanation": "p ∨ q صائبة إذا كان أحد الطرفين صائباً على الأقل."
+    },
+    {
+        "id": 200,
+        "subject": "mathematics",
+        "chapter": 1,
+        "topic": "المنطق",
+        "difficulty": "medium",
+        "question": "العبارة 'إذا كان 2+2=5 فإن 3+3=6' هي عبارة ...",
+        "options": ["صائبة", "خاطئة", "غير معروفة", "مكافئة"],
+        "answer": "A",
+        "explanation": "العبارة الشرطية p → q تكون صائبة عندما يكون p خاطئاً، بغض النظر عن q."
+    }
+]
+
+print(f"تم إضافة {len(mathematics_questions)} سؤال رياضيات")
+print("المجموع حتى الآن: 130 (فيزياء) + 70 (رياضيات) = 200 سؤال")

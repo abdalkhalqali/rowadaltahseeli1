@@ -1,0 +1,113 @@
+
+
+إليك رسالة التعليمات الكاملة النهائية جاهزة للنسخ واللصق في المساعد البرمجي داخل Replit — تشمل كل الأجزاء بما فيها ملفات الإعداد والإضافات:
+
+
+المشروع: منصة رواد التحصيلي (Flask). المطلوب تطوير "المساعد البرمجي للمشرف" فقط. لا تعدّل مساعد الطلاب في coach_tahseeli/routes/chat.py أو coach_tahseeli/bot.py.
+
+
+الملفات التي ستعمل عليها:
+
+
+الخلفية: coach_tahseeli/routes/code_assistant.py
+الواجهة: coach_tahseeli/templates/admin_code_assistant.html
+الحزم: requirements.txt وcoach_tahseeli/requirements.txt
+الإعداد: .gitignore (يجب إنشاؤه — غير موجود)
+تخزين الأسرار: data_store/.ca_secrets.json (يبقى خارج GitHub)
+الهدف العام: تحويل المساعد البرمجي من أداة تفاعلية يدوية إلى وكيل برمجي مستقل يقرأ الملفات ويحلّلها ويعدّلها ويرفعها إلى GitHub تلقائياً، مع دعم كل خدمات الذكاء الاصطناعي بمفاتيح مستقلة.
+
+
+الجزء 1 — دعم كل مزوّدي الذكاء الاصطناعي:
+
+
+وسّع القاموس MODELS والقائمة OR_MODELS (قرب السطر 15–30) لإضافة مزوّدين جدد، كل نموذج يحمل حقل provider واسم المفتاح المطلوب:
+
+
+OpenAI (gpt-4o, gpt-4o-mini, o1) — base_url https://api.openai.com/v1
+Anthropic Claude (claude-3.5-sonnet, claude-3.5-haiku) — https://api.anthropic.com/v1/messages
+Google Gemini (gemini-2.0-flash, gemini-1.5-pro) — Google Generative Language API
+DeepSeek (deepseek-chat, deepseek-reasoner) — https://api.deepseek.com
+Mistral — https://api.mistral.ai/v1
+Groq — https://api.groq.com/openai/v1
+xAI Grok — https://api.x.ai/v1
+Together AI — https://api.together.xyz/v1
+أبقِ OpenRouter و g4f كما هما.
+في code_assistant.py:
+
+
+عمّم الدالة _or_stream (السطور 114–158) إلى دالة عامة _openai_compat_stream(messages, model_name, key, base_url) تعمل مع كل المزوّدين المتوافقين مع صيغة OpenAI (OpenAI, DeepSeek, Mistral, Groq, xAI, Together, OpenRouter).
+أضف _anthropic_stream(messages, model_name, key) لصيغة Anthropic (حوّل رسالة system إلى حقل system منفصل، واستخدم ترويسة x-api-key + anthropic-version).
+أضف _gemini_stream(messages, model_name, key) لصيغة Google (حوّل الأدوار وابثّ عبر streamGenerateContent).
+عمّم أيضاً _call_ai وقاموس dispatch (السطور 186–261) ليشملا كل المزوّدين للاستخدام غير المتدفق في /analyze.
+إدارة المفاتيح المتعددة:
+
+
+أضف دالة _get_provider_key(provider) تقرأ من _load_local_secrets() ثم من متغيرات البيئة، على نمط _get_key() (السطور 73–86) و_gh_token() (السطور 88–101) الحاليَين. المفاتيح: openai_key, anthropic_key, gemini_key, deepseek_key, mistral_key, groq_key, xai_key, together_key (بالإضافة إلى openrouter_key وgithub_token الموجودَين).
+وسّع save_settings (السطور 655–678) ودالة get_settings لقبول وحفظ كل هذه المفاتيح عبر _save_local_secret، وإرجاع حالة كل مفتاح (موجود/غير موجود) دون كشف قيمته.
+في chat_stream/الوكيل اختر دالة البثّ حسب provider النموذج المختار، مع منطق auto يجرّب المزوّدين الذين تتوفّر مفاتيحهم بالترتيب ثم g4f كبديل أخير.
+الجزء 2 — تحويله إلى وكيل برمجي مستقل:
+
+
+أضف مساراً جديداً POST /admin/code-assistant/agent/stream محمياً بـ @login_required و@_super_admin_required، يشغّل حلقة tool-calling:
+
+
+عرّف الأدوات: read_file, list_files, search_code, write_file, create_file, analyze_tree.
+نفّذ الأدوات بإعادة استخدام _gh_read, _gh_list, _gh_write, _gh_tree الموجودة، وأضف _gh_search (بحث نصي داخل الشجرة أو GitHub Search API).
+كرّر الحلقة حتى ينتهي النموذج (حد أقصى ~15 تكراراً)، وابثّ كل خطوة عبر SSE بأحداث: {"tool":...,"args":...}, {"tool_result":...}, {"chunk":...}.
+عند write_file/create_file ارفع مباشرة إلى GitHub دون انتظار المستخدم؛ وعند خطأ HTTP 409 أعد جلب sha عبر _gh_read وأعد المحاولة مرة واحدة.
+عدّل _build_system (يبدأ عند السطر 266) بتعليمات وكيل واضحة (استكشف واقرأ وعدّل وارفع بنفسك)، وزد حدود قصّ السياق ([:3000] وopen_files[:4]).
+النماذج التي لا تدعم tool-calling (g4f) استخدم معها آلية الوسوم النصية [OPEN_FILE]/[APPLY_TO] الحالية كبديل.
+في admin_code_assistant.html:
+
+
+عدّل loadRepo() (السطور 478–500) بحيث يستدعي /admin/code-assistant/analyze تلقائياً بعد جلب الشجرة ويعبّئ state.projectMap، مع مؤشّر "جارٍ قراءة وتحليل المستودع".
+عدّل sendMsg() لاستخدام agent/stream (أو أضف مبدّلاً بين "دردشة" و"وكيل مستقل").
+اعرض خطوات الوكيل كبطاقات (📖 قراءة، 🔍 بحث، ✏️ تعديل ورفع) عند وصول أحداث tool/tool_result، وحدّث شجرة الملفات وتبويبات المحرر تلقائياً بعد كل عملية كتابة (استدعِ loadFiles/reloadTab).
+في قسم الإعدادات panelSettings أضف حقل إدخال لكل مفتاح مزوّد جديد مع شارة حالة، ووسّع منطق حفظ الإعدادات لإرسالها كلها إلى save_settings.
+وسّع قائمة modelSelect (المبنية من MODELS) لعرض كل النماذج مجمّعة حسب المزوّد.
+الجزء 3 — ملفات الإعداد والإضافات (إلزامي):
+
+
+أنشئ ملف .gitignore في جذر المستودع (غير موجود حالياً) وأضِف فيه على الأقل:
+
+
+￼
+data_store/.ca_secrets.json  
+__pycache__/  
+*.pyc  
+.env  
+*.db
+هذا يضمن أن مفاتيح الذكاء الاصطناعي المخزّنة في data_store/.ca_secrets.json لا تُرفع إلى GitHub أبداً.
+
+
+نظّف requirements.txt: يحتوي حالياً على تكرارات ضخمة (نفس الحزم مكرّرة عدة مرات). أبقِ كل حزمة مرة واحدة فقط. إن استخدمت SDK رسمية للمزوّدين الجدد أضِف:
+
+
+￼
+openai>=1.0.0  
+anthropic>=0.30.0  
+google-generativeai>=0.7.0
+(إن اعتمدت على requests فقط لكل المزوّدين، فلا حاجة لإضافتها). وزامِن نفس التغييرات مع coach_tahseeli/requirements.txt.
+
+
+مفاتيح Replit Secrets: أضِف مفاتيح المزوّدين كـ Secrets في Replit (OPENAI_KEY, ANTHROPIC_KEY, GEMINI_KEY, DEEPSEEK_KEY, ...) بحيث يقرؤها _get_provider_key من متغيرات البيئة كخيار احتياطي إن لم تُدخَل من واجهة الإعدادات. تأكد أن مجلد data_store قابل للكتابة.
+
+
+تأكد أن كل المسارات الجديدة محمية بـ @login_required + @_super_admin_required، وأن الأسرار لا تُرفع أبداً إلى GitHub.
+
+
+اختبار نهائي: أدخل رابط مستودع → يجب أن يقرأ ويحلّل تلقائياً → أعطِ مهمة تعديل → يجب أن ينفّذ ويرفع تلقائياً إلى GitHub.
+
+
+هذه هي الرسالة الكاملة. أهم ملاحظة عملية بعد التنفيذ: لكي يعمل كوكيل حقيقي تحتاج إدخال توكن GitHub بصلاحية repo ومفتاح مزوّد واحد على الأقل يدعم tool-calling (نماذج g4f المجانية لا تدعمه)، والتأكد أن بريد حسابك مطابق لـ SUPER_ADMIN_EMAIL. code_assistant.py:88-101 code_assistant.py:33-43 code_assistant.py:238-261
+
+
+￼
+￼
+￼
+￼
+￼
+Ask a follow-up
+"
+
+

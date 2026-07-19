@@ -1,0 +1,56 @@
+package com.example.smartkeyboard.platform.auth;
+
+import android.os.AsyncTask;
+import java.util.Properties;
+import javax.mail.Authenticator;
+import javax.mail.Message;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+public class EmailAuthTask extends AsyncTask<String, Void, Boolean> {
+    private String email, subject, messageBody;
+
+    // بيانات بريد المنصة الخاص بك
+    private static final String APP_EMAIL = "abdualkhaliqali115@gmail.com";
+    // ⚠️ ضع هنا الـ 16 حرفاً التي استخرجتها من إعدادات أمان جوجل (App Password)
+    private static final String APP_PASS = "yhwc pthv emeu skge"; 
+
+    public EmailAuthTask(String email, String subject, String messageBody) {
+        this.email = email;
+        this.subject = subject;
+        this.messageBody = messageBody;
+    }
+
+    @Override
+    protected Boolean doInBackground(String... params) {
+        Properties props = new Properties();
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.host", "smtp.gmail.com");
+        props.put("mail.smtp.port", "587");
+
+        Session session = Session.getInstance(props, new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(APP_EMAIL, APP_PASS);
+            }
+        });
+
+        try {
+            Message msg = new MimeMessage(session);
+            // اسم المرسل الذي سيظهر للطالب
+            msg.setFrom(new InternetAddress(APP_EMAIL, "منصة كيبورد عبد الخالق"));
+            msg.setRecipients(Message.RecipientType.TO, InternetAddress.parse(email));
+            msg.setSubject(subject);
+            msg.setText(messageBody);
+            
+            Transport.send(msg);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+}

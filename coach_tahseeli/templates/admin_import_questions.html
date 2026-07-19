@@ -1,0 +1,412 @@
+{% extends 'base.html' %}
+{% block title %}استيراد دفعي — أسئلة التحصيلي{% endblock %}
+{% block content %}
+<style>
+.import-wrapper{display:grid;grid-template-columns:1fr 370px;gap:20px;height:calc(100vh - 120px);padding:20px;direction:rtl}
+.editor-panel{display:flex;flex-direction:column;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#111827}
+.editor-toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#0d1520;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.editor-toolbar span{font-size:.9rem;color:#94a3b8;font-weight:600}
+.toolbar-btns{display:flex;gap:8px}
+.tbtn{padding:4px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:#94a3b8;cursor:pointer;font-size:.78rem;font-family:inherit;transition:all .2s}
+.tbtn:hover{background:rgba(255,255,255,.1);color:#fff}
+#codeEditor{flex:1;width:100%;background:#0a0f1a;color:#a8e6cf;font-family:'JetBrains Mono','Fira Code','Courier New',monospace;font-size:.82rem;line-height:1.7;padding:16px;border:none;outline:none;resize:none;overflow-y:auto;direction:ltr;text-align:left}
+#codeEditor::placeholder{color:#334155}
+.editor-status{display:flex;align-items:center;gap:8px;padding:8px 16px;background:#0d1520;border-top:1px solid rgba(255,255,255,.08);font-size:.78rem;color:#64748b;flex-shrink:0}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#334155;flex-shrink:0}
+.status-dot.ok{background:#10b981}
+.status-dot.err{background:#ef4444}
+.status-dot.warn{background:#f59e0b}
+.right-panel{display:flex;flex-direction:column;gap:14px;overflow-y:auto;padding-bottom:20px}
+.card{background:#111827;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px}
+.card h3{font-size:.88rem;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:.78rem;color:#94a3b8;margin-bottom:5px}
+.form-group select{width:100%;background:#0d1520;border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e2e8f0;padding:7px 10px;font-size:.82rem;font-family:inherit;outline:none;cursor:pointer}
+.form-group select:focus{border-color:#7c3aed}
+.ai-card{border-color:rgba(124,58,237,.3);background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(17,24,39,1))}
+.ai-card h3{color:#a78bfa}
+.ai-btn{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(124,58,237,.4);background:rgba(124,58,237,.15);color:#a78bfa;cursor:pointer;font-size:.85rem;font-weight:600;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.ai-btn:hover:not(:disabled){background:rgba(124,58,237,.3);border-color:#7c3aed;color:#c4b5fd}
+.ai-btn:disabled{opacity:.5;cursor:not-allowed}
+.ai-result{margin-top:10px;padding:10px;background:#0d1520;border-radius:8px;border:1px solid rgba(255,255,255,.06);font-size:.78rem;display:none}
+.ai-result.show{display:block}
+.ai-error-list{list-style:none;padding:0;margin:6px 0 0;display:flex;flex-direction:column;gap:4px}
+.ai-error-list li{padding:4px 8px;background:rgba(239,68,68,.1);border-radius:6px;color:#fca5a5;font-size:.76rem;border-right:3px solid #ef4444}
+.ai-replace-btn{margin-top:8px;width:100%;padding:7px;border-radius:8px;border:1px solid rgba(16,185,129,.3);background:rgba(16,185,129,.1);color:#6ee7b7;cursor:pointer;font-size:.8rem;font-family:inherit;transition:all .2s}
+.ai-replace-btn:hover{background:rgba(16,185,129,.2)}
+.preview-card h3{color:#38bdf8}
+.preview-card{border-color:rgba(56,189,248,.2)}
+.prev-btn{width:100%;padding:8px;border-radius:8px;border:1px solid rgba(56,189,248,.3);background:rgba(56,189,248,.08);color:#7dd3fc;cursor:pointer;font-size:.82rem;font-family:inherit;transition:all .2s}
+.prev-btn:hover{background:rgba(56,189,248,.15)}
+.prev-result{margin-top:10px;display:none}
+.prev-result.show{display:block}
+.prev-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.prev-stat{background:#0d1520;border-radius:8px;padding:8px;text-align:center}
+.prev-stat-num{font-size:1.3rem;font-weight:700}
+.prev-stat-lbl{font-size:.7rem;color:#64748b;margin-top:2px}
+.prev-q-list{display:flex;flex-direction:column;gap:5px}
+.prev-q{padding:7px 10px;background:#0d1520;border-radius:7px;font-size:.75rem;color:#94a3b8;border-right:3px solid #7c3aed;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.import-btn{width:100%;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.import-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(124,58,237,.4)}
+.import-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.result-toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);padding:14px 28px;border-radius:12px;color:#fff;font-weight:600;font-size:.9rem;z-index:9999;display:none;backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15)}
+.result-toast.success{background:rgba(16,185,129,.9)}
+.result-toast.error{background:rgba(239,68,68,.9)}
+.result-toast.show{display:block;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.format-guide{background:#0d1520;border-radius:8px;padding:10px 12px;font-size:.72rem;color:#64748b;line-height:1.6;margin-top:8px}
+.format-guide code{color:#a78bfa;font-family:monospace}
+.spin{animation:spin 1s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.page-header{display:flex;align-items:center;gap:12px;padding:14px 20px 0;direction:rtl}
+.page-header a{color:#64748b;text-decoration:none;font-size:.82rem;transition:color .2s}
+.page-header a:hover{color:#a78bfa}
+.page-header .sep{color:#334155}
+.page-header h1{font-size:1.05rem;font-weight:700;color:#e2e8f0;flex:1}
+</style>
+
+<div class="page-header">
+  <a href="{{ url_for('admin.dashboard') }}">📊 لوحة التحكم</a>
+  <span class="sep">›</span>
+  <a href="{{ url_for('admin.questions') }}">❓ الأسئلة</a>
+  <span class="sep">›</span>
+  <h1>📥 استيراد دفعي عبر الكود</h1>
+</div>
+
+<div class="import-wrapper">
+
+  <!-- محرر الكود -->
+  <div class="editor-panel">
+    <div class="editor-toolbar">
+      <span>📝 محرر الكود — JSON أو Python</span>
+      <div class="toolbar-btns">
+        <button class="tbtn" onclick="loadExample()">📖 مثال</button>
+        <button class="tbtn" onclick="clearEditor()">🗑 مسح</button>
+        <button class="tbtn" onclick="copyEditor()">📋 نسخ</button>
+      </div>
+    </div>
+    <textarea id="codeEditor" placeholder='الصق كودك هنا...
+
+مثال:
+[
+  {
+    "text": "نص السؤال...",
+    "option_a": "الخيار أ",
+    "option_b": "الخيار ب",
+    "option_c": "الخيار ج",
+    "option_d": "الخيار د",
+    "answer": "A",
+    "explanation": "شرح الإجابة",
+    "difficulty": "medium"
+  }
+]' oninput="onCodeChange()"></textarea>
+    <div class="editor-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">في انتظار الكود...</span>
+    </div>
+  </div>
+
+  <!-- اللوحة الجانبية -->
+  <div class="right-panel">
+
+    <!-- إعدادات الاستيراد -->
+    <div class="card">
+      <h3>⚙️ إعدادات الاستيراد</h3>
+      <div class="form-group">
+        <label>المادة</label>
+        <select id="subject">
+          <option value="physics">⚗️ فيزياء</option>
+          <option value="chemistry">🧪 كيمياء</option>
+          <option value="biology">🌿 أحياء</option>
+          <option value="math">📐 رياضيات</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>الصف الدراسي</label>
+        <select id="grade">
+          <option value="1">أول ثانوي (صف 10)</option>
+          <option value="2">ثاني ثانوي (صف 11)</option>
+          <option value="3" selected>ثالث ثانوي (صف 12)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>نوع الاختبار</label>
+        <select id="exam_type">
+          <option value="general">عام / تحصيلي</option>
+          <option value="chapter_1">الفصل الأول</option>
+          <option value="chapter_2">الفصل الثاني</option>
+          <option value="comprehensive">شامل</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>الصعوبة الافتراضية (إن لم تُحدَّد في الكود)</label>
+        <select id="difficulty">
+          <option value="">بدون تحديد</option>
+          <option value="easy">سهل</option>
+          <option value="medium" selected>متوسط</option>
+          <option value="hard">صعب</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- المساعد الذكي -->
+    <div class="card ai-card">
+      <h3>🤖 المساعد الذكي</h3>
+      <p style="font-size:.78rem;color:#94a3b8;margin-bottom:10px">يكتشف أخطاء الكود ويصحّحها تلقائياً — JSON ناقص، حقول مفقودة، قيم خاطئة...</p>
+      <button class="ai-btn" id="aiBtn" onclick="aiFixCode()">
+        <span>🔍</span> تحليل وتصحيح الكود
+      </button>
+      <div class="ai-result" id="aiResult">
+        <p id="aiSummary" style="color:#a78bfa;font-size:.8rem;margin-bottom:6px"></p>
+        <ul class="ai-error-list" id="aiErrors"></ul>
+        <button class="ai-replace-btn" id="aiReplaceBtn" onclick="replaceWithFixed()" style="display:none">
+          ✅ استبدال الكود بالنسخة المصحّحة
+        </button>
+      </div>
+    </div>
+
+    <!-- المعاينة -->
+    <div class="card preview-card">
+      <h3>👁 معاينة الأسئلة</h3>
+      <button class="prev-btn" onclick="previewCode()">🔎 تحليل الكود الآن</button>
+      <div class="prev-result" id="prevResult">
+        <div class="prev-stats">
+          <div class="prev-stat">
+            <div class="prev-stat-num" id="totalCount" style="color:#FFB800">0</div>
+            <div class="prev-stat-lbl">إجمالي</div>
+          </div>
+          <div class="prev-stat">
+            <div class="prev-stat-num" id="validCount" style="color:#10b981">0</div>
+            <div class="prev-stat-lbl">صالح</div>
+          </div>
+          <div class="prev-stat">
+            <div class="prev-stat-num" id="invalidCount" style="color:#ef4444">0</div>
+            <div class="prev-stat-lbl">ناقص</div>
+          </div>
+        </div>
+        <div class="prev-q-list" id="prevList"></div>
+      </div>
+    </div>
+
+    <!-- دليل الصيغة -->
+    <div class="card" style="border-color:rgba(255,184,0,.15)">
+      <h3 style="color:#FFB800">📋 صيغة الكود المدعومة</h3>
+      <div class="format-guide">
+        الحقول المطلوبة: <code>text, option_a, option_b, option_c, option_d, answer</code><br>
+        الحقول الاختيارية: <code>explanation, difficulty, lesson, chapter</code><br>
+        قيم answer: <code>A</code> أو <code>B</code> أو <code>C</code> أو <code>D</code><br>
+        difficulty: <code>easy</code> أو <code>medium</code> أو <code>hard</code><br><br>
+        يدعم: <code>JSON array</code> أو <code>Python list</code>
+      </div>
+    </div>
+
+    <!-- زر الاستيراد -->
+    <button class="import-btn" id="importBtn" onclick="importQuestions()">
+      📥 استيراد الأسئلة
+    </button>
+
+  </div>
+</div>
+
+<div class="result-toast" id="resultToast"></div>
+
+<script>
+let _fixedCode = null;
+
+function onCodeChange() {
+  const code = document.getElementById('codeEditor').value.trim();
+  const dot  = document.getElementById('statusDot');
+  const txt  = document.getElementById('statusText');
+  if (!code) {
+    dot.className = 'status-dot';
+    txt.textContent = 'في انتظار الكود...';
+    return;
+  }
+  try {
+    const idx = code.indexOf('[');
+    if (idx === -1) throw new Error();
+    const end = code.lastIndexOf(']') + 1;
+    const arr = JSON.parse(code.substring(idx, end));
+    dot.className = 'status-dot ok';
+    txt.textContent = `✅ JSON صالح — ${arr.length} سؤال`;
+  } catch(e) {
+    dot.className = 'status-dot warn';
+    txt.textContent = '⚠️ صيغة غير معروفة — اضغط "تحليل وتصحيح"';
+  }
+}
+
+function loadExample() {
+  document.getElementById('codeEditor').value = `[
+  {
+    "text": "ما وحدة قياس الشحنة الكهربائية في النظام الدولي؟",
+    "option_a": "فولت",
+    "option_b": "أمبير",
+    "option_c": "كولوم",
+    "option_d": "واط",
+    "answer": "C",
+    "explanation": "الكولوم هي وحدة الشحنة الكهربائية في نظام الوحدات الدولي SI",
+    "difficulty": "easy"
+  },
+  {
+    "text": "ما قانون نيوتن الثاني للحركة؟",
+    "option_a": "F = m/a",
+    "option_b": "F = ma",
+    "option_c": "F = m + a",
+    "option_d": "F = m²a",
+    "answer": "B",
+    "explanation": "قانون نيوتن الثاني: القوة تساوي حاصل ضرب الكتلة في التسارع",
+    "difficulty": "medium"
+  }
+]`;
+  onCodeChange();
+}
+
+function clearEditor() {
+  document.getElementById('codeEditor').value = '';
+  _fixedCode = null;
+  onCodeChange();
+  document.getElementById('prevResult').classList.remove('show');
+  document.getElementById('aiResult').classList.remove('show');
+}
+
+function copyEditor() {
+  const code = document.getElementById('codeEditor').value;
+  navigator.clipboard.writeText(code).then(() => showToast('تم النسخ ✅', 'success'));
+}
+
+async function aiFixCode() {
+  const code = document.getElementById('codeEditor').value.trim();
+  if (!code) { showToast('الكود فارغ!', 'error'); return; }
+
+  const btn = document.getElementById('aiBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin">⟳</span> المساعد يحلّل الكود...';
+
+  try {
+    const r = await fetch('/admin/questions/ai-fix-code', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({code})
+    });
+    const data = await r.json();
+
+    const box = document.getElementById('aiResult');
+    box.classList.add('show');
+
+    if (data.success) {
+      document.getElementById('aiSummary').textContent = data.summary || 'تم التحليل';
+      const errList = document.getElementById('aiErrors');
+      errList.innerHTML = '';
+      (data.errors_found || []).forEach(e => {
+        const li = document.createElement('li');
+        li.textContent = e;
+        errList.appendChild(li);
+      });
+      if (data.fixed_code) {
+        _fixedCode = data.fixed_code;
+        document.getElementById('aiReplaceBtn').style.display = 'block';
+      }
+    } else {
+      document.getElementById('aiSummary').textContent = data.error || 'حدث خطأ';
+    }
+  } catch(e) {
+    showToast('فشل الاتصال بالمساعد الذكي', 'error');
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<span>🔍</span> تحليل وتصحيح الكود';
+}
+
+function replaceWithFixed() {
+  if (!_fixedCode) return;
+  document.getElementById('codeEditor').value = _fixedCode;
+  onCodeChange();
+  showToast('تم استبدال الكود بالنسخة المصحّحة ✅', 'success');
+  document.getElementById('aiReplaceBtn').style.display = 'none';
+}
+
+async function previewCode() {
+  const code = document.getElementById('codeEditor').value.trim();
+  if (!code) { showToast('الكود فارغ!', 'error'); return; }
+
+  try {
+    const r = await fetch('/admin/questions/preview-code', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({code})
+    });
+    const data = await r.json();
+    if (!data.success) { showToast(data.error, 'error'); return; }
+
+    document.getElementById('totalCount').textContent = data.total;
+    document.getElementById('validCount').textContent = data.valid;
+    document.getElementById('invalidCount').textContent = data.invalid;
+
+    const list = document.getElementById('prevList');
+    list.innerHTML = '';
+    (data.preview || []).forEach((q, i) => {
+      const div = document.createElement('div');
+      div.className = 'prev-q';
+      div.textContent = `${i+1}. ${q.text}`;
+      list.appendChild(div);
+    });
+    if (data.valid > 5) {
+      const more = document.createElement('div');
+      more.className = 'prev-q';
+      more.style.color = '#64748b';
+      more.textContent = `... و ${data.valid - 5} سؤال آخر`;
+      list.appendChild(more);
+    }
+
+    document.getElementById('prevResult').classList.add('show');
+  } catch(e) {
+    showToast('فشل تحليل الكود', 'error');
+  }
+}
+
+async function importQuestions() {
+  const code = document.getElementById('codeEditor').value.trim();
+  if (!code) { showToast('الكود فارغ!', 'error'); return; }
+
+  const btn = document.getElementById('importBtn');
+  btn.disabled = true;
+  btn.textContent = '⟳ جاري الاستيراد...';
+
+  try {
+    const r = await fetch('/admin/questions/import', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        code,
+        subject:   document.getElementById('subject').value,
+        grade:     document.getElementById('grade').value,
+        exam_type: document.getElementById('exam_type').value,
+        difficulty:document.getElementById('difficulty').value,
+      })
+    });
+    const data = await r.json();
+
+    if (data.success) {
+      showToast(`✅ تم استيراد ${data.added} سؤال بنجاح! (تخطي: ${data.skipped})`, 'success');
+      if (data.added > 0) {
+        setTimeout(() => { window.location.href = '/admin/questions'; }, 2500);
+      }
+    } else {
+      showToast(data.error || 'فشل الاستيراد', 'error');
+    }
+  } catch(e) {
+    showToast('حدث خطأ في الاتصال', 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '📥 استيراد الأسئلة';
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('resultToast');
+  t.textContent = msg;
+  t.className = `result-toast ${type} show`;
+  setTimeout(() => t.className = 'result-toast', 4000);
+}
+</script>
+{% endblock %}

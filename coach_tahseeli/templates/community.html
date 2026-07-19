@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+{% block title %}مجتمع المحترفين{% endblock %}
+{% block content %}
+<style>
+.comm-wrap{max-width:780px;margin:36px auto;padding:0 20px;direction:rtl}
+.comm-header{
+  background:var(--bg-card);border:1px solid rgba(16,185,129,0.25);
+  border-radius:18px;padding:28px 28px 20px;margin-bottom:20px;
+  background:linear-gradient(135deg,rgba(16,185,129,0.04),rgba(8,11,20,0));
+}
+.comm-header h1{font-size:1.5rem;font-weight:900;color:#10b981;margin-bottom:4px}
+.comm-header p{color:var(--text-muted);font-size:0.86rem}
+.comm-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.comm-tab{
+  padding:7px 16px;border-radius:20px;font-size:0.82rem;font-weight:700;
+  border:1px solid var(--border);background:var(--bg-elevated);
+  color:var(--text-muted);text-decoration:none;cursor:pointer;transition:all .2s;
+}
+.comm-tab.active,.comm-tab:hover{
+  background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,0.35);color:#10b981}
+.comm-compose{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;margin-bottom:20px;
+}
+.comm-compose textarea{
+  width:100%;padding:12px;border-radius:10px;resize:vertical;min-height:80px;
+  background:var(--bg-elevated);border:1px solid var(--border);
+  color:var(--text-primary);font-size:0.9rem;font-family:inherit;box-sizing:border-box;
+}
+.comm-compose textarea:focus{outline:none;border-color:rgba(16,185,129,.5)}
+.comm-type-row{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+.type-pill{
+  padding:5px 12px;border-radius:20px;font-size:0.78rem;font-weight:700;
+  border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-muted);
+  cursor:pointer;transition:all .2s;
+}
+.type-pill.selected{background:rgba(16,185,129,0.15);border-color:rgba(16,185,129,.35);color:#10b981}
+.comm-send-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.char-count{font-size:0.75rem;color:var(--text-muted)}
+.post-card{
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;margin-bottom:12px;
+  transition:border-color .2s;
+}
+.post-card:hover{border-color:rgba(16,185,129,0.2)}
+.post-card.pinned{border-color:rgba(16,185,129,0.35);background:linear-gradient(135deg,rgba(16,185,129,0.03),transparent)}
+.post-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.post-avatar{
+  width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-weight:800;font-size:1rem;flex-shrink:0;
+}
+.post-meta{flex:1;min-width:0}
+.post-name{font-size:0.88rem;font-weight:800;color:var(--text-primary)}
+.post-time{font-size:0.74rem;color:var(--text-muted)}
+.post-badge{
+  font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:8px;
+  background:rgba(251,191,36,0.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3);
+}
+.post-type-badge{
+  font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:8px;
+}
+.post-body{font-size:0.9rem;line-height:1.7;color:var(--text-primary);word-break:break-word;margin-bottom:10px}
+.post-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.post-btn{
+  display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:8px;
+  font-size:0.75rem;font-weight:700;background:var(--bg-elevated);
+  border:1px solid var(--border);color:var(--text-muted);
+  cursor:pointer;transition:all .2s;text-decoration:none;
+}
+.post-btn:hover,.post-btn.active{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.3);color:#10b981}
+.post-btn.del:hover{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:#ef4444}
+.replies-wrap{
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--border);
+  display:none;
+}
+.replies-wrap.open{display:block}
+.reply-card{
+  display:flex;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.reply-avatar{
+  width:28px;height:28px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:0.75rem;font-weight:800;flex-shrink:0;
+  background:rgba(139,92,246,0.15);color:#a78bfa;
+}
+.reply-body{font-size:0.84rem;line-height:1.6;color:var(--text-secondary)}
+.reply-form{margin-top:10px;display:flex;gap:8px}
+.reply-form input{
+  flex:1;padding:8px 12px;border-radius:8px;
+  background:var(--bg-elevated);border:1px solid var(--border);
+  color:var(--text-primary);font-size:0.84rem;font-family:inherit;
+}
+.reply-form input:focus{outline:none;border-color:rgba(16,185,129,.5)}
+.pin-badge{font-size:0.7rem;background:rgba(16,185,129,.15);color:#10b981;
+  padding:2px 7px;border-radius:6px;border:1px solid rgba(16,185,129,.3)}
+.empty-state{text-align:center;padding:50px 20px;color:var(--text-muted)}
+.empty-state .ei{font-size:3rem;margin-bottom:12px}
+</style>
+
+<div class="comm-wrap">
+
+  {# الرأس #}
+  <div class="comm-header">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+      <span style="font-size:2rem">👥</span>
+      <div>
+        <h1>مجتمع المحترفين</h1>
+        <p>{{ posts|length }} منشور · شارك أفكارك وأسئلتك مع رواد التحصيلي</p>
+      </div>
+    </div>
+  </div>
+
+  {# التبويبات #}
+  <div class="comm-tabs">
+    <a href="?tab=general"      class="comm-tab {{ 'active' if tab=='general' }}">💬 الكل</a>
+    <a href="?tab=question"     class="comm-tab {{ 'active' if tab=='question' }}">❓ أسئلة</a>
+    <a href="?tab=achievement"  class="comm-tab {{ 'active' if tab=='achievement' }}">🏆 إنجازات</a>
+    {% if current_user.is_admin %}
+    <a href="{{ url_for('notifications.admin_send') }}" class="comm-tab"
+       style="background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:#fbbf24">
+      📢 إرسال إشعار
+    </a>
+    {% endif %}
+  </div>
+
+  {# صندوق الكتابة #}
+  <div class="comm-compose">
+    <form action="{{ url_for('community.post') }}" method="POST" id="compose-form">
+      <div class="comm-type-row">
+        <label><input type="radio" name="post_type" value="general" checked hidden>
+          <span class="type-pill selected" onclick="selectType(this,'general')">💬 نقاش</span></label>
+        <label><input type="radio" name="post_type" value="question" hidden>
+          <span class="type-pill" onclick="selectType(this,'question')">❓ سؤال</span></label>
+        <label><input type="radio" name="post_type" value="achievement" hidden>
+          <span class="type-pill" onclick="selectType(this,'achievement')">🏆 إنجاز</span></label>
+      </div>
+      <textarea name="body" id="compose-body" maxlength="1000"
+        placeholder="اكتب شيئاً للمجتمع…" required
+        oninput="document.getElementById('cc').textContent=this.value.length+'/1000'"></textarea>
+      <div class="comm-send-row">
+        <span class="char-count" id="cc">0/1000</span>
+        <button type="submit" class="btn btn-primary">إرسال ←</button>
+      </div>
+    </form>
+  </div>
+
+  {# قائمة المنشورات #}
+  {% set filtered = posts if tab == 'general' else posts|selectattr('post_type','equalto',tab)|list %}
+  {% if not filtered %}
+  <div class="empty-state">
+    <div class="ei">💬</div>
+    <div>لا توجد منشورات هنا بعد — كن أول من يبدأ النقاش!</div>
+  </div>
+  {% else %}
+  {% for p in filtered %}
+  {% set u = p.author %}
+  <div class="post-card {{ 'pinned' if p.is_pinned }}" id="post-{{ p.id }}">
+
+    <div class="post-hdr">
+      <div class="post-avatar"
+           style="background:{{ 'linear-gradient(135deg,#fbbf24,#f59e0b)' if u and u.is_admin else 'rgba(16,185,129,0.2)' }};
+                  color:{{ '#000' if u and u.is_admin else '#10b981' }}">
+        {{ u.name[0] if u else '?' }}
+      </div>
+      <div class="post-meta">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span class="post-name">{{ u.name if u else 'مجهول' }}</span>
+          {% if u and u.is_admin %}<span class="post-badge">إدارة</span>{% endif %}
+          {% if p.is_pinned %}<span class="pin-badge">📌 مثبّت</span>{% endif %}
+          {% if p.post_type == 'question' %}
+            <span class="post-type-badge" style="background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3)">❓ سؤال</span>
+          {% elif p.post_type == 'achievement' %}
+            <span class="post-type-badge" style="background:rgba(255,184,0,.15);color:#fbbf24;border:1px solid rgba(255,184,0,.3)">🏆 إنجاز</span>
+          {% endif %}
+        </div>
+        <div class="post-time">{{ p.created_at.strftime('%Y/%m/%d · %H:%M') }}</div>
+      </div>
+    </div>
+
+    <div class="post-body">{{ p.body }}</div>
+
+    <div class="post-actions">
+      <button class="post-btn" onclick="likePost({{ p.id }},this)">
+        👍 <span id="likes-{{ p.id }}">{{ p.likes }}</span>
+      </button>
+      <button class="post-btn" onclick="toggleReplies({{ p.id }})">
+        💬 <span>{{ p.reply_count }}</span> رد
+      </button>
+      {% if current_user.id == p.user_id or current_user.is_admin %}
+      <form action="{{ url_for('community.delete', post_id=p.id) }}" method="POST"
+            onsubmit="return confirm('حذف المنشور؟')">
+        <button type="submit" class="post-btn del">🗑 حذف</button>
+      </form>
+      {% endif %}
+      {% if current_user.is_admin %}
+      <button class="post-btn" onclick="pinPost({{ p.id }},this)">
+        📌 {{ 'إلغاء التثبيت' if p.is_pinned else 'تثبيت' }}
+      </button>
+      {% endif %}
+    </div>
+
+    {# الردود #}
+    <div class="replies-wrap" id="replies-{{ p.id }}">
+      {% set active_replies = p.replies.filter_by(is_deleted=False).all() %}
+      {% for r in active_replies %}
+      {% set ru = r.author %}
+      <div class="reply-card">
+        <div class="reply-avatar">{{ ru.name[0] if ru else '?' }}</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+            <span style="font-size:0.78rem;font-weight:800">{{ ru.name if ru else 'مجهول' }}</span>
+            <span style="font-size:0.7rem;color:var(--text-muted)">{{ r.created_at.strftime('%H:%M') }}</span>
+          </div>
+          <div class="reply-body">{{ r.body }}</div>
+        </div>
+      </div>
+      {% endfor %}
+      <form action="{{ url_for('community.reply', post_id=p.id) }}" method="POST" class="reply-form">
+        <input name="body" placeholder="اكتب رداً…" maxlength="500" required>
+        <button type="submit" class="btn btn-sm btn-primary">رد</button>
+      </form>
+    </div>
+
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <div style="text-align:center;margin-top:20px">
+    <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">← العودة للوحة</a>
+  </div>
+</div>
+
+<script>
+function selectType(el, type) {
+  document.querySelectorAll('.type-pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  document.querySelector(`input[value="${type}"]`).checked = true;
+}
+function likePost(id, btn) {
+  fetch(`/community/like/${id}`, {method:'POST',
+    headers:{'X-CSRFToken': document.cookie.match(/csrf_token=([^;]+)/)?.[1]||''}})
+    .then(r=>r.json()).then(d=>{
+      document.getElementById('likes-'+id).textContent = d.likes;
+      btn.classList.add('active');
+    });
+}
+function toggleReplies(id) {
+  const el = document.getElementById('replies-'+id);
+  el.classList.toggle('open');
+}
+function pinPost(id, btn) {
+  fetch(`/community/pin/${id}`, {method:'POST'})
+    .then(r=>r.json()).then(d=>{
+      btn.textContent = d.pinned ? '📌 إلغاء التثبيت' : '📌 تثبيت';
+    });
+}
+</script>
+{% endblock %}
